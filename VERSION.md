@@ -1,5 +1,15 @@
 # Version History
 
+## [v1.0.0-rc2] - 2026-08-10
+
+### Changed & Improved
+- **Open-Source Sharing Utilities**: Completely rebuilt `ShareRedirectModal.js` — replaced the previous API-based share code generator with two clean, focused tabs:
+  - **Codeshare.io Tab**: Direct passcode URL launcher (`codeshare.io/<passcode>`), live URL preview while typing, `localStorage`-persisted **URLs Visited** history with timestamps and individual/bulk remove controls (max 20 entries).
+  - **Toffeeshare Tab**: Feature summary card (P2P, no file limit, E2E encrypted, open source) with one-click "Go to Toffeeshare.com" direct link button.
+- **Sidebar Cleanup**: Removed "Token Log" and "Daily Logs" operational buttons from footer. Renamed sidebar button from "Codeshare Redirect" → **"Open-Source Sharing Utilities"**.
+
+---
+
 ## [v1.0.0-rc1] - 2026-08-10
 
 ### Added & Enhanced

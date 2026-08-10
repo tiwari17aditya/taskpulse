@@ -46,7 +46,7 @@ d:\Antigravity-Projects\abc/
 │   │   ├── TaskManager.js      # Microsoft To-Do list, subtasks & date presets
 │   │   ├── NoteCanvas.js       # Google Keep visual masonry cards & media
 │   │   ├── MediaUploader.js    # Image, audio, video & document uploader
-│   │   ├── ShareRedirectModal.js # Codeshare.io custom passcodes & Toffeeshare hub
+│   │   ├── ShareRedirectModal.js # Open-Source Sharing Utilities (Codeshare URL launcher + visited history, Toffeeshare direct link)
 │   │   ├── TokenUsageModal.js  # token_usage.md tabular log viewer
 │   │   ├── LogViewerModal.js   # Daily log inspector
 │   │   └── UserGuideModal.js   # Interactive User Guide & Documentation modal
