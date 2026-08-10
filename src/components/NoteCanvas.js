@@ -1,8 +1,7 @@
-'use client';
-
 import { useState } from 'react';
 import { Pin, Plus, Share2, Trash2, Tag, Palette, Image as ImageIcon, Music, Video, FileText, Check, ExternalLink } from 'lucide-react';
 import MediaUploader from './MediaUploader';
+import { saveNoteToDB, deleteNoteFromDB } from '@/lib/dbAdapter';
 
 const COLOR_PALETTE = [
   { name: 'Default', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255, 255, 255, 0.1)' },
@@ -51,6 +50,7 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
     };
 
     setNotes([newNote, ...notes]);
+    saveNoteToDB(newNote); // Direct sync to NeonDB / active database
     setTitle('');
     setContent('');
     setMediaList([]);
@@ -58,11 +58,21 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
   };
 
   const togglePin = (noteId) => {
-    setNotes(notes.map(n => n.id === noteId ? { ...n, pinned: !n.pinned } : n));
+    let targetNote = null;
+    const updated = notes.map(n => {
+      if (n.id === noteId) {
+        targetNote = { ...n, pinned: !n.pinned };
+        return targetNote;
+      }
+      return n;
+    });
+    setNotes(updated);
+    if (targetNote) saveNoteToDB(targetNote);
   };
 
   const deleteNote = (noteId) => {
     setNotes(notes.filter(n => n.id !== noteId));
+    deleteNoteFromDB(noteId); // Direct sync delete to NeonDB
   };
 
   const toggleTagInCreation = (tagName) => {

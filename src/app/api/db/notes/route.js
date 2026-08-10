@@ -44,6 +44,9 @@ export async function POST(request) {
 
     const { id, title, content = '', bgColor = '', pinned = false, tags = [], media = [], createdAt } = body;
 
+    const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
+    const mediaJson = typeof media === 'string' ? media : JSON.stringify(media || []);
+
     await sql`
       INSERT INTO notes (id, title, content, "bgColor", pinned, tags, media, "createdAt")
       VALUES (
@@ -52,8 +55,8 @@ export async function POST(request) {
         ${content},
         ${bgColor},
         ${pinned},
-        ${JSON.stringify(tags)},
-        ${JSON.stringify(media)},
+        ${tagsJson}::jsonb,
+        ${mediaJson}::jsonb,
         ${createdAt || new Date().toISOString()}
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -68,6 +71,22 @@ export async function POST(request) {
     return NextResponse.json({ success: true, id });
   } catch (error) {
     console.error('NeonDB notes POST error:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ success: false, error: 'Missing note id' }, { status: 400 });
+
+    const sql = getNeonSql();
+    await ensureNotesTableExists(sql);
+    await sql`DELETE FROM notes WHERE id = ${id};`;
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    console.error('NeonDB notes DELETE error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

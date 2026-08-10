@@ -77,6 +77,23 @@ export async function saveTaskToDB(task) {
   return { success: false, mode: 'local' };
 }
 
+export async function deleteTaskFromDB(id) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      await supabase.from('tasks').delete().eq('id', id);
+    } catch (e) {
+      console.error('Supabase delete error:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      await fetch(`/api/db/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('NeonDB delete error:', e.message);
+    }
+  }
+}
+
 export async function fetchNotesFromDB() {
   const provider = getCurrentDBProvider();
   if (provider === 'supabase' && isSupabaseConfigured()) {
@@ -123,4 +140,21 @@ export async function saveNoteToDB(note) {
   }
 
   return { success: false, mode: 'local' };
+}
+
+export async function deleteNoteFromDB(id) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      await supabase.from('notes').delete().eq('id', id);
+    } catch (e) {
+      console.error('Supabase note delete error:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      await fetch(`/api/db/notes?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('NeonDB note delete error:', e.message);
+    }
+  }
 }

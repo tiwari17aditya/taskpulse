@@ -47,6 +47,10 @@ export async function POST(request) {
 
     const { id, title, completed = false, myDay = false, starred = false, dueDate = '', subtasks = [], tags = [], notes = '', media = [], createdAt } = body;
 
+    const subtasksJson = typeof subtasks === 'string' ? subtasks : JSON.stringify(subtasks || []);
+    const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
+    const mediaJson = typeof media === 'string' ? media : JSON.stringify(media || []);
+
     await sql`
       INSERT INTO tasks (id, title, completed, "myDay", starred, "dueDate", subtasks, tags, notes, media, "createdAt")
       VALUES (
@@ -56,10 +60,10 @@ export async function POST(request) {
         ${myDay},
         ${starred},
         ${dueDate},
-        ${JSON.stringify(subtasks)},
-        ${JSON.stringify(tags)},
+        ${subtasksJson}::jsonb,
+        ${tagsJson}::jsonb,
         ${notes},
-        ${JSON.stringify(media)},
+        ${mediaJson}::jsonb,
         ${createdAt || new Date().toISOString()}
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -77,6 +81,22 @@ export async function POST(request) {
     return NextResponse.json({ success: true, id });
   } catch (error) {
     console.error('NeonDB tasks POST error:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ success: false, error: 'Missing task id' }, { status: 400 });
+
+    const sql = getNeonSql();
+    await ensureTasksTableExists(sql);
+    await sql`DELETE FROM tasks WHERE id = ${id};`;
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    console.error('NeonDB tasks DELETE error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

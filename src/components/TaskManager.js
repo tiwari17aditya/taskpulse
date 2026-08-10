@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, X, ListTodo, Paperclip } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from './MediaUploader';
+import { saveTaskToDB, deleteTaskFromDB } from '@/lib/dbAdapter';
 
 export default function TaskManager({ tasks, setTasks, tags, currentFilter, activeTag }) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -52,22 +53,26 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     };
 
     setTasks([newTask, ...tasks]);
+    saveTaskToDB(newTask); // Direct sync to NeonDB / active database
     setNewTaskTitle('');
     setSelectedDueDate('');
   };
 
   const toggleTaskComplete = (taskId) => {
+    let targetTask = null;
     const updated = tasks.map(t => {
       if (t.id === taskId) {
         const isNowCompleted = !t.completed;
         if (isNowCompleted) {
           confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         }
-        return { ...t, completed: isNowCompleted };
+        targetTask = { ...t, completed: isNowCompleted };
+        return targetTask;
       }
       return t;
     });
     setTasks(updated);
+    if (targetTask) saveTaskToDB(targetTask); // Direct sync to NeonDB
     if (selectedTask?.id === taskId) {
       setSelectedTask(updated.find(t => t.id === taskId));
     }
@@ -75,20 +80,37 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
 
   const toggleStar = (taskId, e) => {
     e?.stopPropagation();
-    const updated = tasks.map(t => t.id === taskId ? { ...t, starred: !t.starred } : t);
+    let targetTask = null;
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        targetTask = { ...t, starred: !t.starred };
+        return targetTask;
+      }
+      return t;
+    });
     setTasks(updated);
+    if (targetTask) saveTaskToDB(targetTask);
     if (selectedTask?.id === taskId) setSelectedTask(updated.find(t => t.id === taskId));
   };
 
   const toggleMyDay = (taskId, e) => {
     e?.stopPropagation();
-    const updated = tasks.map(t => t.id === taskId ? { ...t, myDay: !t.myDay } : t);
+    let targetTask = null;
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        targetTask = { ...t, myDay: !t.myDay };
+        return targetTask;
+      }
+      return t;
+    });
     setTasks(updated);
+    if (targetTask) saveTaskToDB(targetTask);
     if (selectedTask?.id === taskId) setSelectedTask(updated.find(t => t.id === taskId));
   };
 
   const deleteTask = (taskId) => {
     setTasks(tasks.filter(t => t.id !== taskId));
+    deleteTaskFromDB(taskId); // Direct sync delete to NeonDB
     if (selectedTask?.id === taskId) setSelectedTask(null);
   };
 
@@ -109,6 +131,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
 
     const updatedTasks = tasks.map(t => t.id === selectedTask.id ? updatedTask : t);
     setTasks(updatedTasks);
+    saveTaskToDB(updatedTask);
     setSelectedTask(updatedTask);
     setNewSubtaskTitle('');
   };
@@ -120,6 +143,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     );
     const updatedTask = { ...selectedTask, subtasks: updatedSubtasks };
     setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    saveTaskToDB(updatedTask);
     setSelectedTask(updatedTask);
   };
 
@@ -127,6 +151,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     if (!selectedTask) return;
     const updatedTask = { ...selectedTask, notes };
     setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    saveTaskToDB(updatedTask);
     setSelectedTask(updatedTask);
   };
 
@@ -139,6 +164,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
 
     const updatedTask = { ...selectedTask, tags: newTags };
     setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    saveTaskToDB(updatedTask);
     setSelectedTask(updatedTask);
   };
 
