@@ -18,15 +18,38 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const getNextWeekStr = () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
   const [showCompletedSection, setShowCompletedSection] = useState(true);
+  const [filterDate, setFilterDate] = useState('all'); // 'all', 'today', 'tomorrow', 'next-week', 'custom'
+  const [customFilterDate, setCustomFilterDate] = useState('');
 
-  // Filter tasks according to selected view
+  const updateTaskDueDate = (taskId, newDueDate) => {
+    let targetTask = null;
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        targetTask = { ...t, dueDate: newDueDate };
+        return targetTask;
+      }
+      return t;
+    });
+    setTasks(updated);
+    if (targetTask) saveTaskToDB(targetTask);
+    if (selectedTask?.id === taskId) setSelectedTask(targetTask);
+  };
+
+  // Filter tasks according to selected view & date filter
   const categoryTasks = tasks.filter(task => {
     if (activeTag) return task.tags && task.tags.includes(activeTag);
     if (currentFilter === 'my-day') return task.myDay;
     if (currentFilter === 'important') return task.starred;
     if (currentFilter === 'planned') return !!task.dueDate;
     if (currentFilter === 'completed') return task.completed;
-    return true; // All active tasks
+
+    // Date Filter Sub-filtering
+    if (filterDate === 'today') return task.dueDate === getTodayStr() || task.dueDate === 'Today';
+    if (filterDate === 'tomorrow') return task.dueDate === getTomorrowStr() || task.dueDate === 'Tomorrow';
+    if (filterDate === 'next-week') return task.dueDate === getNextWeekStr() || task.dueDate === 'Next Week';
+    if (filterDate === 'custom' && customFilterDate) return task.dueDate === customFilterDate;
+
+    return true; // All tasks
   });
 
   const activeTasks = currentFilter === 'completed' ? [] : categoryTasks.filter(t => !t.completed);
@@ -242,6 +265,57 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </form>
 
+        {/* Date Filter Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
+          <div className="flex items-center gap-1.5 text-slate-400 font-medium">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Filter by Date:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            <button
+              onClick={() => setFilterDate('all')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                filterDate === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              All Dates
+            </button>
+            <button
+              onClick={() => setFilterDate('today')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                filterDate === 'today' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setFilterDate('tomorrow')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                filterDate === 'tomorrow' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Tomorrow
+            </button>
+            <button
+              onClick={() => setFilterDate('next-week')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                filterDate === 'next-week' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Next Week
+            </button>
+            <input
+              type="date"
+              value={customFilterDate}
+              onChange={(e) => {
+                setCustomFilterDate(e.target.value);
+                setFilterDate(e.target.value ? 'custom' : 'all');
+              }}
+              className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none"
+            />
+          </div>
+        </div>
+
         {/* Tasks List Container */}
         <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
           {/* 1. Active Tasks Section */}
@@ -261,7 +335,11 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                   setSelectedTask={setSelectedTask}
                   toggleTaskComplete={toggleTaskComplete}
                   toggleStar={toggleStar}
+                  updateTaskDueDate={updateTaskDueDate}
                   tags={tags}
+                  getTodayStr={getTodayStr}
+                  getTomorrowStr={getTomorrowStr}
+                  getNextWeekStr={getNextWeekStr}
                 />
               ))}
             </div>
@@ -349,6 +427,62 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
               </button>
             </div>
 
+            {/* Due Date Selector Block */}
+            <div className="space-y-1.5 border-t border-slate-800 pt-3">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-indigo-400" /> Due Date</span>
+                {selectedTask.dueDate && (
+                  <button onClick={() => updateTaskDueDate(selectedTask.id, '')} className="text-[10px] text-rose-400 hover:underline">
+                    Clear Date
+                  </button>
+                )}
+              </span>
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => updateTaskDueDate(selectedTask.id, getTodayStr())}
+                  className={`py-1.5 rounded-lg border text-[11px] font-medium transition ${
+                    selectedTask.dueDate === getTodayStr() || selectedTask.dueDate === 'Today'
+                      ? 'bg-indigo-600 border-indigo-500 text-white'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateTaskDueDate(selectedTask.id, getTomorrowStr())}
+                  className={`py-1.5 rounded-lg border text-[11px] font-medium transition ${
+                    selectedTask.dueDate === getTomorrowStr() || selectedTask.dueDate === 'Tomorrow'
+                      ? 'bg-indigo-600 border-indigo-500 text-white'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Tomorrow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateTaskDueDate(selectedTask.id, getNextWeekStr())}
+                  className={`py-1.5 rounded-lg border text-[11px] font-medium transition ${
+                    selectedTask.dueDate === getNextWeekStr() || selectedTask.dueDate === 'Next Week'
+                      ? 'bg-indigo-600 border-indigo-500 text-white'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Next Week
+                </button>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-[11px] text-slate-400">Custom Date:</span>
+                <input
+                  type="date"
+                  value={selectedTask.dueDate || ''}
+                  onChange={(e) => updateTaskDueDate(selectedTask.id, e.target.value)}
+                  className="bg-slate-950 border border-slate-800 text-xs text-slate-200 px-2.5 py-1 rounded-lg outline-none focus:border-indigo-500 flex-1"
+                />
+              </div>
+            </div>
+
             {/* Subtasks Section */}
             <div className="space-y-2 border-t border-slate-800 pt-3">
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sub-tasks Checklist</span>
@@ -432,7 +566,8 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   );
 }
 
-function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, tags }) {
+function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, updateTaskDueDate, tags, getTodayStr, getTomorrowStr, getNextWeekStr }) {
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const isSelected = selectedTask?.id === task.id;
   const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
@@ -466,7 +601,7 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
           </p>
 
           {/* Meta badges: My Day, Subtasks count, Due Date, Tags */}
-          <div className="flex flex-wrap items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-1 relative">
             {task.myDay && (
               <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full font-medium">
                 <Sun className="w-3 h-3" /> My Day
@@ -479,11 +614,66 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
               </span>
             )}
 
-            {task.dueDate && (
-              <span className="flex items-center gap-1 text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full">
-                <Calendar className="w-3 h-3" /> {task.dueDate}
-              </span>
-            )}
+            {/* Interactive Due Date Badge & Quick Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowDatePicker(!showDatePicker); }}
+                className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition ${
+                  task.dueDate
+                    ? 'text-indigo-300 bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20'
+                    : 'text-slate-500 bg-slate-950 border-slate-800 hover:text-slate-300 hover:border-slate-700'
+                }`}
+              >
+                <Calendar className="w-3 h-3 text-indigo-400" />
+                <span>{task.dueDate || '+ Date'}</span>
+              </button>
+
+              {showDatePicker && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 top-6 z-30 bg-slate-900 border border-slate-800 rounded-xl p-2 shadow-2xl space-y-1.5 min-w-[170px] text-xs animate-slide-up"
+                >
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block px-1">Set Due Date</span>
+                  <button
+                    onClick={() => { updateTaskDueDate(task.id, getTodayStr()); setShowDatePicker(false); }}
+                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between"
+                  >
+                    <span>Today</span> <span className="text-[10px] text-slate-500">{getTodayStr()}</span>
+                  </button>
+                  <button
+                    onClick={() => { updateTaskDueDate(task.id, getTomorrowStr()); setShowDatePicker(false); }}
+                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between"
+                  >
+                    <span>Tomorrow</span> <span className="text-[10px] text-slate-500">{getTomorrowStr()}</span>
+                  </button>
+                  <button
+                    onClick={() => { updateTaskDueDate(task.id, getNextWeekStr()); setShowDatePicker(false); }}
+                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between"
+                  >
+                    <span>Next Week</span> <span className="text-[10px] text-slate-500">{getNextWeekStr()}</span>
+                  </button>
+
+                  <div className="pt-1 border-t border-slate-800 flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={task.dueDate || ''}
+                      onChange={(e) => { updateTaskDueDate(task.id, e.target.value); setShowDatePicker(false); }}
+                      className="bg-slate-950 border border-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 rounded outline-none w-full"
+                    />
+                  </div>
+
+                  {task.dueDate && (
+                    <button
+                      onClick={() => { updateTaskDueDate(task.id, ''); setShowDatePicker(false); }}
+                      className="w-full text-left px-2 py-1 hover:bg-rose-950/40 text-rose-400 rounded text-[10px]"
+                    >
+                      Clear Date
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {task.tags?.map(t => {
               const tagObj = tags.find(tg => tg.name === t);

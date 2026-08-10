@@ -27,3 +27,4 @@
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 950 | 380 | 1330 | $0.0009 | Seeded 4 active tasks and 2 note cards into NeonDB tables |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1850 | 720 | 2570 | $0.0018 | Fixed JSONB type casting & added direct real-time sync calls on UI actions |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1200 | 480 | 1680 | $0.0012 | Sanitized connection string (removed channel_binding) & verified live Neon rows |
+| 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1750 | 680 | 2430 | $0.0017 | Implemented Task Due Date Quick-Picker, Drawer selector, & Date Filter bar |

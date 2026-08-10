@@ -26,3 +26,4 @@
 [2026-08-10 12:15:25] [SUCCESS] Executed node scripts/seed_all_tasks.mjs directly against NeonDB connection string. Seeded 4 active tasks and 2 note cards directly into NeonDB!
 [2026-08-10 12:23:10] [ROOT CAUSE FIX] Fixed JSONB type casting in api/db/tasks/route.js & api/db/notes/route.js (${json}::jsonb). Wired instant saveTaskToDB, saveNoteToDB, deleteTaskFromDB, deleteNoteFromDB into TaskManager.js and NoteCanvas.js handlers for seamless real-time NeonDB sync.
 [2026-08-10 12:30:15] [CONNECTION FIX] Removed &channel_binding=require from connection string in .env and sanitized getNeonSql in API routes. Successfully verified live database row insertion and populated task rows in Neon Console.
+[2026-08-10 12:33:00] [FEATURE] Added interactive Task Due Date Quick-Picker popover on Task Cards, Due Date Selector Block in Task Detail Drawer, and Date Filter Sub-Toolbar in TaskManager.js.
