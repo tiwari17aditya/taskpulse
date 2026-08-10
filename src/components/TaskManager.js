@@ -1,0 +1,382 @@
+'use client';
+
+import { useState } from 'react';
+import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, X, ListTodo, Paperclip } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import MediaUploader from './MediaUploader';
+
+export default function TaskManager({ tasks, setTasks, tags, currentFilter, activeTag }) {
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+  // Filter tasks according to selected view
+  const filteredTasks = tasks.filter(task => {
+    if (activeTag) {
+      return task.tags && task.tags.includes(activeTag);
+    }
+    if (currentFilter === 'my-day') return task.myDay && !task.completed;
+    if (currentFilter === 'important') return task.starred && !task.completed;
+    if (currentFilter === 'planned') return task.dueDate && !task.completed;
+    if (currentFilter === 'completed') return task.completed;
+    return !task.completed; // All active tasks
+  });
+
+  const addTask = (e) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    const newTask = {
+      id: 't-' + Date.now(),
+      title: newTaskTitle.trim(),
+      completed: false,
+      myDay: currentFilter === 'my-day',
+      starred: currentFilter === 'important',
+      dueDate: currentFilter === 'planned' ? new Date().toISOString().split('T')[0] : '',
+      subtasks: [],
+      tags: activeTag ? [activeTag] : ['Work'],
+      notes: '',
+      media: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    setTasks([newTask, ...tasks]);
+    setNewTaskTitle('');
+  };
+
+  const toggleTaskComplete = (taskId) => {
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        const isNowCompleted = !t.completed;
+        if (isNowCompleted) {
+          confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+        }
+        return { ...t, completed: isNowCompleted };
+      }
+      return t;
+    });
+    setTasks(updated);
+    if (selectedTask?.id === taskId) {
+      setSelectedTask(updated.find(t => t.id === taskId));
+    }
+  };
+
+  const toggleStar = (taskId, e) => {
+    e?.stopPropagation();
+    const updated = tasks.map(t => t.id === taskId ? { ...t, starred: !t.starred } : t);
+    setTasks(updated);
+    if (selectedTask?.id === taskId) setSelectedTask(updated.find(t => t.id === taskId));
+  };
+
+  const toggleMyDay = (taskId, e) => {
+    e?.stopPropagation();
+    const updated = tasks.map(t => t.id === taskId ? { ...t, myDay: !t.myDay } : t);
+    setTasks(updated);
+    if (selectedTask?.id === taskId) setSelectedTask(updated.find(t => t.id === taskId));
+  };
+
+  const deleteTask = (taskId) => {
+    setTasks(tasks.filter(t => t.id !== taskId));
+    if (selectedTask?.id === taskId) setSelectedTask(null);
+  };
+
+  const addSubtask = (e) => {
+    e.preventDefault();
+    if (!newSubtaskTitle.trim() || !selectedTask) return;
+
+    const newSubtask = {
+      id: 'st-' + Date.now(),
+      title: newSubtaskTitle.trim(),
+      completed: false
+    };
+
+    const updatedTask = {
+      ...selectedTask,
+      subtasks: [...(selectedTask.subtasks || []), newSubtask]
+    };
+
+    const updatedTasks = tasks.map(t => t.id === selectedTask.id ? updatedTask : t);
+    setTasks(updatedTasks);
+    setSelectedTask(updatedTask);
+    setNewSubtaskTitle('');
+  };
+
+  const toggleSubtask = (subtaskId) => {
+    if (!selectedTask) return;
+    const updatedSubtasks = selectedTask.subtasks.map(st =>
+      st.id === subtaskId ? { ...st, completed: !st.completed } : st
+    );
+    const updatedTask = { ...selectedTask, subtasks: updatedSubtasks };
+    setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    setSelectedTask(updatedTask);
+  };
+
+  const updateTaskNotes = (notes) => {
+    if (!selectedTask) return;
+    const updatedTask = { ...selectedTask, notes };
+    setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    setSelectedTask(updatedTask);
+  };
+
+  const toggleTaskTag = (tagName) => {
+    if (!selectedTask) return;
+    const currentTags = selectedTask.tags || [];
+    const newTags = currentTags.includes(tagName)
+      ? currentTags.filter(t => t !== tagName)
+      : [...currentTags, tagName];
+
+    const updatedTask = { ...selectedTask, tags: newTags };
+    setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+    setSelectedTask(updatedTask);
+  };
+
+  return (
+    <div className="flex gap-6 h-full relative">
+      {/* Main Task List Column */}
+      <div className="flex-1 flex flex-col space-y-4">
+        {/* Quick Add Task Bar */}
+        <form onSubmit={addTask} className="relative">
+          <div className="flex items-center bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-3 shadow-lg transition">
+            <Plus className="w-5 h-5 text-indigo-400 mr-3 shrink-0" />
+            <input
+              type="text"
+              placeholder="Add a task (e.g. 'Review weekly plan')..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              className="bg-transparent text-sm text-slate-100 placeholder-slate-500 w-full outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!newTaskTitle.trim()}
+              className="ml-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
+            >
+              Add
+            </button>
+          </div>
+        </form>
+
+        {/* Tasks List */}
+        <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
+          {filteredTasks.length === 0 ? (
+            <div className="py-12 text-center bg-slate-900/40 border border-slate-800/60 rounded-xl">
+              <ListTodo className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-slate-400">No tasks found in this view</p>
+              <p className="text-xs text-slate-500">Type above to create your first item</p>
+            </div>
+          ) : (
+            filteredTasks.map((task) => {
+              const isSelected = selectedTask?.id === task.id;
+              const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
+              const totalSubtasks = task.subtasks?.length || 0;
+
+              return (
+                <div
+                  key={task.id}
+                  onClick={() => setSelectedTask(task)}
+                  className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-slate-800/90 border-indigo-500/80 shadow-md shadow-indigo-900/20'
+                      : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+                      className="text-slate-500 hover:text-emerald-400 transition shrink-0"
+                    >
+                      {task.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
+                      ) : (
+                        <Circle className="w-5 h-5 hover:scale-110 transition" />
+                      )}
+                    </button>
+
+                    <div className="min-w-0">
+                      <p className={`text-sm font-medium transition ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                        {task.title}
+                      </p>
+
+                      {/* Meta badges: My Day, Subtasks count, Due Date, Tags */}
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        {task.myDay && (
+                          <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full font-medium">
+                            <Sun className="w-3 h-3" /> My Day
+                          </span>
+                        )}
+
+                        {totalSubtasks > 0 && (
+                          <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
+                            {completedSubtasks}/{totalSubtasks} subtasks
+                          </span>
+                        )}
+
+                        {task.dueDate && (
+                          <span className="flex items-center gap-1 text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                            <Calendar className="w-3 h-3" /> {task.dueDate}
+                          </span>
+                        )}
+
+                        {task.tags?.map(t => {
+                          const tagObj = tags.find(tg => tg.name === t);
+                          return (
+                            <span
+                              key={t}
+                              className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                              style={{ backgroundColor: `${tagObj?.color || '#6366f1'}20`, color: tagObj?.color || '#818cf8' }}
+                            >
+                              #{t}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Right Side */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={(e) => toggleStar(task.id, e)}
+                      className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${task.starred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}`}
+                    >
+                      <Star className={`w-4 h-4 ${task.starred ? 'fill-amber-400' : ''}`} />
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition" />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Task Detail Drawer (MS To-Do Style Slide-Over Panel) */}
+      {selectedTask && (
+        <div className="w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4 animate-fade-in shrink-0">
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggleTaskComplete(selectedTask.id)}>
+                  {selectedTask.completed ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-slate-400" />
+                  )}
+                </button>
+                <h3 className={`text-base font-semibold ${selectedTask.completed ? 'line-through text-slate-500' : 'text-slate-100'}`}>
+                  {selectedTask.title}
+                </h3>
+              </div>
+              <button onClick={() => setSelectedTask(null)} className="text-slate-500 hover:text-slate-300 p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Actions (My Day & Priority) */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={(e) => toggleMyDay(selectedTask.id, e)}
+                className={`py-2 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 transition ${
+                  selectedTask.myDay
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5" />
+                {selectedTask.myDay ? 'In My Day' : 'Add to My Day'}
+              </button>
+
+              <button
+                onClick={(e) => toggleStar(selectedTask.id, e)}
+                className={`py-2 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 transition ${
+                  selectedTask.starred
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Star className={`w-3.5 h-3.5 ${selectedTask.starred ? 'fill-amber-400' : ''}`} />
+                {selectedTask.starred ? 'Starred' : 'Star Task'}
+              </button>
+            </div>
+
+            {/* Subtasks Section */}
+            <div className="space-y-2 border-t border-slate-800 pt-3">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sub-tasks Checklist</span>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {selectedTask.subtasks?.map(st => (
+                  <div key={st.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-950/50 text-xs">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => toggleSubtask(st.id)}>
+                        {st.completed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-slate-500" />}
+                      </button>
+                      <span className={st.completed ? 'line-through text-slate-500' : 'text-slate-300'}>{st.title}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={addSubtask} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a step..."
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 px-3 py-1.5 rounded-lg outline-none focus:border-indigo-500"
+                />
+                <button type="submit" className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-lg">
+                  Add
+                </button>
+              </form>
+            </div>
+
+            {/* Tag Selection */}
+            <div className="space-y-2 border-t border-slate-800 pt-3">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Tag className="w-3 h-3" /> Tags
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map(tag => {
+                  const isSelected = selectedTask.tags?.includes(tag.name);
+                  return (
+                    <button
+                      key={tag.id}
+                      onClick={() => toggleTaskTag(tag.name)}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1 ${
+                        isSelected
+                          ? 'border-indigo-500 bg-indigo-500/20 text-indigo-200'
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
+                      #{tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Task Notes */}
+            <div className="space-y-1.5 border-t border-slate-800 pt-3">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notes</span>
+              <textarea
+                rows={3}
+                placeholder="Add details, links, or context..."
+                value={selectedTask.notes || ''}
+                onChange={(e) => updateTaskNotes(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 p-2.5 rounded-xl outline-none focus:border-indigo-500 resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-slate-800 pt-3 flex items-center justify-between">
+            <button
+              onClick={() => deleteTask(selectedTask.id)}
+              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete Task
+            </button>
+            <span className="text-[10px] text-slate-500 font-mono">Created {new Date(selectedTask.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
