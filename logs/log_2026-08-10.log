@@ -23,3 +23,4 @@
 [2026-08-10 12:07:00] [DOCUMENTATION & UI GUIDE] Created UserGuideModal.js with interactive tabs and visual demos, created DOCUMENTATION.md, and wired automatic NeonDB background sync for all tasks and notes.
 [2026-08-10 12:11:30] [UPDATE] Updated project name reference in DOCUMENTATION.md and UserGuideModal.js to 'taskpulse' in Neon Console.
 [2026-08-10 12:14:05] [SUCCESS] Executed node scripts/init_neondb.mjs directly against NeonDB connection string. Successfully created 'tasks' and 'notes' tables in public schema!
+[2026-08-10 12:15:25] [SUCCESS] Executed node scripts/seed_all_tasks.mjs directly against NeonDB connection string. Seeded 4 active tasks and 2 note cards directly into NeonDB!
