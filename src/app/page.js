@@ -8,8 +8,9 @@ import ShareRedirectModal from '@/components/ShareRedirectModal';
 import TokenUsageModal from '@/components/TokenUsageModal';
 import LogViewerModal from '@/components/LogViewerModal';
 import { storage } from '@/lib/storage';
-import { getCurrentDBProvider } from '@/lib/dbAdapter';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database } from 'lucide-react';
+import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
+import UserGuideModal from '@/components/UserGuideModal';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
@@ -31,23 +32,55 @@ export default function Home() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTokensModal, setShowTokensModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
-  // Load initial data
+  // Load initial data from DB / Local
   useEffect(() => {
-    setTasks(storage.getTasks());
-    setNotes(storage.getNotes());
+    const initialLocalTasks = storage.getTasks();
+    const initialLocalNotes = storage.getNotes();
+
+    setTasks(initialLocalTasks);
+    setNotes(initialLocalNotes);
     setTags(storage.getTags());
+
+    // Sync with NeonDB / Supabase remote API
+    fetchTasksFromDB().then(dbTasks => {
+      if (dbTasks && dbTasks.length > 0) {
+        setTasks(dbTasks);
+      } else if (initialLocalTasks.length > 0) {
+        // Trigger auto-table creation and sync initial tasks to NeonDB
+        initialLocalTasks.forEach(t => saveTaskToDB(t));
+      }
+    });
+
+    fetchNotesFromDB().then(dbNotes => {
+      if (dbNotes && dbNotes.length > 0) {
+        setNotes(dbNotes);
+      } else if (initialLocalNotes.length > 0) {
+        // Trigger auto-table creation and sync initial notes to NeonDB
+        initialLocalNotes.forEach(n => saveNoteToDB(n));
+      }
+    });
   }, []);
 
-  // Save tasks on change
-  useEffect(() => {
-    if (tasks.length > 0) storage.saveTasks(tasks);
-  }, [tasks]);
+  // Save tasks on change & sync to NeonDB
+  const handleSetTasks = (newTasks) => {
+    setTasks(newTasks);
+    storage.saveTasks(newTasks);
+    // Sync all updated tasks to active DB provider (NeonDB / Supabase)
+    if (Array.isArray(newTasks)) {
+      newTasks.forEach(t => saveTaskToDB(t));
+    }
+  };
 
-  // Save notes on change
-  useEffect(() => {
-    if (notes.length > 0) storage.saveNotes(notes);
-  }, [notes]);
+  // Save notes on change & sync to NeonDB
+  const handleSetNotes = (newNotes) => {
+    setNotes(newNotes);
+    storage.saveNotes(newNotes);
+    if (Array.isArray(newNotes)) {
+      newNotes.forEach(n => saveNoteToDB(n));
+    }
+  };
 
   // Save tags on change
   useEffect(() => {
@@ -85,6 +118,7 @@ export default function Home() {
         onOpenShareModal={() => handleOpenShareModal(null)}
         onOpenTokensModal={() => setShowTokensModal(true)}
         onOpenLogsModal={() => setShowLogsModal(true)}
+        onOpenGuideModal={() => setShowGuideModal(true)}
       />
 
       {/* Main Content Workspace */}
@@ -128,7 +162,7 @@ export default function Home() {
           {activeView === 'tasks' ? (
             <TaskManager
               tasks={tasks}
-              setTasks={setTasks}
+              setTasks={handleSetTasks}
               tags={tags}
               currentFilter={currentFilter}
               activeTag={activeTag}
@@ -136,7 +170,7 @@ export default function Home() {
           ) : (
             <NoteCanvas
               notes={notes}
-              setNotes={setNotes}
+              setNotes={handleSetNotes}
               tags={tags}
               activeTag={activeTag}
               onShareNote={(note) => handleOpenShareModal({ title: note.title, content: note.content, media: note.media })}
@@ -159,6 +193,10 @@ export default function Home() {
 
       {showLogsModal && (
         <LogViewerModal onClose={() => setShowLogsModal(false)} />
+      )}
+
+      {showGuideModal && (
+        <UserGuideModal onClose={() => setShowGuideModal(false)} />
       )}
     </div>
   );

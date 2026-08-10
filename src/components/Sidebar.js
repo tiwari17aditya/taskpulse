@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash, History } from 'lucide-react';
+import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash, History, BookOpen } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -17,6 +17,7 @@ export default function Sidebar({
   onOpenShareModal,
   onOpenTokensModal,
   onOpenLogsModal,
+  onOpenGuideModal,
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#6366f1');
@@ -184,8 +185,16 @@ export default function Sidebar({
           <Share2 className="w-3.5 h-3.5" /> Codeshare Redirect
         </button>
 
+        {/* Operational Tools */}
+        <button
+          onClick={onOpenGuideModal}
+          className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-indigo-400" /> User Guide & Documentation
+        </button>
+
         {/* File Tracking Triggers */}
-        <div className="grid grid-cols-2 gap-1.5 pt-1">
+        <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={onOpenTokensModal}
             className="py-1.5 px-2 bg-slate-950/80 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 rounded-lg text-[11px] flex items-center justify-center gap-1 transition"
