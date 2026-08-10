@@ -109,6 +109,22 @@ CREATE TABLE IF NOT EXISTS notes (
 
 ---
 
+## Real-Time Mobile DB Sync & Bulk Deletion System
+
+### 1. Real-Time Multi-Device Synchronization
+- **8-Second Background Polling**: `page.js` runs a background polling loop to automatically stream database updates across devices.
+- **Tab Visibility & Focus Re-Sync**: Listeners on `visibilitychange`, `focus`, and `online` trigger instant re-fetch whenever switching back to the TaskPulse mobile tab.
+- **Dynamic API Caching Bypass**: API routes `/api/db/tasks` and `/api/db/notes` use `export const dynamic = 'force-dynamic'` and `Cache-Control: no-store` to prevent Next.js static build caching.
+- **Local Network Wi-Fi Binding**: `package.json` dev script configured to `next dev -H 0.0.0.0` so mobile devices on the same Wi-Fi network can connect to `http://<laptop-ip>:3000`.
+
+### 2. Multi-Select & Bulk Deletion Mechanisms
+- **Selection Mode**: Toggle **Multi-Select** in `TaskManager.js` or `NoteCanvas.js` to show item checkboxes.
+- **Select All / Deselect All**: Select or deselect all filtered items with a single click.
+- **Delete Selected (X)**: Batch delete selected item IDs via array POST/DELETE request.
+- **Clear All Items**: One-click bulk delete for all items in the active view.
+
+---
+
 ## How to Verify NeonDB Data
 
 1. Log into your [Neon Console](https://console.neon.tech).
@@ -120,7 +136,7 @@ CREATE TABLE IF NOT EXISTS notes (
 
 ## Running Locally & Deploying
 
-- **Local Dev Server**:
+- **Local Dev Server (Local Network Access)**:
   ```bash
   cmd /c npm run dev
   ```
@@ -132,3 +148,4 @@ CREATE TABLE IF NOT EXISTS notes (
   ```bash
   cmd /c git push -u origin main
   ```
+

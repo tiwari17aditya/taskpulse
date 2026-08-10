@@ -1,5 +1,16 @@
 # Version History
 
+## [v1.0.0-rc1] - 2026-08-10
+
+### Added & Enhanced
+- **Real-Time Mobile DB Sync**: 8-second background polling loop (`setInterval`), tab visibility & window focus re-fetch listeners (`visibilitychange`, `focus`, `online`), and interactive **Sync DB** header button.
+- **Next.js Dynamic API Cache Bypass**: Configured `export const dynamic = 'force-dynamic'`, `revalidate = 0`, and `Cache-Control: no-store` on database API routes (`/api/db/tasks` & `/api/db/notes`).
+- **Multi-Select Bulk Deletion**: Selection mode toggle, Select All / Deselect All controls, Delete Selected (X), and Clear All bulk deletion tools in `TaskManager.js` and `NoteCanvas.js` with batch `DELETE` endpoints.
+- **Security & Credential Sanitization**: Sanitized all setup/seed scripts to read `process.env.NEON_DATABASE_URL` dynamically from `.env` and removed raw credentials from git repository history.
+- **Strict Storage Safety**: Updated `storage.js` to default to empty arrays `[]` when storage is unpopulated, preventing sample item auto-seeding.
+
+---
+
 ## [v1.0.0-beta] - 2026-08-10
 
 ### Added & Enhanced
