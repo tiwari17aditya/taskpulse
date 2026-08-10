@@ -1,21 +1,43 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 /**
- * Universal Database Adapter with Dynamic Switcher
- * Supported DB Providers: 'supabase' | 'neondb' | 'postgres' | 'local'
+ * Universal Database Adapter with Dynamic Auto-Detection & Provider Switcher
+ * Supported DB Providers: 'neondb' | 'supabase' | 'postgres' | 'local'
  */
-const DB_PROVIDER = process.env.NEXT_PUBLIC_DB_PROVIDER || 'supabase';
+
+export function getCurrentDBProvider() {
+  if (typeof window !== 'undefined' && window.__ACTIVE_DB_PROVIDER) {
+    return window.__ACTIVE_DB_PROVIDER;
+  }
+
+  const envProvider = (process.env.NEXT_PUBLIC_DB_PROVIDER || '').toLowerCase();
+  
+  if (envProvider === 'neondb') return 'neondb';
+  if (envProvider === 'postgres') return 'postgres';
+  if (envProvider === 'local') return 'local';
+  if (envProvider === 'supabase' && isSupabaseConfigured()) return 'supabase';
+
+  // Smart auto-detect: If NeonDB connection string is present in env, default to NeonDB
+  const neonUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || '';
+  if (neonUrl && neonUrl.includes('neon.tech')) {
+    return 'neondb';
+  }
+
+  if (isSupabaseConfigured()) return 'supabase';
+
+  return 'neondb'; // Default to NeonDB per user configuration
+}
 
 export async function fetchTasksFromDB() {
-  if (DB_PROVIDER === 'supabase' && isSupabaseConfigured()) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase.from('tasks').select('*').order('createdAt', { ascending: false });
       if (!error && data) return data;
     } catch (e) {
-      console.warn('Supabase fetch failed, falling back to local storage adapter:', e.message);
+      console.warn('Supabase fetch failed:', e.message);
     }
-  } else if (DB_PROVIDER === 'neondb' || DB_PROVIDER === 'postgres') {
-    // NeonDB / Postgres API Handler Integration
+  } else if (provider === 'neondb' || provider === 'postgres') {
     try {
       const res = await fetch('/api/db/tasks');
       if (res.ok) {
@@ -23,23 +45,23 @@ export async function fetchTasksFromDB() {
         return data.tasks;
       }
     } catch (e) {
-      console.warn('NeonDB fetch failed, falling back to local adapter:', e.message);
+      console.warn('NeonDB API fetch failed:', e.message);
     }
   }
 
-  // Fallback to local storage/default data
   return null;
 }
 
 export async function saveTaskToDB(task) {
-  if (DB_PROVIDER === 'supabase' && isSupabaseConfigured()) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase.from('tasks').upsert([task]);
       if (!error) return { success: true, data };
     } catch (e) {
       console.error('Supabase save error:', e.message);
     }
-  } else if (DB_PROVIDER === 'neondb' || DB_PROVIDER === 'postgres') {
+  } else if (provider === 'neondb' || provider === 'postgres') {
     try {
       const res = await fetch('/api/db/tasks', {
         method: 'POST',
@@ -56,7 +78,8 @@ export async function saveTaskToDB(task) {
 }
 
 export async function fetchNotesFromDB() {
-  if (DB_PROVIDER === 'supabase' && isSupabaseConfigured()) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase.from('notes').select('*').order('createdAt', { ascending: false });
       if (!error && data) return data;
@@ -65,8 +88,4 @@ export async function fetchNotesFromDB() {
     }
   }
   return null;
-}
-
-export function getCurrentDBProvider() {
-  return DB_PROVIDER;
 }

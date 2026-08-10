@@ -16,17 +16,20 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const getTomorrowStr = () => new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const getNextWeekStr = () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
+  const [showCompletedSection, setShowCompletedSection] = useState(true);
+
   // Filter tasks according to selected view
-  const filteredTasks = tasks.filter(task => {
-    if (activeTag) {
-      return task.tags && task.tags.includes(activeTag);
-    }
-    if (currentFilter === 'my-day') return task.myDay && !task.completed;
-    if (currentFilter === 'important') return task.starred && !task.completed;
-    if (currentFilter === 'planned') return task.dueDate && !task.completed;
+  const categoryTasks = tasks.filter(task => {
+    if (activeTag) return task.tags && task.tags.includes(activeTag);
+    if (currentFilter === 'my-day') return task.myDay;
+    if (currentFilter === 'important') return task.starred;
+    if (currentFilter === 'planned') return !!task.dueDate;
     if (currentFilter === 'completed') return task.completed;
-    return !task.completed; // All active tasks
+    return true; // All active tasks
   });
+
+  const activeTasks = currentFilter === 'completed' ? [] : categoryTasks.filter(t => !t.completed);
+  const completedTasks = currentFilter === 'completed' ? categoryTasks : categoryTasks.filter(t => t.completed);
 
   const addTask = (e) => {
     e.preventDefault();
@@ -213,96 +216,60 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </form>
 
-        {/* Tasks List */}
-        <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
-          {filteredTasks.length === 0 ? (
+        {/* Tasks List Container */}
+        <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
+          {/* 1. Active Tasks Section */}
+          {activeTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="py-12 text-center bg-slate-900/40 border border-slate-800/60 rounded-xl">
               <ListTodo className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-slate-400">No tasks found in this view</p>
+              <p className="text-sm font-medium text-slate-400">No active tasks in this view</p>
               <p className="text-xs text-slate-500">Type above to create your first item</p>
             </div>
           ) : (
-            filteredTasks.map((task) => {
-              const isSelected = selectedTask?.id === task.id;
-              const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
-              const totalSubtasks = task.subtasks?.length || 0;
-
-              return (
-                <div
+            <div className="space-y-2">
+              {activeTasks.map((task) => (
+                <TaskCard
                   key={task.id}
-                  onClick={() => setSelectedTask(task)}
-                  className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition cursor-pointer ${
-                    isSelected
-                      ? 'bg-slate-800/90 border-indigo-500/80 shadow-md shadow-indigo-900/20'
-                      : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0 pr-4">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
-                      className="text-slate-500 hover:text-emerald-400 transition shrink-0"
-                    >
-                      {task.completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
-                      ) : (
-                        <Circle className="w-5 h-5 hover:scale-110 transition" />
-                      )}
-                    </button>
+                  task={task}
+                  selectedTask={selectedTask}
+                  setSelectedTask={setSelectedTask}
+                  toggleTaskComplete={toggleTaskComplete}
+                  toggleStar={toggleStar}
+                  tags={tags}
+                />
+              ))}
+            </div>
+          )}
 
-                    <div className="min-w-0">
-                      <p className={`text-sm font-medium transition ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
-                        {task.title}
-                      </p>
+          {/* 2. Completed / History Tasks Section (with Strikethrough Cut Lines) */}
+          {completedTasks.length > 0 && (
+            <div className="space-y-2 pt-3 border-t border-slate-800/80">
+              <button
+                type="button"
+                onClick={() => setShowCompletedSection(!showCompletedSection)}
+                className="text-xs font-semibold text-slate-400 hover:text-slate-200 uppercase tracking-wider flex items-center gap-2 py-1"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Completed Items ({completedTasks.length})</span>
+                <span className="text-[10px] text-slate-500 font-mono font-normal">({showCompletedSection ? 'Hide' : 'Show'})</span>
+              </button>
 
-                      {/* Meta badges: My Day, Subtasks count, Due Date, Tags */}
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        {task.myDay && (
-                          <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full font-medium">
-                            <Sun className="w-3 h-3" /> My Day
-                          </span>
-                        )}
-
-                        {totalSubtasks > 0 && (
-                          <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
-                            {completedSubtasks}/{totalSubtasks} subtasks
-                          </span>
-                        )}
-
-                        {task.dueDate && (
-                          <span className="flex items-center gap-1 text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full">
-                            <Calendar className="w-3 h-3" /> {task.dueDate}
-                          </span>
-                        )}
-
-                        {task.tags?.map(t => {
-                          const tagObj = tags.find(tg => tg.name === t);
-                          return (
-                            <span
-                              key={t}
-                              className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                              style={{ backgroundColor: `${tagObj?.color || '#6366f1'}20`, color: tagObj?.color || '#818cf8' }}
-                            >
-                              #{t}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions Right Side */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={(e) => toggleStar(task.id, e)}
-                      className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${task.starred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}`}
-                    >
-                      <Star className={`w-4 h-4 ${task.starred ? 'fill-amber-400' : ''}`} />
-                    </button>
-                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition" />
-                  </div>
+              {showCompletedSection && (
+                <div className="space-y-2">
+                  {completedTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      selectedTask={selectedTask}
+                      setSelectedTask={setSelectedTask}
+                      toggleTaskComplete={toggleTaskComplete}
+                      toggleStar={toggleStar}
+                      tags={tags}
+                    />
+                  ))}
                 </div>
-              );
-            })
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -435,6 +402,89 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, tags }) {
+  const isSelected = selectedTask?.id === task.id;
+  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
+  const totalSubtasks = task.subtasks?.length || 0;
+
+  return (
+    <div
+      onClick={() => setSelectedTask(task)}
+      className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition cursor-pointer ${
+        isSelected
+          ? 'bg-slate-800/90 border-indigo-500/80 shadow-md shadow-indigo-900/20'
+          : task.completed
+          ? 'bg-slate-950/40 border-slate-800/40 opacity-75'
+          : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700'
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0 pr-4">
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+          className="text-slate-500 hover:text-emerald-400 transition shrink-0"
+        >
+          {task.completed ? (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
+          ) : (
+            <Circle className="w-5 h-5 hover:scale-110 transition" />
+          )}
+        </button>
+
+        <div className="min-w-0">
+          <p className={`text-sm font-medium transition ${task.completed ? 'line-through text-slate-400 decoration-slate-500 decoration-2' : 'text-slate-200'}`}>
+            {task.title}
+          </p>
+
+          {/* Meta badges: My Day, Subtasks count, Due Date, Tags */}
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            {task.myDay && (
+              <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full font-medium">
+                <Sun className="w-3 h-3" /> My Day
+              </span>
+            )}
+
+            {totalSubtasks > 0 && (
+              <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
+                {completedSubtasks}/{totalSubtasks} subtasks
+              </span>
+            )}
+
+            {task.dueDate && (
+              <span className="flex items-center gap-1 text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                <Calendar className="w-3 h-3" /> {task.dueDate}
+              </span>
+            )}
+
+            {task.tags?.map(t => {
+              const tagObj = tags.find(tg => tg.name === t);
+              return (
+                <span
+                  key={t}
+                  className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ backgroundColor: `${tagObj?.color || '#6366f1'}20`, color: tagObj?.color || '#818cf8' }}
+                >
+                  #{t}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions Right Side */}
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={(e) => toggleStar(task.id, e)}
+          className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${task.starred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}`}
+        >
+          <Star className={`w-4 h-4 ${task.starred ? 'fill-amber-400' : ''}`} />
+        </button>
+        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition" />
+      </div>
     </div>
   );
 }

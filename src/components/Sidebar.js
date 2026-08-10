@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash } from 'lucide-react';
+import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash, History } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -39,7 +39,7 @@ export default function Sidebar({
     { id: 'important', label: 'Important', icon: Star, color: 'text-amber-400', count: tasksCount.important },
     { id: 'planned', label: 'Planned', icon: Calendar, color: 'text-indigo-400', count: tasksCount.planned },
     { id: 'all-tasks', label: 'Tasks', icon: ListTodo, color: 'text-blue-400', count: tasksCount.active },
-    { id: 'completed', label: 'Completed', icon: CheckCircle2, color: 'text-emerald-400', count: tasksCount.completed },
+    { id: 'completed', label: 'History / Completed', icon: History, color: 'text-emerald-400', count: tasksCount.completed },
   ];
 
   return (
