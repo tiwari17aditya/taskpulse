@@ -86,6 +86,41 @@ export async function fetchNotesFromDB() {
     } catch (e) {
       console.warn('Supabase notes fetch failed:', e.message);
     }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      const res = await fetch('/api/db/notes');
+      if (res.ok) {
+        const data = await res.json();
+        return data.notes;
+      }
+    } catch (e) {
+      console.warn('NeonDB notes fetch failed:', e.message);
+    }
   }
   return null;
+}
+
+export async function saveNoteToDB(note) {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from('notes').upsert([note]);
+      if (!error) return { success: true, data };
+    } catch (e) {
+      console.error('Supabase save error:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      const res = await fetch('/api/db/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(note)
+      });
+      return await res.json();
+    } catch (e) {
+      console.error('NeonDB save note error:', e.message);
+    }
+  }
+
+  return { success: false, mode: 'local' };
 }

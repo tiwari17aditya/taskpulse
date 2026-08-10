@@ -18,3 +18,4 @@
 [2026-08-10 11:44:10] [SUCCESS] Git status verified clean. Local repository is 100% up-to-date with remote origin main on GitHub.
 [2026-08-10 11:46:25] [FIX] Made UI header database indicator badge dynamic in page.js based on NEXT_PUBLIC_DB_PROVIDER setting (NeonDB PostgreSQL Active vs Supabase vs Local).
 [2026-08-10 11:53:10] [ENHANCEMENT] Updated TaskManager and Sidebar with dedicated History / Completed tab and collapsible Completed Items section with checked checkmarks and strikethrough cut lines (line-through text-slate-400 decoration-slate-500). Enhanced dbAdapter.js auto-detection for NeonDB.
+[2026-08-10 11:57:30] [FEATURE] Installed @neondatabase/serverless, created server API routes (api/db/tasks & api/db/notes) with automatic SQL table creation, updated Codeshare.io room links (codeshare.io/<code) and Toffeeshare.com redirection hub.
