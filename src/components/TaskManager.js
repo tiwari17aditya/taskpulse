@@ -380,7 +380,8 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
 
       {/* Task Detail Drawer (MS To-Do Style Slide-Over Panel) */}
       {selectedTask && (
-        <div className="w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4 animate-fade-in shrink-0">
+        <div className="fixed inset-0 z-40 lg:relative lg:inset-auto bg-slate-950/80 backdrop-blur-sm lg:backdrop-blur-none lg:bg-transparent flex justify-end lg:block p-3 lg:p-0">
+          <div className="w-full max-w-md lg:w-80 xl:w-96 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4 animate-fade-in shrink-0 h-full max-h-[85vh] lg:max-h-none overflow-y-auto">
           <div className="space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
@@ -560,6 +561,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
             </button>
             <span className="text-[10px] text-slate-500 font-mono">Created {new Date(selectedTask.createdAt).toLocaleDateString()}</span>
           </div>
+        </div>
         </div>
       )}
     </div>

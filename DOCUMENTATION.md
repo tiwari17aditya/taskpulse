@@ -13,6 +13,7 @@
   - **Supabase**: Primary cloud object storage & PostgreSQL.
   - **Universal Database Adapter (`src/lib/dbAdapter.js`)**: Dynamic provider switcher supporting `neondb`, `supabase`, `postgres`, and `local` fallback.
 - **Hosting & Deployment**: Vercel (`vercel.json` preset configured).
+- **Mobile & Cross-Platform Support**: 100% Mobile-Responsive with slide-over drawer navigation, mobile top header hamburger menu, touch-optimized popovers, and full-screen modal overlays.
 - **Version Control**: Git & GitHub (`tiwari17aditya/taskpulse`).
 - **Virtual Environment**: Isolated Python 3.12.10 virtual environment (`.venv`).
 

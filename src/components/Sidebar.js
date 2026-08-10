@@ -1,9 +1,83 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash, History, BookOpen } from 'lucide-react';
+import { Sun, Star, Calendar, CheckCircle2, ListTodo, StickyNote, Tag, Share2, Table, Terminal, Info, Plus, ChevronRight, Hash, History, BookOpen, X } from 'lucide-react';
 
 export default function Sidebar({
+  activeView,
+  setActiveView,
+  currentFilter,
+  setCurrentFilter,
+  tags,
+  setTags,
+  activeTag,
+  setActiveTag,
+  tasksCount,
+  notesCount,
+  onOpenShareModal,
+  onOpenTokensModal,
+  onOpenLogsModal,
+  onOpenGuideModal,
+  isMobileOpen,
+  onCloseMobile,
+}) {
+  return (
+    <>
+      {/* Desktop Permanent Sidebar */}
+      <aside className="hidden md:flex w-64 bg-slate-900/90 border-r border-slate-800/80 flex-col justify-between p-4 select-none shrink-0 h-screen overflow-y-auto">
+        <SidebarInner
+          activeView={activeView}
+          setActiveView={setActiveView}
+          currentFilter={currentFilter}
+          setCurrentFilter={setCurrentFilter}
+          tags={tags}
+          setTags={setTags}
+          activeTag={activeTag}
+          setActiveTag={setActiveTag}
+          tasksCount={tasksCount}
+          notesCount={notesCount}
+          onOpenShareModal={onOpenShareModal}
+          onOpenTokensModal={onOpenTokensModal}
+          onOpenLogsModal={onOpenLogsModal}
+          onOpenGuideModal={onOpenGuideModal}
+        />
+      </aside>
+
+      {/* Mobile Slide-Over Drawer Navigation */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden bg-slate-950/80 backdrop-blur-md flex">
+          <div className="w-72 bg-slate-900 border-r border-slate-800 h-full p-4 flex flex-col justify-between overflow-y-auto shadow-2xl animate-slide-right relative">
+            <button
+              onClick={onCloseMobile}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <SidebarInner
+              activeView={activeView}
+              setActiveView={(v) => { setActiveView(v); onCloseMobile(); }}
+              currentFilter={currentFilter}
+              setCurrentFilter={(f) => { setCurrentFilter(f); onCloseMobile(); }}
+              tags={tags}
+              setTags={setTags}
+              activeTag={activeTag}
+              setActiveTag={(t) => { setActiveTag(t); onCloseMobile(); }}
+              tasksCount={tasksCount}
+              notesCount={notesCount}
+              onOpenShareModal={() => { onOpenShareModal(); onCloseMobile(); }}
+              onOpenTokensModal={() => { onOpenTokensModal(); onCloseMobile(); }}
+              onOpenLogsModal={() => { onOpenLogsModal(); onCloseMobile(); }}
+              onOpenGuideModal={() => { onOpenGuideModal(); onCloseMobile(); }}
+            />
+          </div>
+          <div className="flex-1" onClick={onCloseMobile} />
+        </div>
+      )}
+    </>
+  );
+}
+
+function SidebarInner({
   activeView,
   setActiveView,
   currentFilter,
@@ -44,7 +118,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between p-4 select-none shrink-0">
+    <div className="flex flex-col justify-between min-h-full space-y-6">
       <div className="space-y-6">
         {/* App Title */}
         <div className="flex items-center gap-3 px-2">
@@ -58,10 +132,10 @@ export default function Sidebar({
         </div>
 
         {/* View Switcher Tabs (Tasks vs Notes) */}
-        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950/80 border border-slate-800 rounded-xl">
+        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
           <button
             onClick={() => { setActiveView('tasks'); setActiveTag(null); }}
-            className={`py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
               activeView === 'tasks' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -70,27 +144,31 @@ export default function Sidebar({
 
           <button
             onClick={() => { setActiveView('notes'); setActiveTag(null); }}
-            className={`py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
               activeView === 'notes' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <StickyNote className="w-3.5 h-3.5" /> Keep Vault
+            <StickyNote className="w-3.5 h-3.5" /> Notes
           </button>
         </div>
 
-        {/* Microsoft To-Do Smart Views */}
+        {/* Smart Filters List (Tasks View) */}
         {activeView === 'tasks' && (
-          <div className="space-y-1">
-            <span className="px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Smart Views</span>
+          <nav className="space-y-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2 block mb-1">
+              Views & Filters
+            </span>
             {navItems.map(item => {
               const Icon = item.icon;
-              const isActive = currentFilter === item.id && !activeTag;
+              const isSelected = currentFilter === item.id && !activeTag;
               return (
                 <button
                   key={item.id}
                   onClick={() => { setCurrentFilter(item.id); setActiveTag(null); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
-                    isActive ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                    isSelected
+                      ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                      : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -98,14 +176,14 @@ export default function Sidebar({
                     <span>{item.label}</span>
                   </div>
                   {item.count > 0 && (
-                    <span className="text-[10px] bg-slate-800/80 px-2 py-0.5 rounded-full font-mono text-slate-400">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
                       {item.count}
                     </span>
                   )}
                 </button>
               );
             })}
-          </div>
+          </nav>
         )}
 
         {/* Note Vault Overview */}
@@ -210,6 +288,6 @@ export default function Sidebar({
           </button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

@@ -10,12 +10,13 @@ import LogViewerModal from '@/components/LogViewerModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen } from 'lucide-react';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
   const [currentFilter, setCurrentFilter] = useState('my-day'); // 'my-day', 'important', 'planned', 'all-tasks', 'completed'
   const [activeTag, setActiveTag] = useState(null);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const dbProvider = getCurrentDBProvider();
   const dbLabel = dbProvider === 'neondb' ? 'NeonDB PostgreSQL Active'
@@ -119,13 +120,21 @@ export default function Home() {
         onOpenTokensModal={() => setShowTokensModal(true)}
         onOpenLogsModal={() => setShowLogsModal(true)}
         onOpenGuideModal={() => setShowGuideModal(true)}
+        isMobileOpen={isMobileNavOpen}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
       />
 
       {/* Main Content Workspace */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto">
         {/* Top Workspace Header */}
-        <header className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileNavOpen(true)}
+              className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             {activeView === 'tasks' ? (
               <div className="flex items-center gap-2">
                 {currentFilter === 'my-day' && <Sun className="w-5 h-5 text-amber-400" />}
