@@ -22,3 +22,4 @@
 [2026-08-10 12:02:30] [ENHANCEMENT] Updated ShareRedirectModal.js and api/share/route.js to support customizable Codeshare.io room passcodes/aliases (e.g. codeshare.io/aditya-room-123).
 [2026-08-10 12:07:00] [DOCUMENTATION & UI GUIDE] Created UserGuideModal.js with interactive tabs and visual demos, created DOCUMENTATION.md, and wired automatic NeonDB background sync for all tasks and notes.
 [2026-08-10 12:11:30] [UPDATE] Updated project name reference in DOCUMENTATION.md and UserGuideModal.js to 'taskpulse' in Neon Console.
+[2026-08-10 12:14:05] [SUCCESS] Executed node scripts/init_neondb.mjs directly against NeonDB connection string. Successfully created 'tasks' and 'notes' tables in public schema!
