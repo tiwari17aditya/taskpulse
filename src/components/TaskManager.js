@@ -9,6 +9,12 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [selectedDueDate, setSelectedDueDate] = useState('');
+
+  // Helper date presets
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getTomorrowStr = () => new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const getNextWeekStr = () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
   // Filter tasks according to selected view
   const filteredTasks = tasks.filter(task => {
@@ -26,13 +32,15 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
+    const initialDueDate = selectedDueDate || (currentFilter === 'planned' ? getTodayStr() : '');
+
     const newTask = {
       id: 't-' + Date.now(),
       title: newTaskTitle.trim(),
       completed: false,
       myDay: currentFilter === 'my-day',
       starred: currentFilter === 'important',
-      dueDate: currentFilter === 'planned' ? new Date().toISOString().split('T')[0] : '',
+      dueDate: initialDueDate,
       subtasks: [],
       tags: activeTag ? [activeTag] : ['Work'],
       notes: '',
@@ -42,6 +50,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
 
     setTasks([newTask, ...tasks]);
     setNewTaskTitle('');
+    setSelectedDueDate('');
   };
 
   const toggleTaskComplete = (taskId) => {
@@ -134,8 +143,8 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     <div className="flex gap-6 h-full relative">
       {/* Main Task List Column */}
       <div className="flex-1 flex flex-col space-y-4">
-        {/* Quick Add Task Bar */}
-        <form onSubmit={addTask} className="relative">
+        {/* Quick Add Task Bar & Date Presets */}
+        <form onSubmit={addTask} className="space-y-2">
           <div className="flex items-center bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-3 shadow-lg transition">
             <Plus className="w-5 h-5 text-indigo-400 mr-3 shrink-0" />
             <input
@@ -152,6 +161,55 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
             >
               Add
             </button>
+          </div>
+
+          {/* Due Date Presets Bar */}
+          <div className="flex items-center gap-1.5 px-1 overflow-x-auto text-xs">
+            <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1 shrink-0">
+              <Calendar className="w-3 h-3" /> Due Date:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedDueDate(getTodayStr())}
+              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedDueDate(getTomorrowStr())}
+              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Tomorrow
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedDueDate(getNextWeekStr())}
+              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                selectedDueDate === getNextWeekStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Next Week
+            </button>
+            <input
+              type="date"
+              value={selectedDueDate}
+              onChange={(e) => setSelectedDueDate(e.target.value)}
+              className="bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-full outline-none"
+            />
+            {selectedDueDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDueDate('')}
+                className="text-slate-500 hover:text-rose-400 text-[11px] ml-1"
+              >
+                Clear
+              </button>
+            )}
           </div>
         </form>
 
