@@ -88,12 +88,32 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, error: 'Missing note id' }, { status: 400 });
+    const idsParam = searchParams.get('ids');
+    const deleteAll = searchParams.get('all') === 'true';
 
     const sql = getNeonSql();
     await ensureNotesTableExists(sql);
-    await sql`DELETE FROM notes WHERE id = ${id};`;
-    return NextResponse.json({ success: true, id });
+
+    if (deleteAll) {
+      await sql`TRUNCATE TABLE notes;`;
+      return NextResponse.json({ success: true, mode: 'all' });
+    }
+
+    let body = null;
+    try {
+      body = await request.json();
+    } catch (e) {}
+
+    const idsToDelete = body?.ids || (idsParam ? idsParam.split(',').filter(Boolean) : (id ? [id] : []));
+    if (idsToDelete.length === 0) {
+      return NextResponse.json({ success: false, error: 'Missing note id or ids' }, { status: 400 });
+    }
+
+    for (const noteId of idsToDelete) {
+      await sql`DELETE FROM notes WHERE id = ${noteId};`;
+    }
+
+    return NextResponse.json({ success: true, count: idsToDelete.length, ids: idsToDelete });
   } catch (error) {
     console.error('NeonDB notes DELETE error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

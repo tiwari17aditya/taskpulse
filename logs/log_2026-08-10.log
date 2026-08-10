@@ -31,6 +31,7 @@
 [2026-08-10 12:39:00] [PACKUP PROTOCOL] Updated .agents/AGENTS.md with /packup protocol rules, updated VERSION.md to v1.0.0-beta, audited all operational tracking files, and performed clean Git & GitHub sync.
 [2026-08-10 12:42:00] [MOBILE RESPONSIVENESS] Enhanced TaskPulse for 100% Mobile Responsiveness: added viewport metadata in layout.js, mobile slide-over drawer in Sidebar.js, mobile top header hamburger menu in page.js, and mobile overlay drawer in TaskManager.js.
 [2026-08-10 12:49:50] [REAL-TIME SYNC FIX] Fixed mobile DB sync issue for NeonDB PostgreSQL: implemented 8s background auto-polling interval, window focus & tab visibility re-fetch listeners, manual Sync DB button with animation in header, JSONB array normalization in dbAdapter.js, and automatic local storage persistence on DB fetch.
-[2026-08-10 12:56:00] [CACHE & HOST FIX] Added export const dynamic = 'force-dynamic' and Cache-Control: no-store headers in api/db/tasks & api/db/notes to bypass Next.js static build caching. Added cache: no-store to client fetch, added error reporting state in page.js, and configured package.json dev script to bind to 0.0.0.0 for local network mobile device access.
+[2026-08-10 13:09:10] [BULK DELETE & DB WIPE] Executed TRUNCATE TABLE tasks and TRUNCATE TABLE notes to clear all records from NeonDB per user request. Updated storage.js to default to empty arrays [] to prevent auto-seeding sample items. Built multi-select selection mode, Select All / Deselect All, Delete Selected (X), and Clear All bulk deletion tools in TaskManager.js and NoteCanvas.js with bulk DELETE API endpoints in dbAdapter.js.
+
 
 

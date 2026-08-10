@@ -73,12 +73,12 @@ export const DEFAULT_NOTES = [
 // Helper functions for Local Storage + Supabase fallback
 export const storage = {
   getTasks: () => {
-    if (typeof window === 'undefined') return DEFAULT_TASKS;
+    if (typeof window === 'undefined') return [];
     try {
       const data = localStorage.getItem(TASKS_KEY);
-      return data ? JSON.parse(data) : DEFAULT_TASKS;
+      return data ? JSON.parse(data) : [];
     } catch (e) {
-      return DEFAULT_TASKS;
+      return [];
     }
   },
   saveTasks: (tasks) => {
@@ -86,12 +86,12 @@ export const storage = {
     localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
   },
   getNotes: () => {
-    if (typeof window === 'undefined') return DEFAULT_NOTES;
+    if (typeof window === 'undefined') return [];
     try {
       const data = localStorage.getItem(NOTES_KEY);
-      return data ? JSON.parse(data) : DEFAULT_NOTES;
+      return data ? JSON.parse(data) : [];
     } catch (e) {
-      return DEFAULT_NOTES;
+      return [];
     }
   },
   saveNotes: (notes) => {

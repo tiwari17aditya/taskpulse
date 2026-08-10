@@ -104,18 +104,27 @@ export async function saveTaskToDB(task) {
 }
 
 export async function deleteTaskFromDB(id) {
+  return deleteTasksFromDB([id]);
+}
+
+export async function deleteTasksFromDB(ids) {
+  if (!ids || ids.length === 0) return;
   const provider = getCurrentDBProvider();
   if (provider === 'supabase' && isSupabaseConfigured()) {
     try {
-      await supabase.from('tasks').delete().eq('id', id);
+      await supabase.from('tasks').delete().in('id', ids);
     } catch (e) {
-      console.error('Supabase delete error:', e.message);
+      console.error('Supabase delete tasks error:', e.message);
     }
   } else if (provider === 'neondb' || provider === 'postgres') {
     try {
-      await fetch(`/api/db/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      await fetch('/api/db/tasks', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
     } catch (e) {
-      console.error('NeonDB delete error:', e.message);
+      console.error('NeonDB delete tasks error:', e.message);
     }
   }
 }
@@ -176,18 +185,27 @@ export async function saveNoteToDB(note) {
 }
 
 export async function deleteNoteFromDB(id) {
+  return deleteNotesFromDB([id]);
+}
+
+export async function deleteNotesFromDB(ids) {
+  if (!ids || ids.length === 0) return;
   const provider = getCurrentDBProvider();
   if (provider === 'supabase' && isSupabaseConfigured()) {
     try {
-      await supabase.from('notes').delete().eq('id', id);
+      await supabase.from('notes').delete().in('id', ids);
     } catch (e) {
-      console.error('Supabase note delete error:', e.message);
+      console.error('Supabase delete notes error:', e.message);
     }
   } else if (provider === 'neondb' || provider === 'postgres') {
     try {
-      await fetch(`/api/db/notes?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      await fetch('/api/db/notes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
     } catch (e) {
-      console.error('NeonDB note delete error:', e.message);
+      console.error('NeonDB delete notes error:', e.message);
     }
   }
 }

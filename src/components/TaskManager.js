@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, X, ListTodo, Paperclip } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from './MediaUploader';
-import { saveTaskToDB, deleteTaskFromDB } from '@/lib/dbAdapter';
+import { saveTaskToDB, deleteTaskFromDB, deleteTasksFromDB } from '@/lib/dbAdapter';
 
 export default function TaskManager({ tasks, setTasks, tags, currentFilter, activeTag }) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [selectedDueDate, setSelectedDueDate] = useState('');
+
+  // Bulk Multi-Select state
+  const [selectedTaskIds, setSelectedTaskIds] = useState([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
 
   // Helper date presets
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -135,6 +139,46 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     setTasks(tasks.filter(t => t.id !== taskId));
     deleteTaskFromDB(taskId); // Direct sync delete to NeonDB
     if (selectedTask?.id === taskId) setSelectedTask(null);
+  };
+
+  const toggleSelectTask = (taskId, e) => {
+    e?.stopPropagation();
+    setSelectedTaskIds(prev =>
+      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+    );
+  };
+
+  const selectAllCategoryTasks = () => {
+    const allIds = categoryTasks.map(t => t.id);
+    setSelectedTaskIds(allIds);
+  };
+
+  const deselectAllTasks = () => {
+    setSelectedTaskIds([]);
+  };
+
+  const deleteSelectedTasks = () => {
+    if (selectedTaskIds.length === 0) return;
+    const remaining = tasks.filter(t => !selectedTaskIds.includes(t.id));
+    setTasks(remaining);
+    deleteTasksFromDB(selectedTaskIds);
+    setSelectedTaskIds([]);
+    if (selectedTask && selectedTaskIds.includes(selectedTask.id)) {
+      setSelectedTask(null);
+    }
+  };
+
+  const deleteAllCategoryTasks = () => {
+    const targetIds = categoryTasks.map(t => t.id);
+    if (targetIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete all ${targetIds.length} tasks in this view?`)) return;
+    const remaining = tasks.filter(t => !targetIds.includes(t.id));
+    setTasks(remaining);
+    deleteTasksFromDB(targetIds);
+    setSelectedTaskIds([]);
+    if (selectedTask && targetIds.includes(selectedTask.id)) {
+      setSelectedTask(null);
+    }
   };
 
   const addSubtask = (e) => {
@@ -316,6 +360,61 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </div>
 
+        {/* Bulk Selection & Multi-Delete Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSelectMode(!isSelectMode);
+                if (isSelectMode) setSelectedTaskIds([]);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                isSelectMode ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {isSelectMode ? 'Exit Selection Mode' : 'Multi-Select Tasks'}
+            </button>
+
+            {isSelectMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={selectedTaskIds.length === categoryTasks.length ? deselectAllTasks : selectAllCategoryTasks}
+                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition"
+                >
+                  {selectedTaskIds.length === categoryTasks.length ? 'Deselect All' : 'Select All'}
+                </button>
+                <span className="text-xs text-slate-400 font-mono">
+                  {selectedTaskIds.length} of {categoryTasks.length} selected
+                </span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isSelectMode && selectedTaskIds.length > 0 && (
+              <button
+                type="button"
+                onClick={deleteSelectedTasks}
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-rose-600/20 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedTaskIds.length})
+              </button>
+            )}
+            {categoryTasks.length > 0 && (
+              <button
+                type="button"
+                onClick={deleteAllCategoryTasks}
+                className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded-lg text-xs font-medium flex items-center gap-1 transition"
+              >
+                <Trash2 className="w-3 h-3" /> Clear All Tasks ({categoryTasks.length})
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Tasks List Container */}
         <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
           {/* 1. Active Tasks Section */}
@@ -340,6 +439,9 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                   getTodayStr={getTodayStr}
                   getTomorrowStr={getTomorrowStr}
                   getNextWeekStr={getNextWeekStr}
+                  isSelectMode={isSelectMode}
+                  isSelectedForBulk={selectedTaskIds.includes(task.id)}
+                  toggleSelectTask={toggleSelectTask}
                 />
               ))}
             </div>
@@ -369,6 +471,9 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                       toggleTaskComplete={toggleTaskComplete}
                       toggleStar={toggleStar}
                       tags={tags}
+                      isSelectMode={isSelectMode}
+                      isSelectedForBulk={selectedTaskIds.includes(task.id)}
+                      toggleSelectTask={toggleSelectTask}
                     />
                   ))}
                 </div>
@@ -568,7 +673,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   );
 }
 
-function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, updateTaskDueDate, tags, getTodayStr, getTomorrowStr, getNextWeekStr }) {
+function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, updateTaskDueDate, tags, getTodayStr, getTomorrowStr, getNextWeekStr, isSelectMode, isSelectedForBulk, toggleSelectTask }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const isSelected = selectedTask?.id === task.id;
   const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
@@ -578,7 +683,9 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
     <div
       onClick={() => setSelectedTask(task)}
       className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition cursor-pointer ${
-        isSelected
+        isSelectedForBulk
+          ? 'bg-indigo-950/40 border-indigo-500/80 shadow-md shadow-indigo-900/20'
+          : isSelected
           ? 'bg-slate-800/90 border-indigo-500/80 shadow-md shadow-indigo-900/20'
           : task.completed
           ? 'bg-slate-950/40 border-slate-800/40 opacity-75'
@@ -586,6 +693,20 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 pr-4">
+        {isSelectMode && (
+          <button
+            type="button"
+            onClick={(e) => toggleSelectTask(task.id, e)}
+            className="shrink-0 p-1 text-slate-400 hover:text-indigo-400"
+          >
+            <div className={`w-4 h-4 rounded border flex items-center justify-center transition ${
+              isSelectedForBulk ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-950'
+            }`}>
+              {isSelectedForBulk && <Check className="w-3 h-3 stroke-[3]" />}
+            </div>
+          </button>
+        )}
+
         <button
           onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
           className="text-slate-500 hover:text-emerald-400 transition shrink-0"

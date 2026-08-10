@@ -33,5 +33,7 @@
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1800 | 710 | 2510 | $0.0018 | Made app 100% mobile-responsive with mobile nav drawer, top hamburger header button, and slide-over task drawer overlay |
 | 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 2100 | 820 | 2920 | $0.0021 | Fixed mobile DB sync with 8s auto-polling, tab focus re-fetch, and Sync DB header button |
 | 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 2400 | 950 | 3350 | $0.0025 | Added force-dynamic & no-store headers to API routes, no-store fetch option, error UI badge, & 0.0.0.0 dev binding |
+| 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 2800 | 1100 | 3900 | $0.0029 | Wiped all DB rows, removed default demo auto-seeding in storage.js, & built Multi-Select Bulk Delete system |
+
 
 
