@@ -21,3 +21,4 @@
 [2026-08-10 11:57:30] [FEATURE] Installed @neondatabase/serverless, created server API routes (api/db/tasks & api/db/notes) with automatic SQL table creation, updated Codeshare.io room links (codeshare.io/<code) and Toffeeshare.com redirection hub.
 [2026-08-10 12:02:30] [ENHANCEMENT] Updated ShareRedirectModal.js and api/share/route.js to support customizable Codeshare.io room passcodes/aliases (e.g. codeshare.io/aditya-room-123).
 [2026-08-10 12:07:00] [DOCUMENTATION & UI GUIDE] Created UserGuideModal.js with interactive tabs and visual demos, created DOCUMENTATION.md, and wired automatic NeonDB background sync for all tasks and notes.
+[2026-08-10 12:11:30] [UPDATE] Updated project name reference in DOCUMENTATION.md and UserGuideModal.js to 'taskpulse' in Neon Console.

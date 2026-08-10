@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS notes (
 ## How to Verify NeonDB Data
 
 1. Log into your [Neon Console](https://console.neon.tech).
-2. Select project `ep-proud-field-ay8ssmib`.
+2. Select your project **`taskpulse`**.
 3. Click **Tables** in the left sidebar menu to view `tasks` and `notes` rows.
 4. Or open **SQL Editor** and run `SELECT * FROM tasks;`.
 

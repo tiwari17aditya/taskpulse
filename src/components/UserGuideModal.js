@@ -254,7 +254,7 @@ export default function UserGuideModal({ onClose }) {
                   <span className="font-semibold text-indigo-400">How to View Tables in Neon Console:</span>
                   <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-400 pl-2">
                     <td>1. Log into your <a href="https://console.neon.tech" target="_blank" className="text-indigo-400 underline">Neon Console</a>.</td>
-                    <td>2. Select project <code className="text-slate-200 font-mono">ep-proud-field-ay8ssmib</code>.</td>
+                    <td>2. Select project <code className="text-slate-200 font-mono">taskpulse</code>.</td>
                     <td>3. Click <b>Tables</b> in left menu to inspect <code className="text-emerald-400 font-mono">tasks</code> and <code className="text-emerald-400 font-mono">notes</code> tables.</td>
                   </ol>
                 </div>
