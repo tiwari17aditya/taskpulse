@@ -32,6 +32,8 @@
 [2026-08-10 12:42:00] [MOBILE RESPONSIVENESS] Enhanced TaskPulse for 100% Mobile Responsiveness: added viewport metadata in layout.js, mobile slide-over drawer in Sidebar.js, mobile top header hamburger menu in page.js, and mobile overlay drawer in TaskManager.js.
 [2026-08-10 12:49:50] [REAL-TIME SYNC FIX] Fixed mobile DB sync issue for NeonDB PostgreSQL: implemented 8s background auto-polling interval, window focus & tab visibility re-fetch listeners, manual Sync DB button with animation in header, JSONB array normalization in dbAdapter.js, and automatic local storage persistence on DB fetch.
 [2026-08-10 13:09:10] [BULK DELETE & DB WIPE] Executed TRUNCATE TABLE tasks and TRUNCATE TABLE notes to clear all records from NeonDB per user request. Updated storage.js to default to empty arrays [] to prevent auto-seeding sample items. Built multi-select selection mode, Select All / Deselect All, Delete Selected (X), and Clear All bulk deletion tools in TaskManager.js and NoteCanvas.js with bulk DELETE API endpoints in dbAdapter.js.
+[2026-08-10 13:13:30] [ROADMAP UPDATE] Updated ENHANCEMENTS.md with Section 10 Universal Data Import Engine (Google Keep, Apple Notes, Joplin, Notion, CSV/JSON).
+
 
 
 

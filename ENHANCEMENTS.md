@@ -67,3 +67,13 @@ This document outlines the architectural roadmap, upcoming core features, notifi
 ## 9. Real-Time Collaborative Code & Notes Editor (Codeshare Sync)
 - **Monaco Editor / CodeMirror**: Full syntax highlighting for JS, Python, Go, SQL, HTML/CSS.
 - **Live Multi-User Cursors**: Yjs CRDT real-time multi-user cursor sync per shared passcode room.
+
+---
+
+## 10. Universal Data Import Engine (Google Keep, Apple Notes, Joplin, Notion, CSV/JSON)
+- **Google Keep Takeout Import**: Parse Google Takeout JSON files (including background color, pinned status, tags, and image/audio attachments).
+- **Apple Notes Import**: Parse exported HTML/txt files and attachments from Apple Notes / Exporter tool.
+- **Joplin Raw & JEX Importer**: Import Joplin `.jex` export archives and raw Markdown notes with folder structures and tag metadata.
+- **Notion Workspace Import**: Parse Notion zip exports containing `.md` and `.csv` pages, database rows, checklists, and media files.
+- **Universal CSV & JSON Importer**: Drag-and-drop CSV / JSON file importer with field mapping wizard for bulk importing tasks, subtasks, due dates, and note cards.
+
