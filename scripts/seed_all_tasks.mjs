@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
-const connectionString = "postgresql://neondb_owner:npg_XzL2dPsr4VTl@ep-proud-field-ay8ssmib-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const connectionString = "postgresql://neondb_owner:npg_XzL2dPsr4VTl@ep-proud-field-ay8ssmib-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require";
 
 async function seed() {
   console.log('Connecting to NeonDB for tasks & notes seeding...');
