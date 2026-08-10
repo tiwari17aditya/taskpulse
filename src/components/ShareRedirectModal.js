@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Share2, Copy, Check, ExternalLink, X, Shield, ArrowRight, Code, ExternalLink as ExternalIcon } from 'lucide-react';
+import { Share2, Copy, Check, ExternalLink, X, Shield, ArrowRight, Code, Key, ExternalLink as ExternalIcon } from 'lucide-react';
 
 export default function ShareRedirectModal({ initialItem, onClose }) {
   const [shareType, setShareType] = useState('code'); // 'code', 'redirect'
   const [title, setTitle] = useState(initialItem?.title || 'Shared Note Snippet');
   const [content, setContent] = useState(initialItem?.content || '');
+  const [customPasscode, setCustomPasscode] = useState('');
   const [redirectUrl, setRedirectUrl] = useState('https://toffeeshare.com');
   const [generatedShare, setGeneratedShare] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
           title,
           content,
           type: shareType === 'redirect' ? 'redirect' : 'code',
+          customCode: customPasscode,
           redirectUrl: shareType === 'redirect' ? (redirectUrl || 'https://toffeeshare.com') : null,
           mediaUrl: initialItem?.media?.[0]?.url || null,
         }),
@@ -72,7 +74,7 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
             </div>
             <div>
               <h3 className="text-base font-semibold text-slate-100">Codeshare.io & Toffeeshare Hub</h3>
-              <p className="text-[11px] text-slate-400">Direct code snippet rooms & Toffeeshare file redirection</p>
+              <p className="text-[11px] text-slate-400">Custom room passcodes & direct website redirection</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 p-1">
@@ -110,16 +112,35 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
             </div>
 
             {shareType === 'code' ? (
-              <div className="space-y-1">
-                <label className="text-xs text-slate-400 font-medium">Code / Text Content</label>
-                <textarea
-                  rows={4}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 font-mono text-xs text-slate-200 p-3 rounded-xl outline-none focus:border-indigo-500 resize-none"
-                  placeholder="Paste code snippet or text here..."
-                />
-              </div>
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-400 font-medium flex items-center justify-between">
+                    <span>Custom Codeshare Passcode / Room Name</span>
+                    <span className="text-[10px] text-indigo-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 focus-within:border-indigo-500">
+                    <span className="text-xs text-slate-500 font-mono mr-1">codeshare.io/</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. aditya-room-123"
+                      value={customPasscode}
+                      onChange={(e) => setCustomPasscode(e.target.value)}
+                      className="w-full bg-transparent font-mono text-xs text-indigo-300 outline-none placeholder-slate-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-400 font-medium">Code / Text Content</label>
+                  <textarea
+                    rows={4}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 font-mono text-xs text-slate-200 p-3 rounded-xl outline-none focus:border-indigo-500 resize-none"
+                    placeholder="Paste code snippet or text here..."
+                  />
+                </div>
+              </>
             ) : (
               <div className="space-y-1">
                 <label className="text-xs text-slate-400 font-medium">Toffeeshare Redirection Link</label>
@@ -146,7 +167,7 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
           <div className="space-y-4 text-center py-2">
             <div className="p-4 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl space-y-2">
               <span className="text-[11px] text-indigo-300 font-semibold uppercase tracking-wider">
-                {generatedShare.type === 'code' ? 'Codeshare.io Unique Code' : 'Toffeeshare Access Code'}
+                {generatedShare.type === 'code' ? 'Codeshare.io Room Passcode' : 'Toffeeshare Access Code'}
               </span>
               <div className="text-3xl font-mono font-bold text-white tracking-widest">{generatedShare.code}</div>
             </div>
@@ -154,7 +175,7 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
             {generatedShare.type === 'code' ? (
               <div className="space-y-3 text-left">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-medium">Direct Codeshare.io URL</label>
+                  <label className="text-xs text-slate-400 font-medium">Customized Codeshare.io URL</label>
                   <div className="flex items-center gap-2">
                     <input
                       readOnly
@@ -177,7 +198,7 @@ export default function ShareRedirectModal({ initialItem, onClose }) {
                   rel="noopener noreferrer"
                   className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition"
                 >
-                  Open in Codeshare.io <ExternalIcon className="w-3.5 h-3.5" />
+                  Open Codeshare.io Room <ExternalIcon className="w-3.5 h-3.5" />
                 </a>
               </div>
             ) : (

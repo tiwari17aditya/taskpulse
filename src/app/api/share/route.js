@@ -32,7 +32,7 @@ export async function GET(request) {
   const shares = getShares();
 
   if (code) {
-    const item = shares[code.toUpperCase()];
+    const item = shares[code.toUpperCase()] || shares[code.toLowerCase()];
     if (item) {
       return NextResponse.json({ success: true, item });
     }
@@ -45,10 +45,14 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { title, content, type = 'text', mediaUrl = null, redirectUrl = null, expiresHours = 24 } = body;
+    const { title, content, type = 'text', mediaUrl = null, redirectUrl = null, customCode = '', expiresHours = 24 } = body;
     
-    // Generate unique 6-character code
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate code or use user custom passcode / room alias
+    const rawCode = customCode && customCode.trim()
+      ? customCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+      : Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const code = rawCode || Math.random().toString(36).substring(2, 8).toUpperCase();
     const shares = getShares();
 
     const newShare = {
@@ -62,7 +66,8 @@ export async function POST(request) {
       expiresAt: new Date(Date.now() + expiresHours * 3600 * 1000).toISOString(),
     };
 
-    shares[code] = newShare;
+    shares[code.toUpperCase()] = newShare;
+    shares[code.toLowerCase()] = newShare;
     saveShares(shares);
 
     return NextResponse.json({ success: true, share: newShare });
