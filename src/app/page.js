@@ -8,12 +8,19 @@ import ShareRedirectModal from '@/components/ShareRedirectModal';
 import TokenUsageModal from '@/components/TokenUsageModal';
 import LogViewerModal from '@/components/LogViewerModal';
 import { storage } from '@/lib/storage';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck } from 'lucide-react';
+import { getCurrentDBProvider } from '@/lib/dbAdapter';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
   const [currentFilter, setCurrentFilter] = useState('my-day'); // 'my-day', 'important', 'planned', 'all-tasks', 'completed'
   const [activeTag, setActiveTag] = useState(null);
+
+  const dbProvider = getCurrentDBProvider();
+  const dbLabel = dbProvider === 'neondb' ? 'NeonDB PostgreSQL Active'
+    : dbProvider === 'supabase' ? 'Supabase Storage Ready'
+    : dbProvider === 'postgres' ? 'PostgreSQL Active'
+    : 'Local Storage Ready';
 
   const [tasks, setTasks] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -107,8 +114,8 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full">
-              <Cloud className="w-3.5 h-3.5 text-indigo-400" /> Supabase Storage Ready
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full font-medium text-slate-300">
+              <Database className="w-3.5 h-3.5 text-indigo-400" /> {dbLabel}
             </span>
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-mono text-[10px]">
               <ShieldCheck className="w-3 h-3" /> v1.0.0-alpha
