@@ -27,3 +27,4 @@
 [2026-08-10 12:23:10] [ROOT CAUSE FIX] Fixed JSONB type casting in api/db/tasks/route.js & api/db/notes/route.js (${json}::jsonb). Wired instant saveTaskToDB, saveNoteToDB, deleteTaskFromDB, deleteNoteFromDB into TaskManager.js and NoteCanvas.js handlers for seamless real-time NeonDB sync.
 [2026-08-10 12:30:15] [CONNECTION FIX] Removed &channel_binding=require from connection string in .env and sanitized getNeonSql in API routes. Successfully verified live database row insertion and populated task rows in Neon Console.
 [2026-08-10 12:33:00] [FEATURE] Added interactive Task Due Date Quick-Picker popover on Task Cards, Due Date Selector Block in Task Detail Drawer, and Date Filter Sub-Toolbar in TaskManager.js.
+[2026-08-10 12:37:10] [ROADMAP UPDATE] Updated ENHANCEMENTS.md with advance task reminders, SMTP email notifications, Mobile Web Push/Telegram bot messaging, recurring task auto-population for My Day, and AI assistant roadmap.
