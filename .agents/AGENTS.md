@@ -12,3 +12,9 @@
   - `logs/log_YYYY-MM-DD.log`: Log info/error events for daily tracking under `logs/`.
   - `VERSION.md`: Update version releases.
   - `ENHANCEMENTS.md`: Document future roadmap items (including LDAP integration).
+
+## Session Packup Workflow (`/packup`)
+When the user triggers `/packup` or requests a session packup:
+1. **Git & GitHub Push**: Execute `git add .`, `git commit`, and `git push` to synchronize all workspace commits to GitHub `main`.
+2. **Operational Tracking Audit**: Ensure `token_usage.md`, `logs/log_YYYY-MM-DD.log`, `VERSION.md`, and `DOCUMENTATION.md` are 100% updated with current session metrics.
+3. **Warm Farewell**: Provide a clear session summary and conclude with an inspiring, positive quote.

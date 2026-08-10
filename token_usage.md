@@ -29,3 +29,4 @@
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1200 | 480 | 1680 | $0.0012 | Sanitized connection string (removed channel_binding) & verified live Neon rows |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1750 | 680 | 2430 | $0.0017 | Implemented Task Due Date Quick-Picker, Drawer selector, & Date Filter bar |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1450 | 560 | 2010 | $0.0014 | Documented advance reminders, SMTP email, Telegram/Web Push, & recurring task engine in ENHANCEMENTS.md |
+| 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1100 | 420 | 1520 | $0.0011 | Added /packup protocol to .agents/AGENTS.md, updated VERSION.md to v1.0.0-beta, and executed packup sync |
