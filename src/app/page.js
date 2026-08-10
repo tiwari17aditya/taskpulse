@@ -10,13 +10,16 @@ import LogViewerModal from '@/components/LogViewerModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu } from 'lucide-react';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
   const [currentFilter, setCurrentFilter] = useState('my-day'); // 'my-day', 'important', 'planned', 'all-tasks', 'completed'
   const [activeTag, setActiveTag] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState(null);
+  const [syncError, setSyncError] = useState(null);
 
   const dbProvider = getCurrentDBProvider();
   const dbLabel = dbProvider === 'neondb' ? 'NeonDB PostgreSQL Active'
@@ -35,52 +38,96 @@ export default function Home() {
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
 
-  // Load initial data from DB / Local
+  // Sync data from database (NeonDB / Supabase) to local state & localStorage
+  const syncDataFromDB = async (isManual = false) => {
+    if (isSyncing && !isManual) return;
+    setIsSyncing(true);
+    setSyncError(null);
+
+    try {
+      const [dbTasks, dbNotes] = await Promise.all([
+        fetchTasksFromDB(),
+        fetchNotesFromDB()
+      ]);
+
+      let errorMsg = null;
+
+      if (dbTasks && dbTasks.error) {
+        errorMsg = dbTasks.error;
+      } else if (Array.isArray(dbTasks)) {
+        setTasks(dbTasks);
+        storage.saveTasks(dbTasks);
+      }
+
+      if (dbNotes && dbNotes.error) {
+        if (!errorMsg) errorMsg = dbNotes.error;
+      } else if (Array.isArray(dbNotes)) {
+        setNotes(dbNotes);
+        storage.saveNotes(dbNotes);
+      }
+
+      if (errorMsg) {
+        setSyncError(errorMsg);
+      } else {
+        const now = new Date();
+        setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }
+    } catch (e) {
+      console.warn('DB Sync failed:', e.message);
+      setSyncError(e.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Load initial local data & setup real-time background sync polling + tab focus listener
   useEffect(() => {
+    // 1. Initial hydration from local storage for fast render
     const initialLocalTasks = storage.getTasks();
     const initialLocalNotes = storage.getNotes();
-
     setTasks(initialLocalTasks);
     setNotes(initialLocalNotes);
     setTags(storage.getTags());
 
-    // Sync with NeonDB / Supabase remote API
-    fetchTasksFromDB().then(dbTasks => {
-      if (dbTasks && dbTasks.length > 0) {
-        setTasks(dbTasks);
-      } else if (initialLocalTasks.length > 0) {
-        // Trigger auto-table creation and sync initial tasks to NeonDB
-        initialLocalTasks.forEach(t => saveTaskToDB(t));
-      }
-    });
+    // 2. Immediate fetch from remote DB
+    syncDataFromDB();
 
-    fetchNotesFromDB().then(dbNotes => {
-      if (dbNotes && dbNotes.length > 0) {
-        setNotes(dbNotes);
-      } else if (initialLocalNotes.length > 0) {
-        // Trigger auto-table creation and sync initial notes to NeonDB
-        initialLocalNotes.forEach(n => saveNoteToDB(n));
+    // 3. Periodic background polling every 8 seconds for multi-device live sync
+    const pollInterval = setInterval(() => {
+      syncDataFromDB();
+    }, 8000);
+
+    // 4. Instant re-fetch when mobile browser tab becomes visible or focused
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncDataFromDB();
       }
-    });
+    };
+    const handleFocus = () => syncDataFromDB();
+    const handleOnline = () => syncDataFromDB();
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleOnline);
+    };
   }, []);
 
-  // Save tasks on change & sync to NeonDB
+  // Save tasks on change & update local storage
   const handleSetTasks = (newTasks) => {
     setTasks(newTasks);
     storage.saveTasks(newTasks);
-    // Sync all updated tasks to active DB provider (NeonDB / Supabase)
-    if (Array.isArray(newTasks)) {
-      newTasks.forEach(t => saveTaskToDB(t));
-    }
   };
 
-  // Save notes on change & sync to NeonDB
+  // Save notes on change & update local storage
   const handleSetNotes = (newNotes) => {
     setNotes(newNotes);
     storage.saveNotes(newNotes);
-    if (Array.isArray(newNotes)) {
-      newNotes.forEach(n => saveNoteToDB(n));
-    }
   };
 
   // Save tags on change
@@ -156,12 +203,23 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full font-medium text-slate-300">
+          <div className="flex items-center gap-2 md:gap-3 text-xs text-slate-400">
+            <button
+              onClick={() => syncDataFromDB(true)}
+              disabled={isSyncing}
+              title={syncError ? `Sync Error: ${syncError}. Click to retry.` : "Click to sync entries live with database"}
+              className={`flex items-center gap-1.5 px-2.5 py-1 ${syncError ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-300'} border hover:border-slate-700 rounded-full font-medium transition cursor-pointer active:scale-95 disabled:opacity-50`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncError ? 'text-rose-400' : 'text-indigo-400'} ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">
+                {isSyncing ? 'Syncing...' : syncError ? `Error: ${syncError}` : lastSyncedTime ? `Synced ${lastSyncedTime}` : 'Sync DB'}
+              </span>
+            </button>
+            <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full font-medium text-slate-300">
               <Database className="w-3.5 h-3.5 text-indigo-400" /> {dbLabel}
             </span>
             <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-mono text-[10px]">
-              <ShieldCheck className="w-3 h-3" /> v1.0.0-alpha
+              <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
             </span>
           </div>
         </header>

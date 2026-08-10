@@ -1,6 +1,10 @@
 import { neon } from '@neondatabase/serverless';
 
-const connectionString = "postgresql://neondb_owner:npg_XzL2dPsr4VTl@ep-proud-field-ay8ssmib-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const connectionString = (process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || '').replace(/&channel_binding=[^&]+/g, '');
+if (!connectionString) {
+  console.error('ERROR: NEON_DATABASE_URL is missing in environment variables.');
+  process.exit(1);
+}
 
 async function main() {
   console.log('Connecting to NeonDB...');

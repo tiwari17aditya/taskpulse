@@ -31,3 +31,7 @@
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1450 | 560 | 2010 | $0.0014 | Documented advance reminders, SMTP email, Telegram/Web Push, & recurring task engine in ENHANCEMENTS.md |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1100 | 420 | 1520 | $0.0011 | Added /packup protocol to .agents/AGENTS.md, updated VERSION.md to v1.0.0-beta, and executed packup sync |
 | 2026-08-10 | 55ef26c0-cace-436e-b90e-746c20f5cfe1 | 1800 | 710 | 2510 | $0.0018 | Made app 100% mobile-responsive with mobile nav drawer, top hamburger header button, and slide-over task drawer overlay |
+| 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 2100 | 820 | 2920 | $0.0021 | Fixed mobile DB sync with 8s auto-polling, tab focus re-fetch, and Sync DB header button |
+| 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 2400 | 950 | 3350 | $0.0025 | Added force-dynamic & no-store headers to API routes, no-store fetch option, error UI badge, & 0.0.0.0 dev binding |
+
+

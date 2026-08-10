@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function getNeonSql() {
   const connectionString = (process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || '').replace(/&channel_binding=[^&]+/g, '');
   if (!connectionString) {
@@ -32,10 +35,16 @@ export async function GET() {
     const sql = getNeonSql();
     await ensureTasksTableExists(sql);
     const tasks = await sql`SELECT * FROM tasks ORDER BY "createdAt" DESC;`;
-    return NextResponse.json({ success: true, tasks });
+    return NextResponse.json(
+      { success: true, tasks },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+    );
   } catch (error) {
     console.error('NeonDB tasks GET error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500, headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } }
+    );
   }
 }
 
