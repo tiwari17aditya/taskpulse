@@ -22,7 +22,7 @@
 ## Directory Architecture
 
 ```
-d:\Antigravity-Projects\abc/
+d:\Antigravity-Projects\taskpulse/
 ├── .agents/                    # Workspace agent rules & modular domain skills
 │   ├── AGENTS.md               # Token optimization & coding conventions
 │   └── skills/                 # Domain skills (task-manager, keep-notes, share-redirect, ops-logging)
@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   tags JSONB DEFAULT '[]'::jsonb,
   notes TEXT,
   media JSONB DEFAULT '[]'::jsonb,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  "completedAt" TEXT
 );
 ```
 
