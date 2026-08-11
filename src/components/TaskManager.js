@@ -16,10 +16,18 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
-  // Helper date presets
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const getTomorrowStr = () => new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const getNextWeekStr = () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  // Helper date presets in local timezone
+  const getLocalDateStr = (date = new Date()) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getTodayStr = () => getLocalDateStr();
+  const getTomorrowStr = () => getLocalDateStr(new Date(Date.now() + 86400000));
+  const getNextWeekStr = () => getLocalDateStr(new Date(Date.now() + 7 * 86400000));
 
   const [showCompletedSection, setShowCompletedSection] = useState(true);
   const [filterDate, setFilterDate] = useState('all'); // 'all', 'today', 'tomorrow', 'next-week', 'custom'
@@ -39,21 +47,58 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     if (selectedTask?.id === taskId) setSelectedTask(targetTask);
   };
 
+  const todayStr = getLocalDateStr();
+
   // Filter tasks according to selected view & date filter
   const categoryTasks = tasks.filter(task => {
-    if (activeTag) return task.tags && task.tags.includes(activeTag);
-    if (currentFilter === 'my-day') return task.myDay;
-    if (currentFilter === 'important') return task.starred;
-    if (currentFilter === 'planned') return !!task.dueDate;
-    if (currentFilter === 'completed') return task.completed;
+    // 1. Tag Filter
+    if (activeTag) {
+      if (!task.tags || !task.tags.includes(activeTag)) return false;
+    } else {
+      // 2. Main Filter
+      if (currentFilter === 'my-day' && !task.myDay) return false;
+      if (currentFilter === 'important' && !task.starred) return false;
+      if (currentFilter === 'planned' && !task.dueDate) return false;
+      if (currentFilter === 'completed' && !task.completed) return false;
+    }
 
-    // Date Filter Sub-filtering
-    if (filterDate === 'today') return task.dueDate === getTodayStr() || task.dueDate === 'Today';
-    if (filterDate === 'tomorrow') return task.dueDate === getTomorrowStr() || task.dueDate === 'Tomorrow';
-    if (filterDate === 'next-week') return task.dueDate === getNextWeekStr() || task.dueDate === 'Next Week';
-    if (filterDate === 'custom' && customFilterDate) return task.dueDate === customFilterDate;
+    // 3. Checked tasks aging logic ("everyday checked tasks")
+    if (task.completed) {
+      if (currentFilter === 'completed') return true; // Always visible in History
 
-    return true; // All tasks
+      if (filterDate !== 'all') {
+        // Specific day selected: show if completed on that day OR due on that day
+        let targetFilterDate = '';
+        if (filterDate === 'today') targetFilterDate = todayStr;
+        else if (filterDate === 'tomorrow') targetFilterDate = getTomorrowStr();
+        else if (filterDate === 'next-week') targetFilterDate = getNextWeekStr();
+        else if (filterDate === 'custom') targetFilterDate = customFilterDate;
+
+        const matchesDueDate = task.dueDate === targetFilterDate || 
+          (filterDate === 'today' && task.dueDate === 'Today') || 
+          (filterDate === 'tomorrow' && task.dueDate === 'Tomorrow') || 
+          (filterDate === 'next-week' && task.dueDate === 'Next Week');
+
+        const matchesCompletedDate = task.completedAt === targetFilterDate;
+
+        return matchesDueDate || matchesCompletedDate;
+      } else {
+        // No specific day selected: only show if completed today
+        const completedDate = task.completedAt || (task.createdAt ? task.createdAt.split('T')[0] : '');
+        return completedDate === todayStr;
+      }
+    } else {
+      // Active tasks: filter by date if filter active
+      if (filterDate !== 'all') {
+        if (filterDate === 'today') return task.dueDate === todayStr || task.dueDate === 'Today';
+        if (filterDate === 'tomorrow') return task.dueDate === getTomorrowStr() || task.dueDate === 'Tomorrow';
+        if (filterDate === 'next-week') return task.dueDate === getNextWeekStr() || task.dueDate === 'Next Week';
+        if (filterDate === 'custom' && customFilterDate) return task.dueDate === customFilterDate;
+        return false;
+      }
+    }
+
+    return true; // All active tasks when filterDate is 'all'
   });
 
   const activeTasks = currentFilter === 'completed' ? [] : categoryTasks.filter(t => !t.completed);
@@ -93,7 +138,11 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
         if (isNowCompleted) {
           confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         }
-        targetTask = { ...t, completed: isNowCompleted };
+        targetTask = { 
+          ...t, 
+          completed: isNowCompleted,
+          completedAt: isNowCompleted ? getLocalDateStr() : null 
+        };
         return targetTask;
       }
       return t;

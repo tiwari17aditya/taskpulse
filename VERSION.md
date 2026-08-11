@@ -1,5 +1,15 @@
 # Version History
 
+## [v1.0.0-rc3] - 2026-08-11
+
+### Added & Enhanced
+- **Everyday Checked Tasks Aging**: Implemented automatic checked tasks aging logic. Completed tasks from previous days are hidden from the active views (My Day, Tasks, Important, Planned) to keep the workspace clean.
+- **Completion Date Retention**: Added support for storing completion dates (`completedAt` property) locally and in PostgreSQL (`tasks` table) without altering any existing database data.
+- **History & Selected Day Visibility**: Completed tasks remain fully visible under the **History / Completed** sidebar tab and when filtering by their specific completion day in the Date Filter.
+- **Timezone-Aware Presets**: Updated all date helpers to use the user's local timezone instead of UTC.
+
+---
+
 ## [v1.0.0-rc2] - 2026-08-10
 
 ### Changed & Improved

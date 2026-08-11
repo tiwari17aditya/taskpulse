@@ -25,9 +25,15 @@ async function ensureTasksTableExists(sql) {
       tags JSONB DEFAULT '[]'::jsonb,
       notes TEXT,
       media JSONB DEFAULT '[]'::jsonb,
-      "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      "completedAt" TEXT
     );
   `;
+  try {
+    await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS "completedAt" TEXT;`;
+  } catch (e) {
+    console.warn('Could not run ALTER TABLE tasks:', e.message);
+  }
 }
 
 export async function GET() {
@@ -54,14 +60,14 @@ export async function POST(request) {
     const sql = getNeonSql();
     await ensureTasksTableExists(sql);
 
-    const { id, title, completed = false, myDay = false, starred = false, dueDate = '', subtasks = [], tags = [], notes = '', media = [], createdAt } = body;
+    const { id, title, completed = false, myDay = false, starred = false, dueDate = '', subtasks = [], tags = [], notes = '', media = [], createdAt, completedAt = null } = body;
 
     const subtasksJson = typeof subtasks === 'string' ? subtasks : JSON.stringify(subtasks || []);
     const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
     const mediaJson = typeof media === 'string' ? media : JSON.stringify(media || []);
 
     await sql`
-      INSERT INTO tasks (id, title, completed, "myDay", starred, "dueDate", subtasks, tags, notes, media, "createdAt")
+      INSERT INTO tasks (id, title, completed, "myDay", starred, "dueDate", subtasks, tags, notes, media, "createdAt", "completedAt")
       VALUES (
         ${id},
         ${title},
@@ -73,7 +79,8 @@ export async function POST(request) {
         ${tagsJson}::jsonb,
         ${notes},
         ${mediaJson}::jsonb,
-        ${createdAt || new Date().toISOString()}
+        ${createdAt || new Date().toISOString()},
+        ${completedAt}
       )
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
@@ -84,7 +91,8 @@ export async function POST(request) {
         subtasks = EXCLUDED.subtasks,
         tags = EXCLUDED.tags,
         notes = EXCLUDED.notes,
-        media = EXCLUDED.media;
+        media = EXCLUDED.media,
+        "completedAt" = EXCLUDED."completedAt";
     `;
 
     return NextResponse.json({ success: true, id });
