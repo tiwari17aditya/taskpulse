@@ -4,6 +4,17 @@ const TASKS_KEY = 'pulse_tasks_v1';
 const NOTES_KEY = 'pulse_notes_v1';
 const TAGS_KEY = 'pulse_tags_v1';
 const SETTINGS_KEY = 'pulse_settings_v1';
+const PROFILES_KEY = 'pulse_profiles_v1';
+const ACTIVE_PROFILE_KEY = 'pulse_active_profile_v1';
+const REMINDERS_KEY = 'pulse_reminders_v1';
+const NOTIFICATION_SETTINGS_KEY = 'pulse_notif_settings_v1';
+
+// Default starter profiles
+export const DEFAULT_PROFILES = [
+  { id: 'p-1', name: 'Personal Profile', email: 'user@taskpulse.app', color: '#6366f1', avatar: '👤', role: 'Personal' },
+  { id: 'p-2', name: 'Work & Projects', email: 'work@taskpulse.app', color: '#ec4899', avatar: '💼', role: 'Work' },
+  { id: 'p-3', name: 'Study & Academy', email: 'student@taskpulse.app', color: '#10b981', avatar: '🎓', role: 'Student' }
+];
 
 // Default starter tags with colors
 export const DEFAULT_TAGS = [
@@ -18,6 +29,7 @@ export const DEFAULT_TAGS = [
 export const DEFAULT_TASKS = [
   {
     id: 't-1',
+    profileId: 'p-1',
     title: 'Review weekly planning goals & sprint breakdown',
     completed: false,
     myDay: true,
@@ -33,6 +45,7 @@ export const DEFAULT_TASKS = [
   },
   {
     id: 't-2',
+    profileId: 'p-1',
     title: 'Explore Toffeeshare P2P feature specs for v2 roadmap',
     completed: false,
     myDay: true,
@@ -48,6 +61,7 @@ export const DEFAULT_TASKS = [
 export const DEFAULT_NOTES = [
   {
     id: 'n-1',
+    profileId: 'p-1',
     title: '🚀 Deployment Quick Reference (Vercel & Supabase)',
     content: '1. Connect GitHub Repository to Vercel.\n2. Add environment variables NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.\n3. Run initial git commit & push.',
     bgColor: 'rgba(99, 102, 241, 0.15)',
@@ -60,6 +74,7 @@ export const DEFAULT_NOTES = [
   },
   {
     id: 'n-2',
+    profileId: 'p-1',
     title: '💡 Useful Snippet: Dynamic Redirection Logic',
     content: '// Toffeeshare / Codeshare dynamic redirect handler\nconst redirectUrl = `/share/${code}`;\nwindow.location.href = redirectUrl;',
     bgColor: 'rgba(234, 179, 8, 0.15)',
@@ -69,6 +84,15 @@ export const DEFAULT_NOTES = [
     createdAt: new Date().toISOString(),
   }
 ];
+
+export const DEFAULT_NOTIFICATION_SETTINGS = {
+  webPushEnabled: true,
+  emailEnabled: true,
+  soundEnabled: true,
+  reminderTime: '09:00', // Default morning reminder time
+  webhookUrl: '',
+  emailRecipient: 'user@taskpulse.app',
+};
 
 // Helper functions for Local Storage + Supabase fallback
 export const storage = {
@@ -110,5 +134,62 @@ export const storage = {
   saveTags: (tags) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(TAGS_KEY, JSON.stringify(tags));
+  },
+  // Multi-User Profile Storage
+  getProfiles: () => {
+    if (typeof window === 'undefined') return DEFAULT_PROFILES;
+    try {
+      const data = localStorage.getItem(PROFILES_KEY);
+      return data ? JSON.parse(data) : DEFAULT_PROFILES;
+    } catch (e) {
+      return DEFAULT_PROFILES;
+    }
+  },
+  saveProfiles: (profiles) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  },
+  getActiveProfile: () => {
+    if (typeof window === 'undefined') return DEFAULT_PROFILES[0];
+    try {
+      const id = localStorage.getItem(ACTIVE_PROFILE_KEY);
+      const profiles = storage.getProfiles();
+      const match = profiles.find(p => p.id === id);
+      return match || profiles[0] || DEFAULT_PROFILES[0];
+    } catch (e) {
+      return DEFAULT_PROFILES[0];
+    }
+  },
+  setActiveProfile: (profileId) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
+  },
+  // Notification & Reminders Storage
+  getReminders: () => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const data = localStorage.getItem(REMINDERS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+  saveReminders: (reminders) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+  },
+  getNotificationSettings: () => {
+    if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_SETTINGS;
+    try {
+      const data = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+      return data ? { ...DEFAULT_NOTIFICATION_SETTINGS, ...JSON.parse(data) } : DEFAULT_NOTIFICATION_SETTINGS;
+    } catch (e) {
+      return DEFAULT_NOTIFICATION_SETTINGS;
+    }
+  },
+  saveNotificationSettings: (settings) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
   }
 };
+

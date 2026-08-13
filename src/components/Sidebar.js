@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X } from 'lucide-react';
+import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -92,6 +92,10 @@ function SidebarInner({
   onOpenTokensModal,
   onOpenLogsModal,
   onOpenGuideModal,
+  activeProfile,
+  onOpenProfileModal,
+  onOpenNotificationModal,
+  remindersCount
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#6366f1');
@@ -112,7 +116,7 @@ function SidebarInner({
   const navItems = [
     { id: 'my-day', label: 'My Day', icon: Sun, color: 'text-amber-400', count: tasksCount.myDay },
     { id: 'important', label: 'Important', icon: Star, color: 'text-amber-400', count: tasksCount.important },
-    { id: 'planned', label: 'Planned', icon: Calendar, color: 'text-indigo-400', count: tasksCount.planned },
+    { id: 'planned', label: 'Planned / Calendar', icon: Calendar, color: 'text-indigo-400', count: tasksCount.planned },
     { id: 'all-tasks', label: 'Tasks', icon: ListTodo, color: 'text-blue-400', count: tasksCount.active },
     { id: 'completed', label: 'History / Completed', icon: History, color: 'text-emerald-400', count: tasksCount.completed },
   ];
@@ -120,15 +124,53 @@ function SidebarInner({
   return (
     <div className="flex flex-col justify-between min-h-full space-y-6">
       <div className="space-y-6">
-        {/* App Title */}
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
-            TP
+        {/* App Title & Multi-User Profile Header */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
+                TP
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-100 leading-none">TaskPulse</h1>
+                <span className="text-[10px] text-indigo-400 font-mono">Daily Planning Workspace</span>
+              </div>
+            </div>
+
+            {/* Notification Bell */}
+            <button
+              onClick={onOpenNotificationModal}
+              className="relative p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 transition"
+              title="Notification & Reminder Center"
+            >
+              <Bell className="w-4 h-4" />
+              {remindersCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-mono text-[9px] font-bold flex items-center justify-center animate-pulse">
+                  {remindersCount}
+                </span>
+              )}
+            </button>
           </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-100 leading-none">TaskPulse</h1>
-            <span className="text-[10px] text-indigo-400 font-mono">Daily Planning Workspace</span>
-          </div>
+
+          {/* Active Profile Switcher Badge */}
+          <button
+            onClick={onOpenProfileModal}
+            className="w-full p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm"
+                style={{ backgroundColor: `${activeProfile?.color || '#6366f1'}25`, border: `1px solid ${activeProfile?.color || '#6366f1'}40` }}
+              >
+                {activeProfile?.avatar || '👤'}
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-bold text-slate-200 block leading-tight">{activeProfile?.name || 'Personal'}</span>
+                <span className="text-[10px] text-slate-500 block">{activeProfile?.role || 'Switch Profile'}</span>
+              </div>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition" />
+          </button>
         </div>
 
         {/* View Switcher Tabs (Tasks vs Notes) */}

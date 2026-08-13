@@ -1,5 +1,14 @@
 # Version History
 
+## [v1.0.0-rc5] - 2026-08-13
+
+### Added & Enhanced
+- **Responsive Calendar UI Overhaul**: Full interactive calendar grid with smooth mobile touch scrolling (`touch-pan-y`), multi-view support (Planned & History sub-views), event activity dots (active due tasks, completed tasks, and scheduled reminders), and day-agenda breakdown drawer.
+- **Multi-User Account Profile System**: Created `ProfileManagerModal.js` allowing users to create, edit, customize avatars/colors, and switch between isolated account profiles.
+- **Automated Notification & Reminder Center**: Built `NotificationManagerModal.js` supporting Web Browser Push Notifications API, Audio Chime previews, automated client email dispatch (Mailto digest), mobile SMS & WhatsApp deep-link dispatch, and date-based task/group reminder scheduling.
+
+---
+
 ## [v1.0.0-rc4] - 2026-08-13
 
 ### Added & Enhanced

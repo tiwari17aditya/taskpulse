@@ -7,10 +7,12 @@ import NoteCanvas from '@/components/NoteCanvas';
 import ShareRedirectModal from '@/components/ShareRedirectModal';
 import TokenUsageModal from '@/components/TokenUsageModal';
 import LogViewerModal from '@/components/LogViewerModal';
+import ProfileManagerModal from '@/components/ProfileManagerModal';
+import NotificationManagerModal from '@/components/NotificationManagerModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw } from 'lucide-react';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
@@ -31,12 +33,22 @@ export default function Home() {
   const [notes, setNotes] = useState([]);
   const [tags, setTags] = useState([]);
 
+  // Multi-User Profiles state
+  const [profiles, setProfiles] = useState([]);
+  const [activeProfile, setActiveProfile] = useState(null);
+
+  // Reminders & Notification Settings state
+  const [reminders, setReminders] = useState([]);
+  const [notificationSettings, setNotificationSettings] = useState({});
+
   // Modals state
   const [shareItem, setShareItem] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTokensModal, setShowTokensModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // Sync data from database (NeonDB / Supabase) to local state & localStorage
   const syncDataFromDB = async (isManual = false) => {
@@ -85,9 +97,18 @@ export default function Home() {
     // 1. Initial hydration from local storage for fast render
     const initialLocalTasks = storage.getTasks();
     const initialLocalNotes = storage.getNotes();
+    const initialProfiles = storage.getProfiles();
+    const initialActiveProfile = storage.getActiveProfile();
+    const initialReminders = storage.getReminders();
+    const initialNotifSettings = storage.getNotificationSettings();
+
     setTasks(initialLocalTasks);
     setNotes(initialLocalNotes);
     setTags(storage.getTags());
+    setProfiles(initialProfiles);
+    setActiveProfile(initialActiveProfile);
+    setReminders(initialReminders);
+    setNotificationSettings(initialNotifSettings);
 
     // 2. Immediate fetch from remote DB
     syncDataFromDB();
@@ -130,18 +151,45 @@ export default function Home() {
     storage.saveNotes(newNotes);
   };
 
+  // Profile management handlers
+  const handleSelectProfile = (profile) => {
+    setActiveProfile(profile);
+    storage.setActiveProfile(profile.id);
+  };
+
+  const handleSaveProfiles = (updatedProfiles) => {
+    setProfiles(updatedProfiles);
+    storage.saveProfiles(updatedProfiles);
+  };
+
+  // Notification & Reminders handlers
+  const handleSaveReminders = (updatedReminders) => {
+    setReminders(updatedReminders);
+    storage.saveReminders(updatedReminders);
+  };
+
+  const handleSaveSettings = (updatedSettings) => {
+    setNotificationSettings(updatedSettings);
+    storage.saveNotificationSettings(updatedSettings);
+  };
+
   // Save tags on change
   useEffect(() => {
     if (tags.length > 0) storage.saveTags(tags);
   }, [tags]);
 
+  // Filter tasks & notes scoped by active profile
+  const profileTasks = tasks.filter(t => !t.profileId || t.profileId === activeProfile?.id);
+  const profileNotes = notes.filter(n => !n.profileId || n.profileId === activeProfile?.id);
+  const profileReminders = reminders.filter(r => !r.profileId || r.profileId === activeProfile?.id);
+
   // Tasks counts for sidebar
   const tasksCount = {
-    myDay: tasks.filter(t => t.myDay && !t.completed).length,
-    important: tasks.filter(t => t.starred && !t.completed).length,
-    planned: tasks.filter(t => t.dueDate && !t.completed).length,
-    active: tasks.filter(t => !t.completed).length,
-    completed: tasks.filter(t => t.completed).length,
+    myDay: profileTasks.filter(t => t.myDay && !t.completed).length,
+    important: profileTasks.filter(t => t.starred && !t.completed).length,
+    planned: profileTasks.filter(t => t.dueDate && !t.completed).length,
+    active: profileTasks.filter(t => !t.completed).length,
+    completed: profileTasks.filter(t => t.completed).length,
   };
 
   const handleOpenShareModal = (itemToShare = null) => {
@@ -162,13 +210,17 @@ export default function Home() {
         activeTag={activeTag}
         setActiveTag={setActiveTag}
         tasksCount={tasksCount}
-        notesCount={notes.length}
+        notesCount={profileNotes.length}
         onOpenShareModal={() => handleOpenShareModal(null)}
         onOpenTokensModal={() => setShowTokensModal(true)}
         onOpenLogsModal={() => setShowLogsModal(true)}
         onOpenGuideModal={() => setShowGuideModal(true)}
         isMobileOpen={isMobileNavOpen}
         onCloseMobile={() => setIsMobileNavOpen(false)}
+        activeProfile={activeProfile}
+        onOpenProfileModal={() => setShowProfileModal(true)}
+        onOpenNotificationModal={() => setShowNotificationModal(true)}
+        remindersCount={profileReminders.filter(r => r.status === 'active').length}
       />
 
       {/* Main Content Workspace */}
@@ -204,6 +256,16 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-3 text-xs text-slate-400">
+            {/* Quick Profile Switch Header Pill */}
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-full font-medium text-slate-200 transition"
+              title="Switch Profile"
+            >
+              <span className="text-xs">{activeProfile?.avatar || '👤'}</span>
+              <span className="hidden sm:inline text-xs font-semibold">{activeProfile?.name || 'Personal'}</span>
+            </button>
+
             <button
               onClick={() => syncDataFromDB(true)}
               disabled={isSyncing}
@@ -215,6 +277,7 @@ export default function Home() {
                 {isSyncing ? 'Syncing...' : syncError ? `Error: ${syncError}` : lastSyncedTime ? `Synced ${lastSyncedTime}` : 'Sync DB'}
               </span>
             </button>
+
             <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full font-medium text-slate-300">
               <Database className="w-3.5 h-3.5 text-indigo-400" /> {dbLabel}
             </span>
@@ -228,15 +291,18 @@ export default function Home() {
         <div className="p-6 flex-1 overflow-hidden">
           {activeView === 'tasks' ? (
             <TaskManager
-              tasks={tasks}
+              tasks={profileTasks}
               setTasks={handleSetTasks}
               tags={tags}
               currentFilter={currentFilter}
               activeTag={activeTag}
+              reminders={profileReminders}
+              onOpenNotificationModal={() => setShowNotificationModal(true)}
+              activeProfile={activeProfile}
             />
           ) : (
             <NoteCanvas
-              notes={notes}
+              notes={profileNotes}
               setNotes={handleSetNotes}
               tags={tags}
               activeTag={activeTag}
@@ -265,6 +331,32 @@ export default function Home() {
       {showGuideModal && (
         <UserGuideModal onClose={() => setShowGuideModal(false)} />
       )}
+
+      {showProfileModal && (
+        <ProfileManagerModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          profiles={profiles}
+          activeProfile={activeProfile}
+          onSelectProfile={handleSelectProfile}
+          onSaveProfiles={handleSaveProfiles}
+        />
+      )}
+
+      {showNotificationModal && (
+        <NotificationManagerModal
+          isOpen={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          tasks={profileTasks}
+          tags={tags}
+          activeProfile={activeProfile}
+          reminders={reminders}
+          onSaveReminders={handleSaveReminders}
+          notificationSettings={notificationSettings}
+          onSaveSettings={handleSaveSettings}
+        />
+      )}
     </div>
   );
 }
+

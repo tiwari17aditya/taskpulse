@@ -1,12 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, ChevronLeft, Check, X, ListTodo, Paperclip, Pencil } from 'lucide-react';
+import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, ChevronLeft, Check, X, ListTodo, Paperclip, Pencil, Bell, Clock, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from './MediaUploader';
 import { saveTaskToDB, deleteTaskFromDB, deleteTasksFromDB } from '@/lib/dbAdapter';
 
-export default function TaskManager({ tasks, setTasks, tags, currentFilter, activeTag }) {
+export default function TaskManager({
+  tasks,
+  setTasks,
+  tags,
+  currentFilter,
+  activeTag,
+  reminders = [],
+  onOpenNotificationModal,
+  activeProfile
+}) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
@@ -34,11 +43,33 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const [filterDate, setFilterDate] = useState('all'); // 'all', 'today', 'tomorrow', 'next-week', 'custom'
   const [customFilterDate, setCustomFilterDate] = useState('');
 
-  // History sub-view & date filter state (Enhancement 11 & 12)
+  // Sub-views for Planned & History tabs
   const [historySubView, setHistorySubView] = useState('list'); // 'list' | 'calendar'
+  const [plannedSubView, setPlannedSubView] = useState('list'); // 'list' | 'calendar'
   const [historyPreset, setHistoryPreset] = useState('all'); // 'all' | 'today' | 'yesterday' | 'last7' | 'month' | 'custom'
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
+
+  const addTaskOnDate = (title, dateStr) => {
+    if (!title || !title.trim()) return;
+    const newTask = {
+      id: 't-' + Date.now(),
+      profileId: activeProfile?.id || 'p-1',
+      title: title.trim(),
+      completed: false,
+      myDay: dateStr === getTodayStr(),
+      starred: false,
+      dueDate: dateStr,
+      subtasks: [],
+      tags: activeTag ? [activeTag] : ['Work'],
+      notes: '',
+      media: [],
+      createdAt: new Date().toISOString(),
+    };
+    setTasks([newTask, ...tasks]);
+    saveTaskToDB(newTask);
+  };
+
 
   const updateTaskDueDate = (taskId, newDueDate) => {
     let targetTask = null;
@@ -515,7 +546,29 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </div>
 
-        {/* Enhancement 11 & 12 — History Controls (sub-tabs + date filter), only in Completed view */}
+        {/* Planned View Controls (Sub-tabs: List / Calendar) */}
+        {currentFilter === 'planned' && (
+          <div className="flex items-center gap-1 p-1 bg-slate-900/80 border border-slate-800 rounded-xl">
+            <button
+              onClick={() => setPlannedSubView('list')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition ${
+                plannedSubView === 'list' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ListTodo className="w-3.5 h-3.5" /> List View
+            </button>
+            <button
+              onClick={() => setPlannedSubView('calendar')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition ${
+                plannedSubView === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" /> Calendar View
+            </button>
+          </div>
+        )}
+
+        {/* History Controls (sub-tabs + date filter), in Completed view */}
         {currentFilter === 'completed' && (
           <div className="space-y-3">
             {/* Sub-tabs: List / Calendar */}
@@ -594,23 +647,30 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         )}
 
-        {/* Calendar View — visible only in History tab when Calendar sub-tab is active */}
-        {currentFilter === 'completed' && historySubView === 'calendar' && (
+        {/* Calendar View — visible when Calendar sub-tab is selected in History OR Planned view */}
+        {((currentFilter === 'completed' && historySubView === 'calendar') ||
+          (currentFilter === 'planned' && plannedSubView === 'calendar')) && (
           <HistoryCalendar
             tasks={tasks}
+            reminders={reminders}
+            onAddTaskOnDate={addTaskOnDate}
             onSelectDay={(dateStr) => {
-              setHistoryDateFrom(dateStr);
-              setHistoryDateTo(dateStr);
-              setHistoryPreset('custom');
-              setHistorySubView('list');
+              if (currentFilter === 'completed') {
+                setHistoryDateFrom(dateStr);
+                setHistoryDateTo(dateStr);
+                setHistoryPreset('custom');
+                setHistorySubView('list');
+              }
             }}
             selectedDay={historyPreset === 'custom' && historyDateFrom === historyDateTo ? historyDateFrom : ''}
           />
         )}
 
         {/* Tasks List Container */}
-        {(currentFilter !== 'completed' || historySubView === 'list') && (
-        <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
+        {((currentFilter !== 'completed' || historySubView === 'list') &&
+          (currentFilter !== 'planned' || plannedSubView === 'list')) && (
+          <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-240px)] pr-1 touch-pan-y">
+
           {/* 1. Active Tasks Section */}
           {activeTasks.length === 0 && historyFilteredTasks.length === 0 ? (
             <div className="py-12 text-center bg-slate-900/40 border border-slate-800/60 rounded-xl">
@@ -1072,20 +1132,14 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
   );
 }
 
-// ─── Enhancement 11 — History Calendar Component ─────────────────────────────
+// ─── Enhancement 11 — Interactive Task Calendar Component ─────────────────────
 
-function HistoryCalendar({ tasks, onSelectDay, selectedDay }) {
+function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAddTaskOnDate }) {
   const now = new Date();
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
   const [calendarYear, setCalendarYear] = useState(now.getFullYear());
-
-  // Build set of dates that have completed tasks
-  const completedDates = new Set(
-    tasks
-      .filter(t => t.completed)
-      .map(t => t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : ''))
-      .filter(Boolean)
-  );
+  const [focusedDay, setFocusedDay] = useState(selectedDay || '');
+  const [quickTitle, setQuickTitle] = useState('');
 
   const pad = n => String(n).padStart(2, '0');
   const getDaysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
@@ -1095,6 +1149,8 @@ function HistoryCalendar({ tasks, onSelectDay, selectedDay }) {
     const d = new Date();
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   })();
+
+  const activeSelectedDay = focusedDay || selectedDay || todayCalStr;
 
   const prevMonth = () => {
     if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(y => y - 1); }
@@ -1111,90 +1167,198 @@ function HistoryCalendar({ tasks, onSelectDay, selectedDay }) {
   const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
   const firstDay = getFirstDayOfMonth(calendarMonth, calendarYear);
 
-  // Build grid cells (null = leading empty cell, number = day)
+  // Group tasks by date
+  const completedByDate = {};
+  const dueByDate = {};
+  tasks.forEach(t => {
+    if (t.completed) {
+      const dateKey = t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : '');
+      if (dateKey) completedByDate[dateKey] = (completedByDate[dateKey] || 0) + 1;
+    } else if (t.dueDate) {
+      dueByDate[t.dueDate] = (dueByDate[t.dueDate] || 0) + 1;
+    }
+  });
+
+  const remindersByDate = {};
+  reminders.forEach(r => {
+    if (r.date) remindersByDate[r.date] = (remindersByDate[r.date] || 0) + 1;
+  });
+
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+  // Filter tasks & reminders for selected day
+  const dayTasks = tasks.filter(t => {
+    if (t.completed) {
+      const d = t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : '');
+      return d === activeSelectedDay;
+    }
+    return t.dueDate === activeSelectedDay;
+  });
+  const dayReminders = reminders.filter(r => r.date === activeSelectedDay);
+
+  const handleQuickAdd = (e) => {
+    e.preventDefault();
+    if (!quickTitle.trim() || !onAddTaskOnDate) return;
+    onAddTaskOnDate(quickTitle.trim(), activeSelectedDay);
+    setQuickTitle('');
+  };
+
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-      {/* Month navigation header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={prevMonth}
-          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <span className="text-sm font-bold text-slate-100 tracking-wide">
-          {MONTH_NAMES[calendarMonth]} {calendarYear}
-        </span>
-        <button
-          onClick={nextMonth}
-          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Day-of-week headers */}
-      <div className="grid grid-cols-7 gap-1">
-        {DAY_NAMES.map(d => (
-          <div key={d} className="text-center text-[10px] font-semibold text-slate-500 uppercase py-1">
-            {d}
+    <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-1 touch-pan-y animate-fade-in">
+      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={prevMonth}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95 flex items-center gap-1 text-xs"
+          >
+            <ChevronLeft className="w-4 h-4" /> Prev
+          </button>
+          <div className="text-center">
+            <span className="text-base font-bold text-slate-100 tracking-wide block">
+              {MONTH_NAMES[calendarMonth]} {calendarYear}
+            </span>
+            <span className="text-[10px] text-indigo-400 font-medium">Interactive Multi-View Calendar</span>
           </div>
-        ))}
+          <button
+            onClick={nextMonth}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95 flex items-center gap-1 text-xs"
+          >
+            Next <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Day of week header */}
+        <div className="grid grid-cols-7 gap-1">
+          {DAY_NAMES.map(d => (
+            <div key={d} className="text-center text-[11px] font-bold text-slate-500 uppercase py-1">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Grid Cells */}
+        <div className="grid grid-cols-7 gap-1.5">
+          {cells.map((day, idx) => {
+            if (!day) return <div key={`empty-${idx}`} className="min-h-[44px] rounded-xl bg-slate-950/20" />;
+            const dateStr = `${calendarYear}-${pad(calendarMonth + 1)}-${pad(day)}`;
+            const completedCount = completedByDate[dateStr] || 0;
+            const dueCount = dueByDate[dateStr] || 0;
+            const reminderCount = remindersByDate[dateStr] || 0;
+            const isToday = dateStr === todayCalStr;
+            const isSelected = dateStr === activeSelectedDay;
+
+            return (
+              <button
+                key={dateStr}
+                onClick={() => { setFocusedDay(dateStr); if (onSelectDay) onSelectDay(dateStr); }}
+                className={`relative flex flex-col items-center justify-between p-1.5 min-h-[50px] sm:min-h-[56px] rounded-xl text-xs font-semibold transition active:scale-95 border ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50'
+                    : isToday
+                    ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20'
+                    : (completedCount > 0 || dueCount > 0 || reminderCount > 0)
+                    ? 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-750'
+                    : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:bg-slate-800/40 hover:text-slate-300'
+                }`}
+              >
+                <span className="text-xs font-bold leading-none">{day}</span>
+
+                {/* Badge Dots */}
+                <div className="flex items-center gap-1 mt-1">
+                  {dueCount > 0 && (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-indigo-400'}`} title={`${dueCount} active due tasks`} />
+                  )}
+                  {completedCount > 0 && (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-400'}`} title={`${completedCount} completed tasks`} />
+                  )}
+                  {reminderCount > 0 && (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-200' : 'bg-amber-400'}`} title={`${reminderCount} scheduled reminders`} />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400 pt-3 border-t border-slate-800">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-400" /> Active Due Task</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Completed Task</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> Scheduled Reminder</span>
+        </div>
       </div>
 
-      {/* Calendar day cells */}
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
-          const dateStr = `${calendarYear}-${pad(calendarMonth + 1)}-${pad(day)}`;
-          const hasActivity = completedDates.has(dateStr);
-          const isToday = dateStr === todayCalStr;
-          const isSelected = dateStr === selectedDay;
-          return (
+      {/* Selected Day Agenda Breakdown Drawer */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-indigo-400" />
+            <h4 className="text-xs font-bold text-slate-100">
+              Agenda for {activeSelectedDay === todayCalStr ? `Today (${activeSelectedDay})` : activeSelectedDay}
+            </h4>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-semibold">
+            {dayTasks.length} tasks • {dayReminders.length} reminders
+          </span>
+        </div>
+
+        {/* Quick Task Add for Selected Day */}
+        {onAddTaskOnDate && (
+          <form onSubmit={handleQuickAdd} className="flex gap-2">
+            <input
+              type="text"
+              placeholder={`Add a task for ${activeSelectedDay}...`}
+              value={quickTitle}
+              onChange={e => setQuickTitle(e.target.value)}
+              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-indigo-500 transition"
+            />
             <button
-              key={dateStr}
-              onClick={() => onSelectDay(dateStr)}
-              className={`relative flex flex-col items-center justify-center aspect-square rounded-xl text-xs font-medium transition active:scale-95 ${
-                isSelected
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : isToday
-                  ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
-                  : hasActivity
-                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20'
-                  : 'text-slate-600 hover:bg-slate-800 hover:text-slate-300'
-              }`}
+              type="submit"
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow transition"
             >
-              {day}
-              {hasActivity && !isSelected && (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
-              )}
+              <Plus className="w-3.5 h-3.5" /> Add Task
             </button>
-          );
-        })}
-      </div>
+          </form>
+        )}
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 pt-2 border-t border-slate-800">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-          Has completed tasks
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
-          Selected day
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm border border-indigo-500/50 inline-block" />
-          Today
-        </span>
+        {/* Agenda Items List */}
+        {dayTasks.length === 0 && dayReminders.length === 0 ? (
+          <p className="text-xs text-slate-500 italic py-4 text-center">No tasks or reminders recorded for this date.</p>
+        ) : (
+          <div className="space-y-2">
+            {dayTasks.map(t => (
+              <div key={t.id} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${t.completed ? 'bg-emerald-400' : 'bg-indigo-400'}`} />
+                  <span className={`font-medium ${t.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                    {t.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                  {t.completed ? (
+                    <span className="text-emerald-400 font-semibold">Completed</span>
+                  ) : (
+                    <span className="text-indigo-400 font-semibold">Due {t.dueDate}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {dayReminders.map(r => (
+              <div key={r.id} className="p-2.5 rounded-xl bg-amber-950/20 border border-amber-500/20 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-medium text-slate-200">{r.title}</span>
+                </div>
+                <span className="text-[10px] text-amber-400 font-mono">Alert: {r.time}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <p className="text-[10px] text-slate-600 text-center italic">
-        Click any date to view tasks completed that day
-      </p>
     </div>
   );
 }
+
