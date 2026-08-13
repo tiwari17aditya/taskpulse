@@ -77,3 +77,28 @@ This document outlines the architectural roadmap, upcoming core features, notifi
 - **Notion Workspace Import**: Parse Notion zip exports containing `.md` and `.csv` pages, database rows, checklists, and media files.
 - **Universal CSV & JSON Importer**: Drag-and-drop CSV / JSON file importer with field mapping wizard for bulk importing tasks, subtasks, due dates, and note cards.
 
+---
+
+## 11. Calendar Tab for History Navigation & Date-Based Task Access
+- **Dedicated Calendar View**: A full interactive calendar panel embedded as a tab inside the **History** section, allowing users to visually browse past task activity by day, week, or month.
+- **Date-Click Navigation**: Clicking any date on the calendar instantly filters and jumps to all tasks that were completed, created, or modified on that specific date.
+- **Month/Week/Day Toggle**: Switch between month overview, weekly agenda, and single-day drill-down modes for flexible history exploration.
+- **Visual Activity Indicators**: Highlight dates that have task activity with colored dots or badges (e.g., green for completed, orange for overdue) for quick visual scanning.
+
+---
+
+## 12. Date Filter for History Tab
+- **Date Range Picker**: Add a **From / To** date range picker at the top of the History tab to filter task history within any custom date window.
+- **Quick Presets**: One-click filter presets — *Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Custom Range*.
+- **Combined Filters**: Allow combining date filters with existing status, priority, or tag filters for precise history queries.
+- **Clear & Reset**: A single "Clear Filters" button resets all active date and category filters back to the full history view.
+
+---
+
+## 13. Inline Task Title Editing
+- **Edit Button per Task Card**: Every task card displays a dedicated **Edit (pencil) icon** on hover or tap, accessible at all times across all views (My Day, Tasks, History, etc.).
+- **Inline Edit Mode**: Clicking the edit icon transforms the task title into an editable text field in-place — no modal or page navigation required.
+- **Keyboard Shortcuts**: Press **Enter** to save the updated title or **Escape** to discard changes and revert to the original title instantly.
+- **Auto-Save on Blur**: If the user clicks away from the field, the updated title is automatically saved to prevent accidental data loss.
+- **Validation**: Empty or whitespace-only titles are rejected with an inline error hint, ensuring every task always has a valid title.
+

@@ -37,6 +37,7 @@
 | 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 950 | 380 | 1330 | $0.0010 | Added Section 10 Universal Data Import Engine (Google Keep, Apple Notes, Joplin, Notion, CSV/JSON) in ENHANCEMENTS.md |
 | 2026-08-10 | ec845c45-a13c-421a-8dd7-f8fca23e55a2 | 1600 | 620 | 2220 | $0.0016 | Rebuilt ShareRedirectModal as Open-Source Sharing Utilities (Codeshare URL launcher + visited history, Toffeeshare direct link); removed Token Log & Daily Logs from Sidebar |
 | 2026-08-11 | 71de3541-c2e8-47ba-b0b9-f796a5a82e92 | 2200 | 850 | 3050 | $0.0023 | Implemented Everyday Checked Tasks Aging Filter & Database Column Schema |
+| 2026-08-13 | 27c3ba26-a29a-4a0c-902d-562dee793391 | 6800 | 3200 | 10000 | $0.0075 | Implemented Enhancements 11-13: Calendar Tab in History, Date Filter for History, Inline Task Title Editing |
 
 
 

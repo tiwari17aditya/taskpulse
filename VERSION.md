@@ -1,5 +1,19 @@
 # Version History
 
+## [v1.0.0-rc4] - 2026-08-13
+
+### Added & Enhanced
+- **Calendar Tab in History (Enhancement 11)**: Interactive month calendar embedded in the History/Completed view as a sub-tab. Days with completed tasks highlighted in green with dot badges. Clicking any date auto-filters the list to tasks completed that day.
+- **Date Filter for History Tab (Enhancement 12)**: Dedicated "Filter History" toolbar with quick presets (All Time, Today, Yesterday, Last 7 Days, This Month) plus From/To custom date range pickers and a Clear Filters button.
+- **Inline Task Title Editing (Enhancement 13)**: Pencil icon appears on every task card on hover. Clicking it activates in-place title editing — Enter to save, Escape to cancel, auto-save on blur. Validates against empty titles. Syncs changes to DB immediately.
+
+### Technical Notes
+- All three enhancements are **pure UI state changes** in `TaskManager.js` — no database schema changes.
+- `HistoryCalendar` added as a standalone component at the bottom of `TaskManager.js`.
+- `completedAt` and `createdAt` fields used for calendar activity and date filtering (pre-existing fields).
+
+---
+
 ## [v1.0.0-rc3] - 2026-08-11
 
 ### Added & Enhanced

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, X, ListTodo, Paperclip } from 'lucide-react';
+import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, ChevronLeft, Check, X, ListTodo, Paperclip, Pencil } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from './MediaUploader';
 import { saveTaskToDB, deleteTaskFromDB, deleteTasksFromDB } from '@/lib/dbAdapter';
@@ -28,10 +28,17 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const getTodayStr = () => getLocalDateStr();
   const getTomorrowStr = () => getLocalDateStr(new Date(Date.now() + 86400000));
   const getNextWeekStr = () => getLocalDateStr(new Date(Date.now() + 7 * 86400000));
+  const getYesterdayStr = () => getLocalDateStr(new Date(Date.now() - 86400000));
 
   const [showCompletedSection, setShowCompletedSection] = useState(true);
   const [filterDate, setFilterDate] = useState('all'); // 'all', 'today', 'tomorrow', 'next-week', 'custom'
   const [customFilterDate, setCustomFilterDate] = useState('');
+
+  // History sub-view & date filter state (Enhancement 11 & 12)
+  const [historySubView, setHistorySubView] = useState('list'); // 'list' | 'calendar'
+  const [historyPreset, setHistoryPreset] = useState('all'); // 'all' | 'today' | 'yesterday' | 'last7' | 'month' | 'custom'
+  const [historyDateFrom, setHistoryDateFrom] = useState('');
+  const [historyDateTo, setHistoryDateTo] = useState('');
 
   const updateTaskDueDate = (taskId, newDueDate) => {
     let targetTask = null;
@@ -104,6 +111,34 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   const activeTasks = currentFilter === 'completed' ? [] : categoryTasks.filter(t => !t.completed);
   const completedTasks = currentFilter === 'completed' ? categoryTasks : categoryTasks.filter(t => t.completed);
 
+  // History-specific filtering on top of completedTasks (Enhancement 12)
+  const historyFilteredTasks = currentFilter === 'completed' ? (() => {
+    if (historyPreset === 'all' && !historyDateFrom && !historyDateTo) return completedTasks;
+    return completedTasks.filter(t => {
+      const taskDate = t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : '');
+      if (historyPreset === 'today') return taskDate === todayStr;
+      if (historyPreset === 'yesterday') return taskDate === getYesterdayStr();
+      if (historyPreset === 'last7') {
+        const from = getLocalDateStr(new Date(Date.now() - 6 * 86400000));
+        return taskDate >= from && taskDate <= todayStr;
+      }
+      if (historyPreset === 'month') return taskDate.startsWith(todayStr.slice(0, 7));
+      if (historyPreset === 'custom') {
+        if (historyDateFrom && historyDateTo) return taskDate >= historyDateFrom && taskDate <= historyDateTo;
+        if (historyDateFrom) return taskDate >= historyDateFrom;
+        if (historyDateTo) return taskDate <= historyDateTo;
+        return true;
+      }
+      return true;
+    });
+  })() : completedTasks;
+
+  const clearHistoryFilters = () => {
+    setHistoryPreset('all');
+    setHistoryDateFrom('');
+    setHistoryDateTo('');
+  };
+
   const addTask = (e) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
@@ -128,6 +163,22 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
     saveTaskToDB(newTask); // Direct sync to NeonDB / active database
     setNewTaskTitle('');
     setSelectedDueDate('');
+  };
+
+  // Enhancement 13 — update task title and sync to DB
+  const updateTaskTitle = (taskId, newTitle) => {
+    if (!newTitle || !newTitle.trim()) return;
+    let targetTask = null;
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        targetTask = { ...t, title: newTitle.trim() };
+        return targetTask;
+      }
+      return t;
+    });
+    setTasks(updated);
+    if (targetTask) saveTaskToDB(targetTask);
+    if (selectedTask?.id === taskId) setSelectedTask(targetTask);
   };
 
   const toggleTaskComplete = (taskId) => {
@@ -464,14 +515,118 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
           </div>
         </div>
 
+        {/* Enhancement 11 & 12 — History Controls (sub-tabs + date filter), only in Completed view */}
+        {currentFilter === 'completed' && (
+          <div className="space-y-3">
+            {/* Sub-tabs: List / Calendar */}
+            <div className="flex items-center gap-1 p-1 bg-slate-900/80 border border-slate-800 rounded-xl">
+              <button
+                onClick={() => setHistorySubView('list')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition ${
+                  historySubView === 'list' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <ListTodo className="w-3.5 h-3.5" /> List View
+              </button>
+              <button
+                onClick={() => setHistorySubView('calendar')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition ${
+                  historySubView === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" /> Calendar View
+              </button>
+            </div>
+
+            {/* History Date Filter Toolbar */}
+            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Filter History
+                </span>
+                {(historyPreset !== 'all' || historyDateFrom || historyDateTo) && (
+                  <button
+                    onClick={clearHistoryFilters}
+                    className="text-[11px] text-rose-400 hover:text-rose-300 transition font-medium"
+                  >
+                    ✕ Clear Filters
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { key: 'all', label: 'All Time' },
+                  { key: 'today', label: 'Today' },
+                  { key: 'yesterday', label: 'Yesterday' },
+                  { key: 'last7', label: 'Last 7 Days' },
+                  { key: 'month', label: 'This Month' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => { setHistoryPreset(key); setHistoryDateFrom(''); setHistoryDateTo(''); }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                      historyPreset === key && !historyDateFrom && !historyDateTo
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1 border-t border-slate-800">
+                <span className="font-medium text-slate-500">From:</span>
+                <input
+                  type="date"
+                  value={historyDateFrom}
+                  onChange={e => { setHistoryDateFrom(e.target.value); setHistoryPreset('custom'); }}
+                  className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none focus:border-indigo-500 transition"
+                />
+                <span className="font-medium text-slate-500">To:</span>
+                <input
+                  type="date"
+                  value={historyDateTo}
+                  onChange={e => { setHistoryDateTo(e.target.value); setHistoryPreset('custom'); }}
+                  className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none focus:border-indigo-500 transition"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calendar View — visible only in History tab when Calendar sub-tab is active */}
+        {currentFilter === 'completed' && historySubView === 'calendar' && (
+          <HistoryCalendar
+            tasks={tasks}
+            onSelectDay={(dateStr) => {
+              setHistoryDateFrom(dateStr);
+              setHistoryDateTo(dateStr);
+              setHistoryPreset('custom');
+              setHistorySubView('list');
+            }}
+            selectedDay={historyPreset === 'custom' && historyDateFrom === historyDateTo ? historyDateFrom : ''}
+          />
+        )}
+
         {/* Tasks List Container */}
+        {(currentFilter !== 'completed' || historySubView === 'list') && (
         <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
           {/* 1. Active Tasks Section */}
-          {activeTasks.length === 0 && completedTasks.length === 0 ? (
+          {activeTasks.length === 0 && historyFilteredTasks.length === 0 ? (
             <div className="py-12 text-center bg-slate-900/40 border border-slate-800/60 rounded-xl">
               <ListTodo className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-slate-400">No active tasks in this view</p>
-              <p className="text-xs text-slate-500">Type above to create your first item</p>
+              <p className="text-sm font-medium text-slate-400">
+                {currentFilter === 'completed'
+                  ? (historyPreset !== 'all' || historyDateFrom || historyDateTo)
+                    ? 'No tasks completed in this period'
+                    : 'No completed tasks yet'
+                  : 'No active tasks in this view'}
+              </p>
+              <p className="text-xs text-slate-500">
+                {currentFilter === 'completed'
+                  ? 'Try a different date range or clear filters'
+                  : 'Type above to create your first item'}
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -491,13 +646,14 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                   isSelectMode={isSelectMode}
                   isSelectedForBulk={selectedTaskIds.includes(task.id)}
                   toggleSelectTask={toggleSelectTask}
+                  onRenameTask={updateTaskTitle}
                 />
               ))}
             </div>
           )}
 
-          {/* 2. Completed / History Tasks Section (with Strikethrough Cut Lines) */}
-          {completedTasks.length > 0 && (
+          {/* 2. Completed / History Tasks Section */}
+          {historyFilteredTasks.length > 0 && (
             <div className="space-y-2 pt-3 border-t border-slate-800/80">
               <button
                 type="button"
@@ -505,13 +661,13 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                 className="text-xs font-semibold text-slate-400 hover:text-slate-200 uppercase tracking-wider flex items-center gap-2 py-1"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Completed Items ({completedTasks.length})</span>
+                <span>Completed Items ({historyFilteredTasks.length})</span>
                 <span className="text-[10px] text-slate-500 font-mono font-normal">({showCompletedSection ? 'Hide' : 'Show'})</span>
               </button>
 
               {showCompletedSection && (
                 <div className="space-y-2">
-                  {completedTasks.map((task) => (
+                  {historyFilteredTasks.map((task) => (
                     <TaskCard
                       key={task.id}
                       task={task}
@@ -523,6 +679,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
                       isSelectMode={isSelectMode}
                       isSelectedForBulk={selectedTaskIds.includes(task.id)}
                       toggleSelectTask={toggleSelectTask}
+                      onRenameTask={updateTaskTitle}
                     />
                   ))}
                 </div>
@@ -530,6 +687,7 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Task Detail Drawer (MS To-Do Style Slide-Over Panel) */}
@@ -722,11 +880,23 @@ export default function TaskManager({ tasks, setTasks, tags, currentFilter, acti
   );
 }
 
-function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, updateTaskDueDate, tags, getTodayStr, getTomorrowStr, getNextWeekStr, isSelectMode, isSelectedForBulk, toggleSelectTask }) {
+function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, toggleStar, updateTaskDueDate, tags, getTodayStr, getTomorrowStr, getNextWeekStr, isSelectMode, isSelectedForBulk, toggleSelectTask, onRenameTask }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  // Enhancement 13 — inline title editing state
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState('');
   const isSelected = selectedTask?.id === task.id;
   const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
+
+  const handleSaveTitle = () => {
+    const trimmed = editTitleValue.trim();
+    if (trimmed && trimmed !== task.title) {
+      onRenameTask?.(task.id, trimmed);
+    }
+    setEditingTitle(false);
+    setEditTitleValue('');
+  };
 
   return (
     <div
@@ -768,9 +938,34 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
         </button>
 
         <div className="min-w-0">
-          <p className={`text-sm font-medium transition ${task.completed ? 'line-through text-slate-400 decoration-slate-500 decoration-2' : 'text-slate-200'}`}>
-            {task.title}
-          </p>
+          {editingTitle ? (
+            <input
+              autoFocus
+              type="text"
+              value={editTitleValue}
+              onChange={e => setEditTitleValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleSaveTitle();
+                if (e.key === 'Escape') { setEditingTitle(false); setEditTitleValue(''); }
+              }}
+              onBlur={handleSaveTitle}
+              onClick={e => e.stopPropagation()}
+              className="text-sm font-medium w-full bg-slate-800 border border-indigo-500 text-slate-100 px-2.5 py-0.5 rounded-lg outline-none focus:ring-1 focus:ring-indigo-400"
+            />
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <p className={`text-sm font-medium transition ${task.completed ? 'line-through text-slate-400 decoration-slate-500 decoration-2' : 'text-slate-200'}`}>
+                {task.title}
+              </p>
+              <button
+                onClick={e => { e.stopPropagation(); setEditTitleValue(task.title); setEditingTitle(true); }}
+                className="p-0.5 rounded text-slate-600 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition shrink-0"
+                title="Edit task title"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
           {/* Meta badges: My Day, Subtasks count, Due Date, Tags */}
           <div className="flex flex-wrap items-center gap-2 mt-1 relative">
@@ -873,6 +1068,133 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
         </button>
         <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition" />
       </div>
+    </div>
+  );
+}
+
+// ─── Enhancement 11 — History Calendar Component ─────────────────────────────
+
+function HistoryCalendar({ tasks, onSelectDay, selectedDay }) {
+  const now = new Date();
+  const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
+  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+
+  // Build set of dates that have completed tasks
+  const completedDates = new Set(
+    tasks
+      .filter(t => t.completed)
+      .map(t => t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : ''))
+      .filter(Boolean)
+  );
+
+  const pad = n => String(n).padStart(2, '0');
+  const getDaysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
+  const getFirstDayOfMonth = (m, y) => new Date(y, m, 1).getDay();
+
+  const todayCalStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  })();
+
+  const prevMonth = () => {
+    if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(y => y - 1); }
+    else setCalendarMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(y => y + 1); }
+    else setCalendarMonth(m => m + 1);
+  };
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAY_NAMES = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
+  const firstDay = getFirstDayOfMonth(calendarMonth, calendarYear);
+
+  // Build grid cells (null = leading empty cell, number = day)
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+      {/* Month navigation header */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={prevMonth}
+          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-bold text-slate-100 tracking-wide">
+          {MONTH_NAMES[calendarMonth]} {calendarYear}
+        </span>
+        <button
+          onClick={nextMonth}
+          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Day-of-week headers */}
+      <div className="grid grid-cols-7 gap-1">
+        {DAY_NAMES.map(d => (
+          <div key={d} className="text-center text-[10px] font-semibold text-slate-500 uppercase py-1">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar day cells */}
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((day, idx) => {
+          if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
+          const dateStr = `${calendarYear}-${pad(calendarMonth + 1)}-${pad(day)}`;
+          const hasActivity = completedDates.has(dateStr);
+          const isToday = dateStr === todayCalStr;
+          const isSelected = dateStr === selectedDay;
+          return (
+            <button
+              key={dateStr}
+              onClick={() => onSelectDay(dateStr)}
+              className={`relative flex flex-col items-center justify-center aspect-square rounded-xl text-xs font-medium transition active:scale-95 ${
+                isSelected
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : isToday
+                  ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
+                  : hasActivity
+                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20'
+                  : 'text-slate-600 hover:bg-slate-800 hover:text-slate-300'
+              }`}
+            >
+              {day}
+              {hasActivity && !isSelected && (
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 pt-2 border-t border-slate-800">
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+          Has completed tasks
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+          Selected day
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-sm border border-indigo-500/50 inline-block" />
+          Today
+        </span>
+      </div>
+      <p className="text-[10px] text-slate-600 text-center italic">
+        Click any date to view tasks completed that day
+      </p>
     </div>
   );
 }
