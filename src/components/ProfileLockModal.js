@@ -120,7 +120,7 @@ export default function ProfileLockModal({
                 <span className={`text-[9px] font-mono px-2 py-0.5 rounded font-semibold uppercase ${
                   isAdmin ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-300'
                 }`}>
-                  {isAdmin ? 'Admin (Shared LDAP PIN)' : 'User Profile'}
+                  {isAdmin ? 'Admin (Shared LDAP PIN)' : 'Member Profile'}
                 </span>
               </div>
               <span className="text-[11px] text-slate-400 block">

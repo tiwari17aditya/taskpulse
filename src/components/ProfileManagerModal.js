@@ -31,7 +31,7 @@ export default function ProfileManagerModal({
   const [email, setEmail] = useState('');
   const [avatar, setAvatar] = useState('👤');
   const [color, setColor] = useState('#6366f1');
-  const [role, setRole] = useState('User');
+  const [role, setRole] = useState('Member');
   const [isLocked, setIsLocked] = useState(false);
 
   if (!isOpen) return null;
@@ -41,7 +41,7 @@ export default function ProfileManagerModal({
     setEmail('');
     setAvatar('👤');
     setColor('#6366f1');
-    setRole('User');
+    setRole('Member');
     setIsLocked(false);
     setEditingProfileId(null);
     setIsEditing(true);
@@ -53,7 +53,7 @@ export default function ProfileManagerModal({
     setEmail(p.email || '');
     setAvatar(p.avatar || '👤');
     setColor(p.color || '#6366f1');
-    setRole(p.role || 'User');
+    setRole(p.role || 'Member');
     setIsLocked(p.isLocked || false);
     setIsEditing(true);
   };
@@ -176,7 +176,7 @@ export default function ProfileManagerModal({
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 outline-none"
                 />
                 <span className="text-[10px] text-slate-500 block mt-1">
-                  New profiles are assigned standard <strong>User</strong> access by default. Admin access can only be granted by an Admin inside the Admin Panel.
+                  New profiles are assigned standard <strong>Member</strong> access by default. Admin access can only be granted by an Admin inside the Admin Panel.
                 </span>
               </div>
 

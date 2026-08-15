@@ -27,7 +27,7 @@ export default function AdminPanelModal({
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState('User');
+  const [newUserRole, setNewUserRole] = useState('Member');
   const [editingAdminPin, setEditingAdminPin] = useState(false);
   const [tempAdminPinInput, setTempAdminPinInput] = useState('');
 
@@ -42,7 +42,7 @@ export default function AdminPanelModal({
     }
     const updated = profiles.map(p => {
       if (p.id === profileId) {
-        const newRole = p.role === 'Admin' ? 'User' : 'Admin';
+        const newRole = p.role === 'Admin' ? 'Member' : 'Admin';
         return { ...p, role: newRole };
       }
       return p;
@@ -67,7 +67,7 @@ export default function AdminPanelModal({
     onSaveProfiles([...profiles, newProfile]);
     setNewUserName('');
     setNewUserEmail('');
-    setNewUserRole('User');
+    setNewUserRole('Member');
     setShowAddUserModal(false);
   };
 
@@ -305,12 +305,12 @@ export default function AdminPanelModal({
                           <span className="text-[11px] font-medium text-slate-400">Assign Role:</span>
                           <button
                             type="button"
-                            onClick={() => setNewUserRole('User')}
+                            onClick={() => setNewUserRole('Member')}
                             className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                              newUserRole === 'User' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                              newUserRole === 'Member' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
                             }`}
                           >
-                            User
+                            Member
                           </button>
                           <button
                             type="button"
@@ -397,9 +397,9 @@ export default function AdminPanelModal({
                                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
                                   : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
                               }`}
-                              title={isCurrent ? 'Cannot change active profile role' : 'Click to toggle Admin / User role'}
+                              title={isCurrent ? 'Cannot change active profile role' : 'Click to toggle Admin / Member role'}
                             >
-                              Role: {p.role || 'User'}
+                              Role: {p.role || 'Member'}
                             </button>
                           </div>
                         </div>

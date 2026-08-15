@@ -489,7 +489,7 @@ export default function Home() {
             >
               <span className="text-xs">{activeProfile?.avatar || '👤'}</span>
               <span className="hidden sm:inline text-xs font-semibold">{activeProfile?.name || 'Personal'}</span>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">({activeProfile?.role || 'User'})</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">({activeProfile?.role || 'Member'})</span>
             </button>
 
             {/* Profile Lock Button */}
