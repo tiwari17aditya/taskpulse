@@ -59,6 +59,7 @@ export default function Home() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
   const [lockTargetProfile, setLockTargetProfile] = useState(null);
+  const [isProfileUnlocked, setIsProfileUnlocked] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false);
 
   // Routine Auto-Populate & Completion Log helper functions
@@ -275,6 +276,9 @@ export default function Home() {
     if (activeP && (activeP.isLocked || activeP.pin)) {
       setLockTargetProfile(activeP);
       setShowLockModal(true);
+      setIsProfileUnlocked(false);
+    } else {
+      setIsProfileUnlocked(true);
     }
 
     // Initial DB sync & push initial profiles if DB is empty
@@ -340,15 +344,17 @@ export default function Home() {
   };
 
 
-  // Profile management handlers
-  const handleSelectProfile = (profile) => {
-    if (profile.isLocked || profile.pin) {
-      setLockTargetProfile(profile);
-      setShowLockModal(true);
+  // Profile management handlers (Require PIN unlock BEFORE switching activeProfile!)
+  const handleSelectProfile = (targetProfile) => {
+    setLockTargetProfile(targetProfile);
+    setShowProfileModal(false);
+    if (targetProfile.id === activeProfile?.id && isProfileUnlocked) {
+      // Re-locking current active profile
+      setIsProfileUnlocked(false);
     } else {
-      setActiveProfile(profile);
-      storage.setActiveProfile(profile.id);
+      setIsProfileUnlocked(false);
     }
+    setShowLockModal(true);
   };
 
   const handleSaveProfiles = (updatedProfiles) => {
@@ -649,11 +655,15 @@ export default function Home() {
       {showLockModal && (
         <ProfileLockModal
           isOpen={showLockModal}
-          onClose={() => setShowLockModal(false)}
+          onClose={() => {
+            setShowLockModal(false);
+          }}
           targetProfile={lockTargetProfile || activeProfile}
           onUnlockSuccess={(unlockedProfile) => {
             setActiveProfile(unlockedProfile);
             storage.setActiveProfile(unlockedProfile.id);
+            setIsProfileUnlocked(true);
+            setShowLockModal(false);
           }}
           profiles={profiles}
           onSaveProfiles={handleSaveProfiles}
