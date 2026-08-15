@@ -29,12 +29,5 @@
 [2026-08-15 22:14:00] [FIX] Enforced Admin role persistence for Aditya profile in storage.js, page.js startup auto-repair, and ProfileManagerModal.js edit handler to guarantee Admin role and header trigger button never disappear.
 [2026-08-15 22:18:00] [FEAT] Standardized non-admin RBAC roles to 'Member' and admin roles to 'Admin' across rbac.json, ProfileManagerModal.js, AdminPanelModal.js, ProfileLockModal.js, and page.js header tags.
 [2026-08-15 22:20:00] [SECURITY] Enforced impenetrable Profile Privacy Lock Guard in page.js, blocking profile state switch and content rendering until PIN verification succeeds.
-
-
-
-
-
-
-
-
+[2026-08-15 22:22:00] [DB] Added pin and isLocked columns to profiles table schema in api/db/profiles/route.js for real-time NeonDB PostgreSQL sync.
 

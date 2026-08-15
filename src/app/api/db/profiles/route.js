@@ -21,9 +21,13 @@ async function ensureProfilesTableExists(sql) {
       color TEXT,
       avatar TEXT,
       role TEXT,
+      pin TEXT DEFAULT '1234',
+      "isLocked" BOOLEAN DEFAULT false,
       "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
   `;
+  await sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pin TEXT DEFAULT '1234';`;
+  await sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS "isLocked" BOOLEAN DEFAULT false;`;
 }
 
 export async function GET() {
@@ -54,11 +58,11 @@ export async function POST(request) {
     const profilesToSave = Array.isArray(body) ? body : (body.profiles ? body.profiles : [body]);
 
     for (const p of profilesToSave) {
-      const { id, name, email = '', color = '#6366f1', avatar = '👤', role = 'Personal', createdAt } = p;
+      const { id, name, email = '', color = '#6366f1', avatar = '👤', role = 'Member', pin = '1234', isLocked = false, createdAt } = p;
       if (!id || !name) continue;
 
       await sql`
-        INSERT INTO profiles (id, name, email, color, avatar, role, "createdAt")
+        INSERT INTO profiles (id, name, email, color, avatar, role, pin, "isLocked", "createdAt")
         VALUES (
           ${id},
           ${name},
@@ -66,6 +70,8 @@ export async function POST(request) {
           ${color},
           ${avatar},
           ${role},
+          ${pin},
+          ${isLocked},
           ${createdAt || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
@@ -73,7 +79,9 @@ export async function POST(request) {
           email = EXCLUDED.email,
           color = EXCLUDED.color,
           avatar = EXCLUDED.avatar,
-          role = EXCLUDED.role;
+          role = EXCLUDED.role,
+          pin = EXCLUDED.pin,
+          "isLocked" = EXCLUDED."isLocked";
       `;
     }
 

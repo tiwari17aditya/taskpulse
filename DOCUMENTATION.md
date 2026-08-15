@@ -108,6 +108,21 @@ CREATE TABLE IF NOT EXISTS notes (
 );
 ```
 
+### `profiles` Table Schema:
+```sql
+CREATE TABLE IF NOT EXISTS profiles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT,
+  color TEXT,
+  avatar TEXT,
+  role TEXT,
+  pin TEXT DEFAULT '1234',
+  "isLocked" BOOLEAN DEFAULT false,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ---
 
 ## Real-Time Mobile DB Sync & Bulk Deletion System
