@@ -495,7 +495,7 @@ export default function Home() {
               onShareNote={(note) => handleOpenShareModal({ title: note.title, content: note.content, media: note.media })}
               activeProfile={activeProfile}
             />
-          ) : (
+          ) : activeView === 'routine' ? (
             <RoutineManager
               routines={profileRoutines}
               setRoutines={(updatedProfileRoutines) => {
@@ -505,6 +505,20 @@ export default function Home() {
               }}
               tags={tags}
               activeProfile={activeProfile}
+            />
+          ) : (
+            <AdminPanelModal
+              isEmbedded={true}
+              isOpen={true}
+              onClose={() => setActiveView('tasks')}
+              profiles={profiles}
+              activeProfile={activeProfile}
+              onSaveProfiles={handleSaveProfiles}
+              tasks={tasks}
+              notes={notes}
+              routines={routines}
+              reminders={reminders}
+              onOpenLogsModal={() => setShowLogsModal(true)}
             />
           )}
         </div>

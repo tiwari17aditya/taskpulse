@@ -36,6 +36,8 @@ export default function NotificationManagerModal({
   // SMTP Dispatcher State
   const [smtpStatus, setSmtpStatus] = useState(null);
   const [sendingSmtp, setSendingSmtp] = useState(false);
+  const [digestStatus, setDigestStatus] = useState(null);
+  const [sendingDigest, setSendingDigest] = useState(false);
 
   const handleTestSmtpEmail = async () => {
     setSendingSmtp(true);
@@ -45,7 +47,7 @@ export default function NotificationManagerModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: emailRecipient || activeProfile?.email || '',
+          to: emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com',
           subject: 'TaskPulse SMTP Connection Test ⏰',
           htmlText: `Hello ${activeProfile?.name || 'User'}, your TaskPulse SMTP email server integration is active and operating properly.`,
           tasksSummary: tasks.filter(t => !t.completed).slice(0, 3)
@@ -61,6 +63,35 @@ export default function NotificationManagerModal({
       setSmtpStatus({ type: 'error', text: `⚠️ Dispatch Error: ${e.message}` });
     } finally {
       setSendingSmtp(false);
+    }
+  };
+
+  const handleSend7AmDigest = async () => {
+    setSendingDigest(true);
+    setDigestStatus(null);
+    try {
+      const recipient = emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com';
+      const myDayTasks = tasks.filter(t => t.myDay && !t.completed);
+      const res = await fetch('/api/notifications/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: recipient,
+          subject: '☀️ TaskPulse 7:00 AM Morning Digest & Daily Focus',
+          htmlText: `Good morning ${activeProfile?.name || 'Aditya'}! Here is your scheduled 7:00 AM Daily Morning Digest for ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}.`,
+          tasksSummary: myDayTasks.length > 0 ? myDayTasks : [{ title: 'No pending My Day tasks scheduled for today. Create new focus tasks in TaskPulse!' }]
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDigestStatus({ type: 'success', text: `✅ 7:00 AM Morning Digest Mailed to ${recipient}!` });
+      } else {
+        setDigestStatus({ type: 'error', text: `⚠️ Digest dispatch failed: ${data.error}` });
+      }
+    } catch (e) {
+      setDigestStatus({ type: 'error', text: `⚠️ Error sending digest: ${e.message}` });
+    } finally {
+      setSendingDigest(false);
     }
   };
 
@@ -480,6 +511,49 @@ export default function NotificationManagerModal({
           {/* TAB 2: EMAIL & MOBILE DISPATCH */}
           {activeTab === 'dispatch' && (
             <div className="space-y-4">
+              {/* 7:00 AM Daily Morning Digest Email (SMTP) */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-indigo-950/40 to-slate-900 border border-amber-500/30 space-y-3 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-100">7:00 AM Daily Morning Task Digest</h3>
+                      <span className="text-[10px] text-amber-400 font-mono">Automated Morning Mail Dispatch</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                    Daily 07:00 AM
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Automatically email your daily "My Day" focus tasks and active routines every morning at 7:00 AM to <strong className="text-slate-100">{emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com'}</strong>.
+                </p>
+
+                {digestStatus && (
+                  <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                    digestStatus.type === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  }`}>
+                    {digestStatus.text}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSend7AmDigest}
+                    disabled={sendingDigest}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 via-indigo-600 to-violet-600 hover:from-amber-500 hover:to-violet-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
+                  >
+                    <Send className={`w-3.5 h-3.5 ${sendingDigest ? 'animate-spin' : ''}`} />
+                    {sendingDigest ? 'Sending 7:00 AM Digest Email...' : 'Send 7:00 AM Morning Digest Email Now'}
+                  </button>
+                </div>
+              </div>
+
               {/* Direct SMTP Dispatcher */}
               <div className="p-4 rounded-xl bg-slate-950/80 border border-indigo-500/30 space-y-3 shadow-lg">
                 <div className="flex items-center justify-between">

@@ -16,3 +16,7 @@
 [2026-08-15 21:00:30] [INFO] Enforced strict per-profile data isolation in src/app/page.js and auto-migrated legacy data to Aditya.
 [2026-08-15 21:01:00] [INFO] Created src/components/AdminPanelModal.js featuring RBAC role toggles, data metrics, log audit, and JSON database backup/restore.
 [2026-08-15 21:01:30] [INFO] Rendered Admin Control Panel trigger button in Sidebar.js footer exclusively for Admin role profiles.
+[2026-08-15 21:15:10] [INFO] Added Delete Routine button to routine creation and edit modal in RoutineManager.js.
+[2026-08-15 21:15:20] [INFO] Added Admin primary tab to view switcher in Sidebar.js and page.js for direct embedded Admin Panel access.
+[2026-08-15 21:16:00] [INFO] Built 7:00 AM Daily Morning Digest Email card in NotificationManagerModal.js with Nodemailer SMTP dispatch button targeting tiwari17aditya@gmail.com.
+[2026-08-15 21:16:15] [INFO] Updated TaskManager.js to collapse completed history tasks and calendar views by default for a clean workspace layout.

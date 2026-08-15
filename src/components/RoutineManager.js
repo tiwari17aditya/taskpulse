@@ -619,20 +619,35 @@ export default function RoutineManager({
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
-                >
-                  {editingRoutine ? 'Save Routine Changes' : 'Create Routine Task'}
-                </button>
+              <div className="flex items-center justify-between pt-2">
+                {editingRoutine ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDeleteRoutine(editingRoutine.id);
+                      setShowModal(false);
+                    }}
+                    className="px-3 py-2 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Routine
+                  </button>
+                ) : <div />}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    {editingRoutine ? 'Save Routine Changes' : 'Create Routine Task'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

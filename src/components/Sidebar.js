@@ -189,11 +189,11 @@ function SidebarInner({
           </button>
         </div>
 
-        {/* View Switcher Tabs (Tasks vs Notes vs Routine) */}
-        <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
+        {/* View Switcher Tabs (Tasks vs Notes vs Routine vs Admin) */}
+        <div className={`grid ${activeProfile?.role === 'Admin' ? 'grid-cols-4' : 'grid-cols-3'} gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl`}>
           <button
             onClick={() => { setActiveView('tasks'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'tasks' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -202,7 +202,7 @@ function SidebarInner({
 
           <button
             onClick={() => { setActiveView('notes'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'notes' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -211,12 +211,23 @@ function SidebarInner({
 
           <button
             onClick={() => { setActiveView('routine'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'routine' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Repeat className="w-3.5 h-3.5" /> Routine
           </button>
+
+          {activeProfile?.role === 'Admin' && (
+            <button
+              onClick={() => { setActiveView('admin'); setActiveTag(null); }}
+              className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
+                activeView === 'admin' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" /> Admin
+            </button>
+          )}
         </div>
 
         {/* Smart Filters List (Tasks View) */}

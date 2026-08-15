@@ -39,7 +39,7 @@ export default function TaskManager({
   const getNextWeekStr = () => getLocalDateStr(new Date(Date.now() + 7 * 86400000));
   const getYesterdayStr = () => getLocalDateStr(new Date(Date.now() - 86400000));
 
-  const [showCompletedSection, setShowCompletedSection] = useState(true);
+  const [showCompletedSection, setShowCompletedSection] = useState(false);
   const [filterDate, setFilterDate] = useState('all'); // 'all', 'today', 'tomorrow', 'next-week', 'custom'
   const [customFilterDate, setCustomFilterDate] = useState('');
 
