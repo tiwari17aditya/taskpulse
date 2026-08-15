@@ -66,7 +66,7 @@ export default function ProfileManagerModal({
     if (editingProfileId) {
       updatedProfiles = updatedProfiles.map(p =>
         p.id === editingProfileId
-          ? { ...p, name: name.trim(), email: email.trim(), avatar, color, role, isLocked }
+          ? { ...p, name: name.trim(), email: email.trim(), avatar, color, role: p.role || role, isLocked }
           : p
       );
     } else {

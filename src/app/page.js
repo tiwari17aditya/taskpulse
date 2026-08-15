@@ -202,16 +202,23 @@ export default function Home() {
 
       if (Array.isArray(dbProfiles)) {
         if (dbProfiles.length > 0) {
-          setProfiles(dbProfiles);
-          storage.saveProfiles(dbProfiles);
-          // Preserve active profile if matched
+          // Ensure Aditya / primary profile retains Admin role
+          let cleanDBProfiles = dbProfiles.map(p =>
+            (p.id === 'p-aditya' || p.name.toLowerCase().includes('aditya')) ? { ...p, role: 'Admin' } : p
+          );
+          if (!cleanDBProfiles.some(p => p.role === 'Admin') && cleanDBProfiles[0]) {
+            cleanDBProfiles[0].role = 'Admin';
+          }
+          setProfiles(cleanDBProfiles);
+          storage.saveProfiles(cleanDBProfiles);
+
           const currentActive = storage.getActiveProfile();
-          const match = dbProfiles.find(p => p.id === currentActive?.id);
+          const match = cleanDBProfiles.find(p => p.id === currentActive?.id);
           if (match) {
             setActiveProfile(match);
-          } else if (dbProfiles[0]) {
-            setActiveProfile(dbProfiles[0]);
-            storage.setActiveProfile(dbProfiles[0].id);
+          } else if (cleanDBProfiles[0]) {
+            setActiveProfile(cleanDBProfiles[0]);
+            storage.setActiveProfile(cleanDBProfiles[0].id);
           }
         } else if (profiles.length > 0) {
           // Push initial profiles to database
@@ -248,19 +255,25 @@ export default function Home() {
     const initialReminders = storage.getReminders();
     const initialNotifSettings = storage.getNotificationSettings();
 
-    setRoutines(initialRoutines);
-    const populatedTasks = evaluateRoutineAutoPopulate(initialLocalTasks, initialRoutines);
-    setTasks(populatedTasks);
-    setNotes(initialLocalNotes);
-    setTags(storage.getTags());
-    setProfiles(initialProfiles);
-    setActiveProfile(initialActiveProfile);
-    setReminders(initialReminders);
-    setNotificationSettings(initialNotifSettings);
+    // Enforce Admin role persistence for Aditya profile
+    let sanitizedProfiles = initialProfiles.length > 0 ? initialProfiles : storage.getProfiles();
+    sanitizedProfiles = sanitizedProfiles.map(p =>
+      (p.id === 'p-aditya' || p.name.toLowerCase().includes('aditya')) ? { ...p, role: 'Admin' } : p
+    );
+    if (!sanitizedProfiles.some(p => p.role === 'Admin') && sanitizedProfiles[0]) {
+      sanitizedProfiles[0].role = 'Admin';
+    }
+
+    setProfiles(sanitizedProfiles);
+    storage.saveProfiles(sanitizedProfiles);
+
+    const activeP = sanitizedProfiles.find(p => p.id === initialActiveProfile?.id) || sanitizedProfiles[0];
+    setActiveProfile(activeP);
+    storage.setActiveProfile(activeP.id);
 
     // Auto-lock workspace on initial application startup if active profile has privacy lock enabled
-    if (initialActiveProfile && (initialActiveProfile.isLocked || initialActiveProfile.pin)) {
-      setLockTargetProfile(initialActiveProfile);
+    if (activeP && (activeP.isLocked || activeP.pin)) {
+      setLockTargetProfile(activeP);
       setShowLockModal(true);
     }
 

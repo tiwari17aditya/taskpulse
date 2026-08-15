@@ -26,6 +26,8 @@
 [2026-08-15 22:00:00] [FEAT] Created ProfileLockModal.js with LDAP-style shared Master Admin PIN across all Admin profiles (test1, test2), added Add Member form in Admin Panel, restricted Admin role assignment to Admin Panel, and removed Admin tab from Sidebar view switcher grid.
 [2026-08-15 22:05:00] [FEAT] Created FirstTimeTutorialModal.js for first-time visitor onboarding, updated DOCUMENTATION.md, bumped VERSION.md to v1.1.0-beta, and added mandatory Continuous Documentation & UI Version Maintenance Rule to AGENTS.md.
 [2026-08-15 22:11:00] [FEAT] Defaulted task creation due date to creation date (today) in TaskManager.js FAB modal, enforced automatic workspace lock on app startup for locked profiles in page.js, and added isLocked privacy toggle in ProfileManagerModal.js.
+[2026-08-15 22:14:00] [FIX] Enforced Admin role persistence for Aditya profile in storage.js, page.js startup auto-repair, and ProfileManagerModal.js edit handler to guarantee Admin role and header trigger button never disappear.
+
 
 
 
