@@ -12,7 +12,7 @@ const ROUTINES_KEY = 'pulse_routines_v1';
 
 // Default starter profile (Aditya assigned Admin role)
 export const DEFAULT_PROFILES = [
-  { id: 'p-aditya', name: 'Aditya', email: 'tiwari17aditya@gmail.com', color: '#6366f1', avatar: '👤', role: 'Admin', pin: '1234' }
+  { id: 'p-aditya', name: 'Aditya', email: 'tiwari17aditya@gmail.com', color: '#6366f1', avatar: '👤', role: 'Admin', pin: '1234', isLocked: true }
 ];
 
 
