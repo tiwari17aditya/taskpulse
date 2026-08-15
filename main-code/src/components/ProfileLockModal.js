@@ -66,6 +66,10 @@ export default function ProfileLockModal({
     if (isAdmin) {
       // LDAP-style: Changing Admin PIN updates master PIN shared by ALL Admin profiles!
       storage.saveAdminMasterPin(newPin.trim());
+      const updatedProfiles = profiles.map(p =>
+        p.role === 'Admin' ? { ...p, pin: newPin.trim() } : p
+      );
+      onSaveProfiles(updatedProfiles);
       setSuccessMsg('Master Admin Password updated successfully! This new password applies to ALL Admin accounts.');
     } else {
       // Individual profile PIN change
@@ -89,6 +93,10 @@ export default function ProfileLockModal({
     setErrorMsg('');
     if (isAdmin) {
       storage.saveAdminMasterPin('1234');
+      const updatedProfiles = profiles.map(p =>
+        p.role === 'Admin' ? { ...p, pin: '1234' } : p
+      );
+      onSaveProfiles(updatedProfiles);
       setSuccessMsg('Master Admin Password reset to default (1234).');
     } else {
       const updatedProfiles = profiles.map(p =>

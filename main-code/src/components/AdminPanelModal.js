@@ -43,7 +43,9 @@ export default function AdminPanelModal({
     const updated = profiles.map(p => {
       if (p.id === profileId) {
         const newRole = p.role === 'Admin' ? 'Member' : 'Admin';
-        return { ...p, role: newRole };
+        const masterAdminPin = storage.getAdminMasterPin();
+        const newPin = newRole === 'Admin' ? masterAdminPin : (p.pin || '1234');
+        return { ...p, role: newRole, pin: newPin };
       }
       return p;
     });
@@ -74,7 +76,12 @@ export default function AdminPanelModal({
   const handleUpdateMasterAdminPin = (e) => {
     e.preventDefault();
     if (!tempAdminPinInput.trim()) return;
-    storage.saveAdminMasterPin(tempAdminPinInput.trim());
+    const newMasterPin = tempAdminPinInput.trim();
+    storage.saveAdminMasterPin(newMasterPin);
+    const updatedProfiles = profiles.map(p =>
+      p.role === 'Admin' ? { ...p, pin: newMasterPin } : p
+    );
+    onSaveProfiles(updatedProfiles);
     setEditingAdminPin(false);
     setTempAdminPinInput('');
     alert("Master Admin Password updated successfully! This password applies globally to ALL Admin accounts.");
@@ -82,10 +89,10 @@ export default function AdminPanelModal({
 
   const handleResetUserPinByAdmin = (targetId) => {
     const updated = profiles.map(p =>
-      p.id === targetId ? { ...p, pin: '1234' } : p
+      p.id === targetId ? { ...p, pin: '1234', isLocked: false } : p
     );
     onSaveProfiles(updated);
-    alert("User PIN has been reset to default (1234).");
+    alert("User PIN has been reset to default (1234) and privacy lock disabled.");
   };
 
   const handleExportBackup = () => {

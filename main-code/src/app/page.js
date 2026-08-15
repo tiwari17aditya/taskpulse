@@ -216,7 +216,9 @@ export default function Home() {
           const currentActive = storage.getActiveProfile();
           const match = cleanDBProfiles.find(p => p.id === currentActive?.id);
           if (match) {
-            setActiveProfile(match);
+            setActiveProfile(prev => (
+              prev && prev.id === match.id ? { ...match, isLocked: prev.isLocked } : match
+            ));
           } else if (cleanDBProfiles[0]) {
             setActiveProfile(cleanDBProfiles[0]);
             storage.setActiveProfile(cleanDBProfiles[0].id);

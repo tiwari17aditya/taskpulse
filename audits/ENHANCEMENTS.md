@@ -102,3 +102,30 @@ This document outlines the architectural roadmap, upcoming core features, notifi
 - **Auto-Save on Blur**: If the user clicks away from the field, the updated title is automatically saved to prevent accidental data loss.
 - **Validation**: Empty or whitespace-only titles are rejected with an inline error hint, ensuring every task always has a valid title.
 
+---
+
+## 14. Audit of Discovered Edge-Case Bugs & Rigorous Testing Findings (Resolved v1.1.0-beta)
+
+Through rigorous end-to-end scenario testing across multi-role workflows (Member creation, Admin promotion/demotion, profile privacy locking/unlocking, master PIN updates, and background DB polling), the following edge-case bugs were audited and resolved:
+
+### 🐛 Bug 1: Master Admin Password DB Sync Persistence
+- **Symptom**: Updating the shared Master Admin Password in `ProfileLockModal` updated local storage (`pulse_admin_master_pin_v1`), but did not push updated profile PINs to NeonDB PostgreSQL.
+- **Fix**: Updated `ProfileLockModal` to update all Admin profile records in state and trigger `onSaveProfiles(updatedProfiles)` so the new Master PIN is immediately saved to the database.
+
+### 🐛 Bug 2: Admin Reset User PIN Left Profile Locked
+- **Symptom**: When an Admin clicked "Reset PIN" for a locked user profile, `pin` was set to `'1234'`, but `isLocked` remained `true`.
+- **Fix**: Updated `handleResetUserPinByAdmin` in `AdminPanelModal` to set `pin: '1234'` AND `isLocked: false` so locked-out users are immediately unlocked and restored.
+
+### 🐛 Bug 3: Modal Stacking & Backdrop Overlap on Profile Switch
+- **Symptom**: Selecting a profile in `ProfileManagerModal` triggered `ProfileLockModal`, but `ProfileManagerModal` remained open beneath it, causing backdrop & z-index collisions.
+- **Fix**: Enforced automatic closing of `ProfileManagerModal` (`setShowProfileModal(false)`) whenever `ProfileLockModal` opens for PIN verification.
+
+### 🐛 Bug 4: Demoted Admin Role PIN Synchronization
+- **Symptom**: Demoting an `Admin` to `Member` in `AdminPanelModal` left their profile `pin` as default `'1234'` without syncing the Master PIN they used while an Admin.
+- **Fix**: Synchronized profile `pin` with Master Admin PIN when transitioning role from `Admin` to `Member` in `handleRoleToggle`.
+
+### 🐛 Bug 5: Periodic 8-Second DB Polling Re-Lock Safeguard
+- **Symptom**: Background polling every 8s (`syncDataFromDB`) updated `activeProfile` state while a user was on the lock screen, causing transient profile state changes before PIN unlock.
+- **Fix**: Added active lock guard in `app/page.js` to preserve `isProfileUnlocked` state during background polling synchronization.
+
+
