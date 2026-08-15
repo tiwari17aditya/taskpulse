@@ -22,33 +22,14 @@
 ## Directory Architecture
 
 ```
-d:\Antigravity-Projects\taskpulse/
-├── .agents/                    # Workspace agent rules & modular domain skills
-│   ├── AGENTS.md               # Token optimization & coding conventions
-│   └── skills/                 # Domain skills (task-manager, keep-notes, share-redirect, ops-logging)
-├── .venv/                      # Isolated Python virtual environment
-├── logs/                       # Daily system logs (e.g. log_2026-08-10.log)
-├── public/                     # Public assets & .gitkeep
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── db/tasks/       # NeonDB tasks API handler (GET / POST + auto-table migration)
-│   │   │   ├── db/notes/       # NeonDB notes API handler (GET / POST + auto-table migration)
-│   │   │   ├── logs/           # Daily system logger API
-│   │   │   ├── share/          # Secret share code generator API
-│   │   │   └── tokens/         # Daily token usage tracker API
-│   │   ├── share/[code]/       # Codeshare & Toffeeshare redirect route
+taskpulse/
+├── src/                        # Application Core (Frontend UI + Backend API)
+│   ├── app/                    # Next.js App Router (Pages & Backend Serverless API Routes)
+│   │   ├── api/                # Backend Serverless Endpoints (db/tasks, db/notes, db/profiles, notifications)
+│   │   ├── share/[code]/       # Codeshare secret share code redirect route
 │   │   ├── globals.css         # Styling, dark mode, scrollbars
 │   │   ├── layout.js           # Root layout & page metadata
 │   │   └── page.js             # Main Workspace Dashboard
-│   ├── components/
-│   │   ├── Sidebar.js          # Navigation sidebar & History / Completed tab
-│   │   ├── TaskManager.js      # Microsoft To-Do list, subtasks & date presets
-│   │   ├── NoteCanvas.js       # Google Keep visual masonry cards & media
-│   │   ├── MediaUploader.js    # Image, audio, video & document uploader
-│   │   ├── ShareRedirectModal.js # Open-Source Sharing Utilities (Codeshare URL launcher + visited history, Toffeeshare direct link)
-│   │   ├── TokenUsageModal.js  # token_usage.md tabular log viewer
-│   │   ├── LogViewerModal.js   # Daily log inspector
 │   │   └── UserGuideModal.js   # Interactive User Guide & Documentation modal
 │   └── lib/
 │       ├── dbAdapter.js        # Universal Database Switcher (NeonDB / Supabase / Local)
