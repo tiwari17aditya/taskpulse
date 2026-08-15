@@ -32,6 +32,8 @@
 [2026-08-15 22:22:00] [DB] Added pin and isLocked columns to profiles table schema in api/db/profiles/route.js for real-time NeonDB PostgreSQL sync.
 [2026-08-15 22:27:00] [FEAT] Bypassed PIN password prompt for profiles with isLocked=false, added interactive Header Privacy Lock/Unlock Toggle Pill, and rendered Lock Status badges in ProfileManagerModal.js.
 [2026-08-15 22:31:00] [REFACTOR] Restructured root directory: moved tracking files into tracker/, documentation into docs/, database scripts into samples/scripts/, updated AGENTS.md, created root README.md guide, and deleted obsolete .venv.
+[2026-08-15 22:35:00] [REFACTOR] Restructured repository layout: created main-code/ (holding src/, public/, package.json, configs), audits/ (holding token_usage.md, VERSION.md, ENHANCEMENTS.md, logs/), docs/, samples/, and updated AGENTS.md & README.md.
+
 
 
 
