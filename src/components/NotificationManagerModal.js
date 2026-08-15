@@ -33,6 +33,37 @@ export default function NotificationManagerModal({
   const [webhookUrl, setWebhookUrl] = useState(notificationSettings?.webhookUrl || '');
   const [emailRecipient, setEmailRecipient] = useState(notificationSettings?.emailRecipient || activeProfile?.email || '');
 
+  // SMTP Dispatcher State
+  const [smtpStatus, setSmtpStatus] = useState(null);
+  const [sendingSmtp, setSendingSmtp] = useState(false);
+
+  const handleTestSmtpEmail = async () => {
+    setSendingSmtp(true);
+    setSmtpStatus(null);
+    try {
+      const res = await fetch('/api/notifications/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailRecipient || activeProfile?.email || '',
+          subject: 'TaskPulse SMTP Connection Test ⏰',
+          htmlText: `Hello ${activeProfile?.name || 'User'}, your TaskPulse SMTP email server integration is active and operating properly.`,
+          tasksSummary: tasks.filter(t => !t.completed).slice(0, 3)
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSmtpStatus({ type: 'success', text: `✅ SMTP Email Sent Successfully! Message ID: ${data.messageId || 'OK'}` });
+      } else {
+        setSmtpStatus({ type: 'error', text: `⚠️ ${data.error || 'SMTP Dispatch failed'}` });
+      }
+    } catch (e) {
+      setSmtpStatus({ type: 'error', text: `⚠️ Dispatch Error: ${e.message}` });
+    } finally {
+      setSendingSmtp(false);
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermissionStatus(Notification.permission);
@@ -449,10 +480,53 @@ export default function NotificationManagerModal({
           {/* TAB 2: EMAIL & MOBILE DISPATCH */}
           {activeTab === 'dispatch' && (
             <div className="space-y-4">
+              {/* Direct SMTP Dispatcher */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-indigo-500/30 space-y-3 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                      <Send className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-100">SMTP Email Notification Server (Nodemailer)</h3>
+                      <span className="text-[10px] text-indigo-400 font-mono">Backend Server Transport</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                    SMTP Active
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Dispatches automated email notifications directly to <strong className="text-slate-100">{emailRecipient || activeProfile?.email || 'your email'}</strong> via your configured SMTP host credentials in <code className="text-indigo-300 font-mono text-[11px]">.env</code>.
+                </p>
+
+                {smtpStatus && (
+                  <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                    smtpStatus.type === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  }`}>
+                    {smtpStatus.text}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleTestSmtpEmail}
+                    disabled={sendingSmtp}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
+                  >
+                    <Send className={`w-3.5 h-3.5 ${sendingSmtp ? 'animate-spin' : ''}`} />
+                    {sendingSmtp ? 'Dispatching SMTP Email...' : 'Send Test SMTP Email Notification'}
+                  </button>
+                </div>
+              </div>
+
               <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
                 <div className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-indigo-400" />
-                  <h3 className="text-xs font-bold text-slate-200">Automated Client Email Dispatch</h3>
+                  <h3 className="text-xs font-bold text-slate-200">Client Email Mailto Fallback</h3>
                 </div>
                 <p className="text-xs text-slate-400">
                   Instantly open an automated email digest containing all current active tasks and scheduled reminders sent to <strong className="text-slate-200">{emailRecipient || activeProfile?.email || 'your email'}</strong>.
@@ -460,9 +534,9 @@ export default function NotificationManagerModal({
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={openMailto}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition"
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow transition"
                   >
-                    <Mail className="w-3.5 h-3.5" /> Open Email Digest
+                    <Mail className="w-3.5 h-3.5 text-indigo-400" /> Open Mailto Client Digest
                   </button>
                 </div>
               </div>

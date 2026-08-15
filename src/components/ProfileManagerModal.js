@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { User, Plus, Check, Trash2, Edit2, Shield, Mail, Palette, X, UserCheck } from 'lucide-react';
+import { deleteProfileFromDB } from '@/lib/dbAdapter';
 
 const AVATAR_OPTIONS = ['👤', '💼', '🎓', '🚀', '⚡', '🎨', '🔥', '🛡️', '🌟', '💻'];
 const COLOR_OPTIONS = [
@@ -90,6 +91,7 @@ export default function ProfileManagerModal({
 
     if (confirm("Are you sure you want to delete this profile? Associated tasks will remain accessible in general storage.")) {
       const updated = profiles.filter(p => p.id !== profileId);
+      deleteProfileFromDB(profileId);
       onSaveProfiles(updated);
       if (activeProfile?.id === profileId) {
         onSelectProfile(updated[0]);

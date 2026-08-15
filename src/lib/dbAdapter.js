@@ -209,3 +209,73 @@ export async function deleteNotesFromDB(ids) {
     }
   }
 }
+
+// ─── Profile Database Synchronization Helpers ─────────────────────────────────
+
+export async function fetchProfilesFromDB() {
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').order('name', { ascending: true });
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('Supabase profiles fetch failed:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      const res = await fetch('/api/db/profiles', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.profiles && Array.isArray(data.profiles)) {
+          return data.profiles;
+        }
+      }
+    } catch (e) {
+      console.warn('NeonDB profiles fetch failed:', e.message);
+    }
+  }
+  return null;
+}
+
+export async function saveProfilesToDB(profiles) {
+  if (!profiles || profiles.length === 0) return { success: false };
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from('profiles').upsert(profiles);
+      if (!error) return { success: true, data };
+    } catch (e) {
+      console.error('Supabase save profiles error:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      const res = await fetch('/api/db/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profiles)
+      });
+      return await res.json();
+    } catch (e) {
+      console.error('NeonDB save profiles error:', e.message);
+    }
+  }
+  return { success: false, mode: 'local' };
+}
+
+export async function deleteProfileFromDB(id) {
+  if (!id) return;
+  const provider = getCurrentDBProvider();
+  if (provider === 'supabase' && isSupabaseConfigured()) {
+    try {
+      await supabase.from('profiles').delete().eq('id', id);
+    } catch (e) {
+      console.error('Supabase delete profile error:', e.message);
+    }
+  } else if (provider === 'neondb' || provider === 'postgres') {
+    try {
+      await fetch(`/api/db/profiles?id=${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('NeonDB delete profile error:', e.message);
+    }
+  }
+}

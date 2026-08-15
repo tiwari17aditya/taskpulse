@@ -5,3 +5,9 @@
 [2026-08-15 20:02:10] [INFO] Updated src/components/Sidebar.js view switcher to include Routine tab and info box.
 [2026-08-15 20:02:40] [INFO] Integrated src/app/page.js with routines state, evaluateRoutineAutoPopulate(), and completion log streak handlers.
 [2026-08-15 20:03:25] [INFO] Added routine badge indicator to TaskCard in src/components/TaskManager.js.
+[2026-08-15 20:18:25] [INFO] Fixed activeProfile and modal prop forwarding bug in src/components/Sidebar.js to sync profile name & avatar.
+[2026-08-15 20:18:35] [INFO] Upgraded Daily Routine Recurring Engine sidebar card styling with glowing badge and gradient layout.
+[2026-08-15 20:19:00] [INFO] Created SMTP Email API endpoint src/app/api/notifications/email/route.js and installed nodemailer dependency.
+[2026-08-15 20:19:25] [INFO] Added SMTP Direct Server Dispatcher test UI card into NotificationManagerModal.js.
+[2026-08-15 20:51:15] [INFO] Configured Gmail SMTP App Password credentials (lznl ldgs yurp kqjk) into .env for TaskPulse email dispatches.
+[2026-08-15 20:51:25] [INFO] Verified production build compilation with zero errors.

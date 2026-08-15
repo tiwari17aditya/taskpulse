@@ -11,7 +11,7 @@ import LogViewerModal from '@/components/LogViewerModal';
 import ProfileManagerModal from '@/components/ProfileManagerModal';
 import NotificationManagerModal from '@/components/NotificationManagerModal';
 import { storage } from '@/lib/storage';
-import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
+import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
 import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat } from 'lucide-react';
 
@@ -168,9 +168,10 @@ export default function Home() {
     setSyncError(null);
 
     try {
-      const [dbTasks, dbNotes] = await Promise.all([
+      const [dbTasks, dbNotes, dbProfiles] = await Promise.all([
         fetchTasksFromDB(),
-        fetchNotesFromDB()
+        fetchNotesFromDB(),
+        fetchProfilesFromDB()
       ]);
 
       let errorMsg = null;
@@ -188,6 +189,25 @@ export default function Home() {
       } else if (Array.isArray(dbNotes)) {
         setNotes(dbNotes);
         storage.saveNotes(dbNotes);
+      }
+
+      if (Array.isArray(dbProfiles)) {
+        if (dbProfiles.length > 0) {
+          setProfiles(dbProfiles);
+          storage.saveProfiles(dbProfiles);
+          // Preserve active profile if matched
+          const currentActive = storage.getActiveProfile();
+          const match = dbProfiles.find(p => p.id === currentActive?.id);
+          if (match) {
+            setActiveProfile(match);
+          } else if (dbProfiles[0]) {
+            setActiveProfile(dbProfiles[0]);
+            storage.setActiveProfile(dbProfiles[0].id);
+          }
+        } else if (profiles.length > 0) {
+          // Push initial profiles to database
+          saveProfilesToDB(profiles);
+        }
       }
 
       if (errorMsg) {
@@ -223,6 +243,11 @@ export default function Home() {
     setActiveProfile(initialActiveProfile);
     setReminders(initialReminders);
     setNotificationSettings(initialNotifSettings);
+
+    // Initial DB sync & push initial profiles if DB is empty
+    if (initialProfiles.length > 0) {
+      saveProfilesToDB(initialProfiles);
+    }
 
     // 2. Immediate fetch from remote DB
     syncDataFromDB();
@@ -284,6 +309,7 @@ export default function Home() {
   const handleSaveProfiles = (updatedProfiles) => {
     setProfiles(updatedProfiles);
     storage.saveProfiles(updatedProfiles);
+    saveProfilesToDB(updatedProfiles);
   };
 
   // Notification & Reminders handlers

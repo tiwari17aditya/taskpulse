@@ -20,6 +20,10 @@ export default function Sidebar({
   onOpenGuideModal,
   isMobileOpen,
   onCloseMobile,
+  activeProfile,
+  onOpenProfileModal,
+  onOpenNotificationModal,
+  remindersCount,
 }) {
   return (
     <>
@@ -40,6 +44,10 @@ export default function Sidebar({
           onOpenTokensModal={onOpenTokensModal}
           onOpenLogsModal={onOpenLogsModal}
           onOpenGuideModal={onOpenGuideModal}
+          activeProfile={activeProfile}
+          onOpenProfileModal={onOpenProfileModal}
+          onOpenNotificationModal={onOpenNotificationModal}
+          remindersCount={remindersCount}
         />
       </aside>
 
@@ -68,6 +76,10 @@ export default function Sidebar({
               onOpenTokensModal={() => { onOpenTokensModal(); onCloseMobile(); }}
               onOpenLogsModal={() => { onOpenLogsModal(); onCloseMobile(); }}
               onOpenGuideModal={() => { onOpenGuideModal(); onCloseMobile(); }}
+              activeProfile={activeProfile}
+              onOpenProfileModal={() => { onOpenProfileModal(); onCloseMobile(); }}
+              onOpenNotificationModal={() => { onOpenNotificationModal(); onCloseMobile(); }}
+              remindersCount={remindersCount}
             />
           </div>
           <div className="flex-1" onClick={onCloseMobile} />
@@ -248,14 +260,27 @@ function SidebarInner({
           </div>
         )}
 
-        {/* Routine Manager Overview */}
+        {/* Routine Manager Overview Card */}
         {activeView === 'routine' && (
-          <div className="p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl space-y-1">
-            <div className="flex items-center justify-between text-xs text-amber-300 font-medium">
-              <span className="flex items-center gap-1.5"><Repeat className="w-3.5 h-3.5" /> Daily Routine</span>
-              <span className="font-mono bg-amber-500/20 px-2 py-0.5 rounded-full">Recurring Engine</span>
+          <div className="p-3.5 bg-gradient-to-br from-amber-500/15 via-indigo-950/40 to-slate-900 border border-amber-500/30 rounded-xl space-y-2 shadow-lg shadow-amber-500/5 relative overflow-hidden group">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                  <Repeat className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-100 block leading-tight">Daily Routine</span>
+                  <span className="text-[10px] text-amber-400 font-mono font-semibold">Recurring Engine</span>
+                </div>
+              </div>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
             </div>
-            <p className="text-[11px] text-slate-400">Daily/weekly habit builder with editable target times & streaks</p>
+            <p className="text-[11px] text-slate-300 leading-normal">
+              Automated habit builder with editable target times, streaks 🔥 & My Day sync.
+            </p>
           </div>
         )}
 
