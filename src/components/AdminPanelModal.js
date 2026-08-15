@@ -95,10 +95,16 @@ export default function AdminPanelModal({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-slate-100">System Admin Control Panel</h2>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
                   RBAC Active
+                </span>
+                <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 flex items-center gap-1">
+                  <Database className="w-3 h-3 text-indigo-400" /> NeonDB PostgreSQL Active
+                </span>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -334,10 +340,16 @@ export default function AdminPanelModal({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-slate-100">System Admin Control Panel</h2>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
                   RBAC Active
+                </span>
+                <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 flex items-center gap-1">
+                  <Database className="w-3 h-3 text-indigo-400" /> NeonDB PostgreSQL Active
+                </span>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
                 </span>
               </div>
               <p className="text-xs text-slate-400">

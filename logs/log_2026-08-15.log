@@ -22,5 +22,7 @@
 [2026-08-15 21:16:15] [INFO] Updated TaskManager.js to collapse completed history tasks and calendar views by default for a clean workspace layout.
 [2026-08-15 21:30:00] [FIX] Moved Floating Action Button (+) to TaskManager root JSX scope to render across all workspace views and fixed HistoryCalendar scope ReferenceError.
 [2026-08-15 21:37:00] [FEAT] Fixed handleSetRoutines in page.js for routine deletion, added permanent Admin tab in Sidebar, added Anti-Hallucination rule to AGENTS.md, upgraded FAB (+) to Whole Card Creation Modal with interactive calendar date picker, and enforced default myDay=false.
+[2026-08-15 21:48:00] [FEAT] Created src/config/rbac.json, cleaned up sample profiles in storage.js, enlarged FAB button (w-16 h-16), removed inline task inputs & agenda drawer, positioned Admin trigger next to Profile pill strictly for RBAC Admin role, and rendered Database Status/Version info inside Admin Control Panel.
+
 
 

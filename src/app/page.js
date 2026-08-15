@@ -453,7 +453,20 @@ export default function Home() {
             >
               <span className="text-xs">{activeProfile?.avatar || '👤'}</span>
               <span className="hidden sm:inline text-xs font-semibold">{activeProfile?.name || 'Personal'}</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">({activeProfile?.role || 'User'})</span>
             </button>
+
+            {/* Admin Trigger Button (Positioned immediately to the right of Profile, ONLY visible to RBAC Admin role) */}
+            {activeProfile?.role === 'Admin' && (
+              <button
+                onClick={() => setShowAdminModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/10 border border-amber-500/40 hover:border-amber-400 rounded-full font-semibold text-amber-300 transition cursor-pointer shadow-md shadow-amber-500/10 animate-pulse"
+                title="Open Admin Control Panel & System Metrics"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs font-bold">Admin</span>
+              </button>
+            )}
 
             <button
               onClick={() => syncDataFromDB(true)}
@@ -466,13 +479,6 @@ export default function Home() {
                 {isSyncing ? 'Syncing...' : syncError ? `Error: ${syncError}` : lastSyncedTime ? `Synced ${lastSyncedTime}` : 'Sync DB'}
               </span>
             </button>
-
-            <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full font-medium text-slate-300">
-              <Database className="w-3.5 h-3.5 text-indigo-400" /> {dbLabel}
-            </span>
-            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-mono text-[10px]">
-              <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
-            </span>
           </div>
         </header>
 

@@ -159,8 +159,8 @@ export default function ProfileManagerModal({
                 </div>
               </div>
 
-              {/* Name & Role */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Name & RBAC Role Selector */}
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Profile Name</label>
                   <input
@@ -172,17 +172,44 @@ export default function ProfileManagerModal({
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 outline-none"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Role / Tag</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Developer, Student, Work"
-                    value={role}
-                    onChange={e => setRole(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 outline-none"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center justify-between">
+                    <span>RBAC Access Role</span>
+                    <span className="text-[10px] text-amber-400 font-mono">Grant Admin Privileges</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRole('User')}
+                      className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                        role !== 'Admin'
+                          ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200 shadow-md'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="font-bold block text-slate-100">User</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Standard workspace access</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRole('Admin')}
+                      className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                        role === 'Admin'
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md ring-1 ring-amber-500/40'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="font-bold block text-amber-400 flex items-center gap-1">
+                        <Shield className="w-3.5 h-3.5" /> Admin
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Unlocks Admin Panel & Status</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+
 
               {/* Email */}
               <div>

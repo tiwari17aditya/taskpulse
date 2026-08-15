@@ -462,77 +462,7 @@ export default function TaskManager({
           </div>
         )}
 
-        {/* Quick Add Task Bar & Date Presets (Collapsed in Calendar Mode unless expanded) */}
-        {(!isCalendarMode || showCalendarFilters) && (
-          <form onSubmit={addTask} className="space-y-2">
-            <div className="flex items-center bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-3 shadow-lg transition">
-              <Plus className="w-5 h-5 text-indigo-400 mr-3 shrink-0" />
-              <input
-                type="text"
-                placeholder="Add a task (e.g. 'Review weekly plan')..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="bg-transparent text-sm text-slate-100 placeholder-slate-500 w-full outline-none"
-              />
-              <button
-                type="submit"
-                disabled={!newTaskTitle.trim()}
-                className="ml-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
-              >
-                Add
-              </button>
-            </div>
 
-            {/* Due Date Presets Bar */}
-            <div className="flex items-center gap-1.5 px-1 overflow-x-auto text-xs">
-              <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1 shrink-0">
-                <Calendar className="w-3 h-3" /> Due Date:
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedDueDate(getTodayStr())}
-                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                  selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Today
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDueDate(getTomorrowStr())}
-                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                  selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Tomorrow
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDueDate(getNextWeekStr())}
-                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                  selectedDueDate === getNextWeekStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Next Week
-              </button>
-              <input
-                type="date"
-                value={selectedDueDate}
-                onChange={(e) => setSelectedDueDate(e.target.value)}
-                className="bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-full outline-none"
-              />
-              {selectedDueDate && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedDueDate('')}
-                  className="text-slate-500 hover:text-rose-400 text-[11px] ml-1"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </form>
-        )}
 
         {/* Date Filter & Multi-Select Toolbars (Collapsed in Calendar Mode unless expanded) */}
         {(!isCalendarMode || showCalendarFilters) && (
@@ -1334,15 +1264,15 @@ export default function TaskManager({
         </div>
       )}
 
-      {/* Floating Action Button (+) */}
+      {/* Floating Action Button (+) — Prominent & Easily Visible */}
       <div className="fixed bottom-6 right-6 z-40">
         <button
           type="button"
           onClick={handleOpenFabModal}
-          className="w-13 h-13 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+          className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-500/60 ring-4 ring-indigo-500/30 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
           title="Quick Add Task (+)"
         >
-          <Plus className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
+          <Plus className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90 stroke-[2.5]" />
         </button>
       </div>
     </div>
@@ -1706,73 +1636,6 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
         </div>
       </div>
 
-      {/* Selected Day Agenda Breakdown Drawer */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-indigo-400" />
-            <h4 className="text-xs font-bold text-slate-100">
-              Agenda for {activeSelectedDay === todayCalStr ? `Today (${activeSelectedDay})` : activeSelectedDay}
-            </h4>
-          </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-semibold">
-            {dayTasks.length} tasks • {dayReminders.length} reminders
-          </span>
-        </div>
-
-        {/* Quick Task Add for Selected Day */}
-        {onAddTaskOnDate && (
-          <form onSubmit={handleQuickAdd} className="flex gap-2">
-            <input
-              type="text"
-              placeholder={`Add a task for ${activeSelectedDay}...`}
-              value={quickTitle}
-              onChange={e => setQuickTitle(e.target.value)}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-indigo-500 transition"
-            />
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow transition"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Task
-            </button>
-          </form>
-        )}
-
-        {/* Agenda Items List */}
-        {dayTasks.length === 0 && dayReminders.length === 0 ? (
-          <p className="text-xs text-slate-500 italic py-4 text-center">No tasks or reminders recorded for this date.</p>
-        ) : (
-          <div className="space-y-2">
-            {dayTasks.map(t => (
-              <div key={t.id} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${t.completed ? 'bg-emerald-400' : 'bg-indigo-400'}`} />
-                  <span className={`font-medium ${t.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
-                    {t.title}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                  {t.completed ? (
-                    <span className="text-emerald-400 font-semibold">Completed</span>
-                  ) : (
-                    <span className="text-indigo-400 font-semibold">Due {t.dueDate}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-            {dayReminders.map(r => (
-              <div key={r.id} className="p-2.5 rounded-xl bg-amber-950/20 border border-amber-500/20 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-medium text-slate-200">{r.title}</span>
-                </div>
-                <span className="text-[10px] text-amber-400 font-mono">Alert: {r.time}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -10,12 +10,11 @@ const REMINDERS_KEY = 'pulse_reminders_v1';
 const NOTIFICATION_SETTINGS_KEY = 'pulse_notif_settings_v1';
 const ROUTINES_KEY = 'pulse_routines_v1';
 
-// Default starter profiles
+// Default starter profile (Clean User role by default)
 export const DEFAULT_PROFILES = [
-  { id: 'p-aditya', name: 'Aditya', email: 'tiwari17aditya@gmail.com', color: '#6366f1', avatar: '🚴', role: 'Admin' },
-  { id: 'p-2', name: 'Work & Projects', email: 'work@taskpulse.app', color: '#ec4899', avatar: '💼', role: 'Member' },
-  { id: 'p-3', name: 'Study & Academy', email: 'student@taskpulse.app', color: '#10b981', avatar: '🎓', role: 'Member' }
+  { id: 'p-aditya', name: 'Aditya', email: 'tiwari17aditya@gmail.com', color: '#6366f1', avatar: '👤', role: 'User' }
 ];
+
 
 // Default starter tags with colors
 export const DEFAULT_TAGS = [

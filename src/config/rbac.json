@@ -1,0 +1,25 @@
+{
+  "system": "TaskPulse Enterprise RBAC Framework",
+  "version": "1.0.0-beta",
+  "roles": [
+    {
+      "key": "User",
+      "label": "User (Standard Access)",
+      "description": "Standard user workspace access to Tasks, Keep Notes, and Daily Routines."
+    },
+    {
+      "key": "Admin",
+      "label": "Admin (System Administrator)",
+      "description": "Full access to System Control Panel, Database Sync Status, Version Audits, System Logs, and RBAC Management."
+    }
+  ],
+  "defaultRole": "User",
+  "adminPermissions": [
+    "view_database_status",
+    "view_version_info",
+    "view_admin_panel",
+    "manage_user_roles",
+    "view_system_logs",
+    "manage_database_backups"
+  ]
+}
