@@ -23,6 +23,14 @@ export default function AdminPanelModal({
   const [backupJson, setBackupJson] = useState('');
   const [importStatus, setImportStatus] = useState(null);
 
+  // Admin Member Creation & Shared Master Admin PIN state
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserRole, setNewUserRole] = useState('User');
+  const [editingAdminPin, setEditingAdminPin] = useState(false);
+  const [tempAdminPinInput, setTempAdminPinInput] = useState('');
+
   if (!isOpen && !isEmbedded) return null;
 
   const isAdmin = activeProfile?.role === 'Admin';
@@ -34,12 +42,50 @@ export default function AdminPanelModal({
     }
     const updated = profiles.map(p => {
       if (p.id === profileId) {
-        const newRole = p.role === 'Admin' ? 'Member' : 'Admin';
+        const newRole = p.role === 'Admin' ? 'User' : 'Admin';
         return { ...p, role: newRole };
       }
       return p;
     });
     onSaveProfiles(updated);
+  };
+
+  const handleCreateUserByAdmin = (e) => {
+    e.preventDefault();
+    if (!newUserName.trim()) return;
+
+    const newProfile = {
+      id: `p-${Date.now()}`,
+      name: newUserName.trim(),
+      email: newUserEmail.trim() || `${newUserName.toLowerCase().replace(/\s+/g, '')}@taskpulse.app`,
+      avatar: newUserRole === 'Admin' ? '🛡️' : '👤',
+      color: newUserRole === 'Admin' ? '#f59e0b' : '#6366f1',
+      role: newUserRole,
+      pin: '1234'
+    };
+
+    onSaveProfiles([...profiles, newProfile]);
+    setNewUserName('');
+    setNewUserEmail('');
+    setNewUserRole('User');
+    setShowAddUserModal(false);
+  };
+
+  const handleUpdateMasterAdminPin = (e) => {
+    e.preventDefault();
+    if (!tempAdminPinInput.trim()) return;
+    storage.saveAdminMasterPin(tempAdminPinInput.trim());
+    setEditingAdminPin(false);
+    setTempAdminPinInput('');
+    alert("Master Admin Password updated successfully! This password applies globally to ALL Admin accounts.");
+  };
+
+  const handleResetUserPinByAdmin = (targetId) => {
+    const updated = profiles.map(p =>
+      p.id === targetId ? { ...p, pin: '1234' } : p
+    );
+    onSaveProfiles(updated);
+    alert("User PIN has been reset to default (1234).");
   };
 
   const handleExportBackup = () => {
@@ -169,16 +215,132 @@ export default function AdminPanelModal({
             <div className="p-5 flex-1 overflow-y-auto space-y-5">
               {/* TAB 1: USER ACCOUNTS & RBAC */}
               {activeTab === 'users' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-200">Registered User Profiles</h3>
-                      <p className="text-[11px] text-slate-400">Manage user roles and permissions across isolated account profiles.</p>
+                <div className="space-y-5">
+                  {/* Master Admin Security PIN Management Card */}
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Key className="w-4 h-4 text-amber-400" />
+                        <h4 className="text-xs font-bold text-amber-300">Shared LDAP Master Admin Password</h4>
+                      </div>
+                      <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                        Password for Admin is shared across all Admin members (e.g. test1, test2). Updating it from any Admin account applies globally. Current Master PIN: <strong className="font-mono text-white">{storage.getAdminMasterPin()}</strong>
+                      </p>
                     </div>
-                    <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">
-                      {profiles.length} Profiles
-                    </span>
+
+                    {editingAdminPin ? (
+                      <form onSubmit={handleUpdateMasterAdminPin} className="flex items-center gap-2 shrink-0">
+                        <input
+                          type="password"
+                          placeholder="New PIN..."
+                          value={tempAdminPinInput}
+                          onChange={(e) => setTempAdminPinInput(e.target.value)}
+                          className="bg-slate-950 border border-amber-500 text-xs text-white px-2.5 py-1 rounded-lg outline-none w-28 font-mono"
+                          autoFocus
+                          required
+                        />
+                        <button type="submit" className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg cursor-pointer">
+                          Save
+                        </button>
+                        <button type="button" onClick={() => setEditingAdminPin(false)} className="px-2 py-1 text-slate-400 text-xs">
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingAdminPin(true)}
+                        className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition"
+                      >
+                        Change Master Admin PIN
+                      </button>
+                    )}
                   </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-200">Registered Account Profiles & Role Control</h3>
+                      <p className="text-[11px] text-slate-400">Add new members, promote members to Admin, or reset user lock passwords.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddUserModal(!showAddUserModal)}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-md"
+                    >
+                      <Users className="w-3.5 h-3.5" /> Add New Member
+                    </button>
+                  </div>
+
+                  {/* Add User Modal Form inside Admin Panel */}
+                  {showAddUserModal && (
+                    <form onSubmit={handleCreateUserByAdmin} className="p-4 rounded-xl bg-slate-950 border border-indigo-500/40 space-y-3 animate-fade-in">
+                      <h4 className="text-xs font-bold text-slate-200">Create New Member Profile</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[11px] font-medium text-slate-400 block mb-1">Member Name *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. test2"
+                            value={newUserName}
+                            onChange={(e) => setNewUserName(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-indigo-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-medium text-slate-400 block mb-1">Email (Optional)</label>
+                          <input
+                            type="email"
+                            placeholder="member@taskpulse.app"
+                            value={newUserEmail}
+                            onChange={(e) => setNewUserEmail(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-medium text-slate-400">Assign Role:</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewUserRole('User')}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                              newUserRole === 'User' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
+                            User
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewUserRole('Admin')}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                              newUserRole === 'Admin' ? 'bg-amber-600 text-white border-amber-500' : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
+                            Admin
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAddUserModal(false)}
+                            className="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow cursor-pointer"
+                          >
+                            Create Member
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
 
                   <div className="space-y-2.5">
                     {profiles.map(p => {
@@ -215,7 +377,18 @@ export default function AdminPanelModal({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {p.role !== 'Admin' && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetUserPinByAdmin(p.id)}
+                                className="px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition"
+                                title="Reset user PIN to default 1234"
+                              >
+                                Reset PIN
+                              </button>
+                            )}
+
                             <button
                               onClick={() => handleRoleToggle(p.id)}
                               disabled={isCurrent}
@@ -224,9 +397,9 @@ export default function AdminPanelModal({
                                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
                                   : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
                               }`}
-                              title={isCurrent ? 'Cannot change active profile role' : 'Click to toggle Admin / Member role'}
+                              title={isCurrent ? 'Cannot change active profile role' : 'Click to toggle Admin / User role'}
                             >
-                              Role: {p.role || 'Member'}
+                              Role: {p.role || 'User'}
                             </button>
                           </div>
                         </div>

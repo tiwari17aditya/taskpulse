@@ -189,8 +189,8 @@ function SidebarInner({
           </button>
         </div>
 
-        {/* View Switcher Tabs (Tasks vs Notes vs Routine vs Admin) */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
+        {/* View Switcher Tabs (Tasks vs Notes vs Routine) */}
+        <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
           <button
             onClick={() => { setActiveView('tasks'); setActiveTag(null); }}
             className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
@@ -216,15 +216,6 @@ function SidebarInner({
             }`}
           >
             <Repeat className="w-3.5 h-3.5" /> Routine
-          </button>
-
-          <button
-            onClick={() => { setActiveView('admin'); setActiveTag(null); }}
-            className={`py-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
-              activeView === 'admin' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-300" /> Admin
           </button>
         </div>
 

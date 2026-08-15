@@ -14,7 +14,9 @@ import AdminPanelModal from '@/components/AdminPanelModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat } from 'lucide-react';
+import ProfileLockModal from '@/components/ProfileLockModal';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat, Lock, Unlock } from 'lucide-react';
+
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
@@ -53,6 +55,8 @@ export default function Home() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showLockModal, setShowLockModal] = useState(false);
+  const [lockTargetProfile, setLockTargetProfile] = useState(null);
 
   // Routine Auto-Populate & Completion Log helper functions
   const updateRoutineCompletionLog = (routineId, taskCompleted, completionDate) => {
@@ -311,8 +315,13 @@ export default function Home() {
 
   // Profile management handlers
   const handleSelectProfile = (profile) => {
-    setActiveProfile(profile);
-    storage.setActiveProfile(profile.id);
+    if (profile.isLocked || profile.pin) {
+      setLockTargetProfile(profile);
+      setShowLockModal(true);
+    } else {
+      setActiveProfile(profile);
+      storage.setActiveProfile(profile.id);
+    }
   };
 
   const handleSaveProfiles = (updatedProfiles) => {
@@ -456,6 +465,19 @@ export default function Home() {
               <span className="text-[10px] font-mono text-slate-500 uppercase">({activeProfile?.role || 'User'})</span>
             </button>
 
+            {/* Profile Lock Button */}
+            <button
+              onClick={() => {
+                setLockTargetProfile(activeProfile);
+                setShowLockModal(true);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-full font-medium text-slate-300 transition cursor-pointer"
+              title="Lock Active Profile for Privacy (LDAP PIN Protected)"
+            >
+              <Lock className="w-3 h-3 text-amber-400" />
+              <span className="hidden md:inline text-[11px]">Lock</span>
+            </button>
+
             {/* Admin Trigger Button (Positioned immediately to the right of Profile, ONLY visible to RBAC Admin role) */}
             {activeProfile?.role === 'Admin' && (
               <button
@@ -594,6 +616,20 @@ export default function Home() {
           routines={routines}
           reminders={reminders}
           onOpenLogsModal={() => { setShowAdminModal(false); setShowLogsModal(true); }}
+        />
+      )}
+
+      {showLockModal && (
+        <ProfileLockModal
+          isOpen={showLockModal}
+          onClose={() => setShowLockModal(false)}
+          targetProfile={lockTargetProfile || activeProfile}
+          onUnlockSuccess={(unlockedProfile) => {
+            setActiveProfile(unlockedProfile);
+            storage.setActiveProfile(unlockedProfile.id);
+          }}
+          profiles={profiles}
+          onSaveProfiles={handleSaveProfiles}
         />
       )}
     </div>

@@ -234,6 +234,20 @@ export const storage = {
   saveNotificationSettings: (settings) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
+  },
+  // Master Admin PIN (Shared LDAP-style PIN across all Admin role profiles)
+  getAdminMasterPin: () => {
+    if (typeof window === 'undefined') return '1234';
+    try {
+      return localStorage.getItem('pulse_admin_master_pin_v1') || '1234';
+    } catch (e) {
+      return '1234';
+    }
+  },
+  saveAdminMasterPin: (pin) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('pulse_admin_master_pin_v1', pin);
   }
 };
+
 
