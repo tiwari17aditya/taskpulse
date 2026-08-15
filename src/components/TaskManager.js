@@ -49,6 +49,8 @@ export default function TaskManager({
   const [historyPreset, setHistoryPreset] = useState('all'); // 'all' | 'today' | 'yesterday' | 'last7' | 'month' | 'custom'
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [showCalendarFilters, setShowCalendarFilters] = useState(false);
 
   const addTaskOnDate = (title, dateStr) => {
     if (!title || !title.trim()) return;
@@ -367,185 +369,212 @@ export default function TaskManager({
     setSelectedTask(updatedTask);
   };
 
+  const isCalendarMode = (currentFilter === 'planned' && plannedSubView === 'calendar') || (currentFilter === 'completed' && historySubView === 'calendar');
+
   return (
     <div className="flex gap-6 h-full relative">
       {/* Main Task List Column */}
       <div className="flex-1 flex flex-col space-y-4">
-        {/* Quick Add Task Bar & Date Presets */}
-        <form onSubmit={addTask} className="space-y-2">
-          <div className="flex items-center bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-3 shadow-lg transition">
-            <Plus className="w-5 h-5 text-indigo-400 mr-3 shrink-0" />
-            <input
-              type="text"
-              placeholder="Add a task (e.g. 'Review weekly plan')..."
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              className="bg-transparent text-sm text-slate-100 placeholder-slate-500 w-full outline-none"
-            />
+        {/* Calendar Mode Compact Header Toggle */}
+        {isCalendarMode && (
+          <div className="flex items-center justify-between p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs shadow-md">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-bold text-slate-100">Full-Screen Interactive Calendar</span>
+            </div>
             <button
-              type="submit"
-              disabled={!newTaskTitle.trim()}
-              className="ml-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
+              type="button"
+              onClick={() => setShowCalendarFilters(!showCalendarFilters)}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
-              Add
+              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+              {showCalendarFilters ? 'Collapse Toolbars' : 'Expand Filters & Toolbars'}
             </button>
           </div>
+        )}
 
-          {/* Due Date Presets Bar */}
-          <div className="flex items-center gap-1.5 px-1 overflow-x-auto text-xs">
-            <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1 shrink-0">
-              <Calendar className="w-3 h-3" /> Due Date:
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedDueDate(getTodayStr())}
-              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedDueDate(getTomorrowStr())}
-              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Tomorrow
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedDueDate(getNextWeekStr())}
-              className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
-                selectedDueDate === getNextWeekStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Next Week
-            </button>
-            <input
-              type="date"
-              value={selectedDueDate}
-              onChange={(e) => setSelectedDueDate(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-full outline-none"
-            />
-            {selectedDueDate && (
+        {/* Quick Add Task Bar & Date Presets (Collapsed in Calendar Mode unless expanded) */}
+        {(!isCalendarMode || showCalendarFilters) && (
+          <form onSubmit={addTask} className="space-y-2">
+            <div className="flex items-center bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-3 shadow-lg transition">
+              <Plus className="w-5 h-5 text-indigo-400 mr-3 shrink-0" />
+              <input
+                type="text"
+                placeholder="Add a task (e.g. 'Review weekly plan')..."
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="bg-transparent text-sm text-slate-100 placeholder-slate-500 w-full outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!newTaskTitle.trim()}
+                className="ml-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Due Date Presets Bar */}
+            <div className="flex items-center gap-1.5 px-1 overflow-x-auto text-xs">
+              <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1 shrink-0">
+                <Calendar className="w-3 h-3" /> Due Date:
+              </span>
               <button
                 type="button"
-                onClick={() => setSelectedDueDate('')}
-                className="text-slate-500 hover:text-rose-400 text-[11px] ml-1"
+                onClick={() => setSelectedDueDate(getTodayStr())}
+                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                  selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
               >
-                Clear
+                Today
               </button>
-            )}
-          </div>
-        </form>
-
-        {/* Date Filter Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
-          <div className="flex items-center gap-1.5 text-slate-400 font-medium">
-            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Filter by Date:</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <button
-              onClick={() => setFilterDate('all')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                filterDate === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              All Dates
-            </button>
-            <button
-              onClick={() => setFilterDate('today')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                filterDate === 'today' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setFilterDate('tomorrow')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                filterDate === 'tomorrow' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Tomorrow
-            </button>
-            <button
-              onClick={() => setFilterDate('next-week')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                filterDate === 'next-week' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Next Week
-            </button>
-            <input
-              type="date"
-              value={customFilterDate}
-              onChange={(e) => {
-                setCustomFilterDate(e.target.value);
-                setFilterDate(e.target.value ? 'custom' : 'all');
-              }}
-              className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Bulk Selection & Multi-Delete Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsSelectMode(!isSelectMode);
-                if (isSelectMode) setSelectedTaskIds([]);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-                isSelectMode ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
-              }`}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              {isSelectMode ? 'Exit Selection Mode' : 'Multi-Select Tasks'}
-            </button>
-
-            {isSelectMode && (
-              <>
+              <button
+                type="button"
+                onClick={() => setSelectedDueDate(getTomorrowStr())}
+                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                  selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Tomorrow
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDueDate(getNextWeekStr())}
+                className={`px-2 py-0.5 rounded-full border text-[11px] font-medium transition ${
+                  selectedDueDate === getNextWeekStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Next Week
+              </button>
+              <input
+                type="date"
+                value={selectedDueDate}
+                onChange={(e) => setSelectedDueDate(e.target.value)}
+                className="bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-full outline-none"
+              />
+              {selectedDueDate && (
                 <button
                   type="button"
-                  onClick={selectedTaskIds.length === categoryTasks.length ? deselectAllTasks : selectAllCategoryTasks}
-                  className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition"
+                  onClick={() => setSelectedDueDate('')}
+                  className="text-slate-500 hover:text-rose-400 text-[11px] ml-1"
                 >
-                  {selectedTaskIds.length === categoryTasks.length ? 'Deselect All' : 'Select All'}
+                  Clear
                 </button>
-                <span className="text-xs text-slate-400 font-mono">
-                  {selectedTaskIds.length} of {categoryTasks.length} selected
-                </span>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          </form>
+        )}
 
-          <div className="flex items-center gap-2">
-            {isSelectMode && selectedTaskIds.length > 0 && (
-              <button
-                type="button"
-                onClick={deleteSelectedTasks}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-rose-600/20 transition"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedTaskIds.length})
-              </button>
-            )}
-            {categoryTasks.length > 0 && (
-              <button
-                type="button"
-                onClick={deleteAllCategoryTasks}
-                className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded-lg text-xs font-medium flex items-center gap-1 transition"
-              >
-                <Trash2 className="w-3 h-3" /> Clear All Tasks ({categoryTasks.length})
-              </button>
-            )}
-          </div>
-        </div>
+        {/* Date Filter & Multi-Select Toolbars (Collapsed in Calendar Mode unless expanded) */}
+        {(!isCalendarMode || showCalendarFilters) && (
+          <>
+            {/* Date Filter Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
+              <div className="flex items-center gap-1.5 text-slate-400 font-medium">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Filter by Date:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                <button
+                  onClick={() => setFilterDate('all')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                    filterDate === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  All Dates
+                </button>
+                <button
+                  onClick={() => setFilterDate('today')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                    filterDate === 'today' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setFilterDate('tomorrow')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                    filterDate === 'tomorrow' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Tomorrow
+                </button>
+                <button
+                  onClick={() => setFilterDate('next-week')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                    filterDate === 'next-week' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Next Week
+                </button>
+                <input
+                  type="date"
+                  value={customFilterDate}
+                  onChange={(e) => {
+                    setCustomFilterDate(e.target.value);
+                    setFilterDate(e.target.value ? 'custom' : 'all');
+                  }}
+                  className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Bulk Selection & Multi-Delete Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSelectMode(!isSelectMode);
+                    if (isSelectMode) setSelectedTaskIds([]);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                    isSelectMode ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {isSelectMode ? 'Exit Selection Mode' : 'Multi-Select Tasks'}
+                </button>
+
+                {isSelectMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={selectedTaskIds.length === categoryTasks.length ? deselectAllTasks : selectAllCategoryTasks}
+                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition"
+                    >
+                      {selectedTaskIds.length === categoryTasks.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                    <span className="text-xs text-slate-400 font-mono">
+                      {selectedTaskIds.length} of {categoryTasks.length} selected
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isSelectMode && selectedTaskIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={deleteSelectedTasks}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-rose-600/20 transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedTaskIds.length})
+                  </button>
+                )}
+                {categoryTasks.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={deleteAllCategoryTasks}
+                    className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded-lg text-xs font-medium flex items-center gap-1 transition"
+                  >
+                    <Trash2 className="w-3 h-3" /> Clear All Tasks ({categoryTasks.length})
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Planned View Controls (Sub-tabs: List / Calendar) */}
         {currentFilter === 'planned' && (
@@ -592,22 +621,23 @@ export default function TaskManager({
               </button>
             </div>
 
-            {/* History Date Filter Toolbar */}
-            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Filter History
-                </span>
-                {(historyPreset !== 'all' || historyDateFrom || historyDateTo) && (
-                  <button
-                    onClick={clearHistoryFilters}
-                    className="text-[11px] text-rose-400 hover:text-rose-300 transition font-medium"
-                  >
-                    ✕ Clear Filters
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
+            {/* History Date Filter Toolbar (Collapsed in Calendar Mode unless expanded) */}
+            {(!isCalendarMode || showCalendarFilters) && (
+              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Filter History
+                  </span>
+                  {(historyPreset !== 'all' || historyDateFrom || historyDateTo) && (
+                    <button
+                      onClick={clearHistoryFilters}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 transition font-medium"
+                    >
+                      ✕ Clear Filters
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
                 {[
                   { key: 'all', label: 'All Time' },
                   { key: 'today', label: 'Today' },
@@ -645,6 +675,7 @@ export default function TaskManager({
                 />
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -1364,6 +1395,83 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
             ))}
           </div>
         )}
+      </div>
+
+      {/* Floating Quick Add Task Action Button (Bottom-Right) */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        {showQuickAddModal && (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl w-80 animate-scale-up space-y-3 mb-2">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-indigo-400" /> Quick Add New Task
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowQuickAddModal(false)}
+                className="text-slate-400 hover:text-slate-200 p-1 rounded-lg bg-slate-800/60"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { addTask(e); setShowQuickAddModal(false); }} className="space-y-3">
+              <input
+                type="text"
+                placeholder="Task title..."
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2 rounded-xl outline-none focus:border-indigo-500"
+                autoFocus
+              />
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-400 block">Due Date (Optional)</label>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDueDate(getTodayStr())}
+                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
+                      selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDueDate(getTomorrowStr())}
+                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
+                      selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    Tomorrow
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDueDate}
+                    onChange={(e) => setSelectedDueDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-lg outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold rounded-xl shadow-lg transition cursor-pointer"
+              >
+                Add Task Now
+              </button>
+            </form>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowQuickAddModal(!showQuickAddModal)}
+          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+          title="Quick Add Task (+)"
+        >
+          <Plus className={`w-6 h-6 transition-transform duration-300 ${showQuickAddModal ? 'rotate-45' : 'group-hover:rotate-90'}`} />
+        </button>
       </div>
     </div>
   );
