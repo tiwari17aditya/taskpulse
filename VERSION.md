@@ -1,5 +1,16 @@
 # Version History
 
+## [v1.1.0-rc2] - 2026-08-15
+
+### Added & Enhanced
+- **Gmail SMTP Nodemailer Transport**: Integrated Nodemailer direct email dispatch endpoint (`/api/notifications/email`) configured with Gmail App Password credentials for automated reminder digests.
+- **Serverless NeonDB Profile Sync (`/api/db/profiles`)**: Created dedicated database route and auto-provisioning SQL schema for the `profiles` table in NeonDB PostgreSQL, persisting user profile creations, updates, selections, and deletions live across all devices.
+- **Data Re-assignment to Profile "Aditya"**: Set **Aditya** (`p-aditya`, `Admin` role) as primary default profile and re-assigned legacy workspace tasks, notes, routines, and reminders to Aditya's profile.
+- **Strict Per-Profile Data Isolation**: Attached `profileId` to task and note creation handlers, enforcing strict profile filtering across Tasks, Notes, Routines, and Reminders when switching profiles.
+- **System Admin Control Panel & RBAC (`AdminPanelModal.js`)**: Built dedicated Admin Control Panel featuring Role-Based Access Control (`Admin` ↔ `Member`), system metrics dashboard, live log audit viewer, and 1-click JSON database backup & restore.
+
+---
+
 ## [v1.1.0-rc1] - 2026-08-15
 
 ### Added & Enhanced

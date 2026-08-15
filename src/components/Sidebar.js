@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown, Repeat } from 'lucide-react';
+import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown, Repeat, ShieldCheck } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -24,6 +24,7 @@ export default function Sidebar({
   onOpenProfileModal,
   onOpenNotificationModal,
   remindersCount,
+  onOpenAdminModal,
 }) {
   return (
     <>
@@ -48,6 +49,7 @@ export default function Sidebar({
           onOpenProfileModal={onOpenProfileModal}
           onOpenNotificationModal={onOpenNotificationModal}
           remindersCount={remindersCount}
+          onOpenAdminModal={onOpenAdminModal}
         />
       </aside>
 
@@ -80,6 +82,7 @@ export default function Sidebar({
               onOpenProfileModal={() => { onOpenProfileModal(); onCloseMobile(); }}
               onOpenNotificationModal={() => { onOpenNotificationModal(); onCloseMobile(); }}
               remindersCount={remindersCount}
+              onOpenAdminModal={() => { onOpenAdminModal(); onCloseMobile(); }}
             />
           </div>
           <div className="flex-1" onClick={onCloseMobile} />
@@ -107,7 +110,8 @@ function SidebarInner({
   activeProfile,
   onOpenProfileModal,
   onOpenNotificationModal,
-  remindersCount
+  remindersCount,
+  onOpenAdminModal
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#6366f1');
@@ -152,7 +156,7 @@ function SidebarInner({
             {/* Notification Bell */}
             <button
               onClick={onOpenNotificationModal}
-              className="relative p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 transition"
+              className="relative p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 transition cursor-pointer"
               title="Notification & Reminder Center"
             >
               <Bell className="w-4 h-4" />
@@ -167,7 +171,7 @@ function SidebarInner({
           {/* Active Profile Switcher Badge */}
           <button
             onClick={onOpenProfileModal}
-            className="w-full p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition flex items-center justify-between group"
+            className="w-full p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <div
@@ -189,7 +193,7 @@ function SidebarInner({
         <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
           <button
             onClick={() => { setActiveView('tasks'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'tasks' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -198,7 +202,7 @@ function SidebarInner({
 
           <button
             onClick={() => { setActiveView('notes'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'notes' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -207,7 +211,7 @@ function SidebarInner({
 
           <button
             onClick={() => { setActiveView('routine'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition cursor-pointer ${
               activeView === 'routine' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -228,7 +232,7 @@ function SidebarInner({
                 <button
                   key={item.id}
                   onClick={() => { setCurrentFilter(item.id); setActiveTag(null); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer ${
                     isSelected
                       ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
                       : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
@@ -290,7 +294,7 @@ function SidebarInner({
             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
               <Tag className="w-3 h-3" /> Tags
             </span>
-            <button onClick={() => setShowAddTag(!showAddTag)} className="text-slate-400 hover:text-slate-200 p-0.5">
+            <button onClick={() => setShowAddTag(!showAddTag)} className="text-slate-400 hover:text-slate-200 p-0.5 cursor-pointer">
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -312,7 +316,7 @@ function SidebarInner({
                   className="w-6 h-6 rounded border-0 cursor-pointer bg-transparent"
                 />
               </div>
-              <button type="submit" className="w-full py-1 bg-indigo-600 text-white rounded text-[11px] font-medium">
+              <button type="submit" className="w-full py-1 bg-indigo-600 text-white rounded text-[11px] font-medium cursor-pointer">
                 Save Tag
               </button>
             </form>
@@ -325,7 +329,7 @@ function SidebarInner({
                 <button
                   key={tag.id}
                   onClick={() => setActiveTag(isSelected ? null : tag.name)}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs transition ${
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
                     isSelected ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
                   }`}
                 >
@@ -342,10 +346,20 @@ function SidebarInner({
 
       {/* Footer Operational Tools */}
       <div className="space-y-2 border-t border-slate-800/80 pt-4">
+        {/* Admin Control Panel Button (Admin Only) */}
+        {activeProfile?.role === 'Admin' && (
+          <button
+            onClick={onOpenAdminModal}
+            className="w-full py-2 px-3 bg-gradient-to-r from-amber-600 via-indigo-600 to-violet-600 hover:from-amber-500 hover:to-violet-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4 text-amber-300" /> Admin Control Panel
+          </button>
+        )}
+
         {/* Open-Source Sharing Utilities button */}
         <button
           onClick={onOpenShareModal}
-          className="w-full py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition"
+          className="w-full py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition cursor-pointer"
         >
           <Share2 className="w-3.5 h-3.5" /> Open-Source Sharing Utilities
         </button>
@@ -353,7 +367,7 @@ function SidebarInner({
         {/* User Guide */}
         <button
           onClick={onOpenGuideModal}
-          className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition"
+          className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
         >
           <BookOpen className="w-3.5 h-3.5 text-indigo-400" /> User Guide & Documentation
         </button>

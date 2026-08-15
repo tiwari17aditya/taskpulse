@@ -11,3 +11,8 @@
 [2026-08-15 20:19:25] [INFO] Added SMTP Direct Server Dispatcher test UI card into NotificationManagerModal.js.
 [2026-08-15 20:51:15] [INFO] Configured Gmail SMTP App Password credentials (lznl ldgs yurp kqjk) into .env for TaskPulse email dispatches.
 [2026-08-15 20:51:25] [INFO] Verified production build compilation with zero errors.
+[2026-08-15 21:00:00] [INFO] Reassigned primary default profile in src/lib/storage.js to Aditya (p-aditya, Admin role).
+[2026-08-15 21:00:15] [INFO] Updated TaskManager.js and NoteCanvas.js to attach activeProfile.id on item creation.
+[2026-08-15 21:00:30] [INFO] Enforced strict per-profile data isolation in src/app/page.js and auto-migrated legacy data to Aditya.
+[2026-08-15 21:01:00] [INFO] Created src/components/AdminPanelModal.js featuring RBAC role toggles, data metrics, log audit, and JSON database backup/restore.
+[2026-08-15 21:01:30] [INFO] Rendered Admin Control Panel trigger button in Sidebar.js footer exclusively for Admin role profiles.

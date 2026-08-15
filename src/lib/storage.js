@@ -12,9 +12,9 @@ const ROUTINES_KEY = 'pulse_routines_v1';
 
 // Default starter profiles
 export const DEFAULT_PROFILES = [
-  { id: 'p-1', name: 'Personal Profile', email: 'user@taskpulse.app', color: '#6366f1', avatar: '👤', role: 'Personal' },
-  { id: 'p-2', name: 'Work & Projects', email: 'work@taskpulse.app', color: '#ec4899', avatar: '💼', role: 'Work' },
-  { id: 'p-3', name: 'Study & Academy', email: 'student@taskpulse.app', color: '#10b981', avatar: '🎓', role: 'Student' }
+  { id: 'p-aditya', name: 'Aditya', email: 'tiwari17aditya@gmail.com', color: '#6366f1', avatar: '🚴', role: 'Admin' },
+  { id: 'p-2', name: 'Work & Projects', email: 'work@taskpulse.app', color: '#ec4899', avatar: '💼', role: 'Member' },
+  { id: 'p-3', name: 'Study & Academy', email: 'student@taskpulse.app', color: '#10b981', avatar: '🎓', role: 'Member' }
 ];
 
 // Default starter tags with colors

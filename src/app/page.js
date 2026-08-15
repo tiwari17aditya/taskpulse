@@ -10,6 +10,7 @@ import TokenUsageModal from '@/components/TokenUsageModal';
 import LogViewerModal from '@/components/LogViewerModal';
 import ProfileManagerModal from '@/components/ProfileManagerModal';
 import NotificationManagerModal from '@/components/NotificationManagerModal';
+import AdminPanelModal from '@/components/AdminPanelModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
@@ -51,6 +52,7 @@ export default function Home() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
 
   // Routine Auto-Populate & Completion Log helper functions
   const updateRoutineCompletionLog = (routineId, taskCompleted, completionDate) => {
@@ -328,10 +330,12 @@ export default function Home() {
     if (tags.length > 0) storage.saveTags(tags);
   }, [tags]);
 
-  // Filter tasks & notes scoped by active profile
-  const profileTasks = tasks.filter(t => !t.profileId || t.profileId === activeProfile?.id);
-  const profileNotes = notes.filter(n => !n.profileId || n.profileId === activeProfile?.id);
-  const profileReminders = reminders.filter(r => !r.profileId || r.profileId === activeProfile?.id);
+  // Filter tasks, notes, routines & reminders strictly scoped by active profile
+  const targetProfileId = activeProfile?.id || 'p-aditya';
+  const profileTasks = tasks.filter(t => t.profileId === targetProfileId || (!t.profileId && targetProfileId === 'p-aditya'));
+  const profileNotes = notes.filter(n => n.profileId === targetProfileId || (!n.profileId && targetProfileId === 'p-aditya'));
+  const profileRoutines = routines.filter(r => r.profileId === targetProfileId || (!r.profileId && targetProfileId === 'p-aditya'));
+  const profileReminders = reminders.filter(r => r.profileId === targetProfileId || (!r.profileId && targetProfileId === 'p-aditya'));
 
   // Tasks counts for sidebar
   const tasksCount = {
@@ -371,6 +375,7 @@ export default function Home() {
         onOpenProfileModal={() => setShowProfileModal(true)}
         onOpenNotificationModal={() => setShowNotificationModal(true)}
         remindersCount={profileReminders.filter(r => r.status === 'active').length}
+        onOpenAdminModal={() => setShowAdminModal(true)}
       />
 
       {/* Main Content Workspace */}
@@ -460,16 +465,20 @@ export default function Home() {
           ) : activeView === 'notes' ? (
             <NoteCanvas
               notes={profileNotes}
-              setNotes={handleSetNotes}
+              setNotes={(updatedProfileNotes) => {
+                const otherNotes = notes.filter(n => n.profileId && n.profileId !== targetProfileId);
+                handleSetNotes([...updatedProfileNotes, ...otherNotes]);
+              }}
               tags={tags}
               activeTag={activeTag}
               onShareNote={(note) => handleOpenShareModal({ title: note.title, content: note.content, media: note.media })}
+              activeProfile={activeProfile}
             />
           ) : (
             <RoutineManager
-              routines={routines.filter(r => !r.profileId || r.profileId === activeProfile?.id)}
+              routines={profileRoutines}
               setRoutines={(updatedProfileRoutines) => {
-                const otherRoutines = routines.filter(r => r.profileId && r.profileId !== activeProfile?.id);
+                const otherRoutines = routines.filter(r => r.profileId && r.profileId !== targetProfileId);
                 handleSetRoutines([...updatedProfileRoutines, ...otherRoutines]);
               }}
               tags={tags}
@@ -521,6 +530,21 @@ export default function Home() {
           onSaveReminders={handleSaveReminders}
           notificationSettings={notificationSettings}
           onSaveSettings={handleSaveSettings}
+        />
+      )}
+
+      {showAdminModal && (
+        <AdminPanelModal
+          isOpen={showAdminModal}
+          onClose={() => setShowAdminModal(false)}
+          profiles={profiles}
+          activeProfile={activeProfile}
+          onSaveProfiles={handleSaveProfiles}
+          tasks={tasks}
+          notes={notes}
+          routines={routines}
+          reminders={reminders}
+          onOpenLogsModal={() => { setShowAdminModal(false); setShowLogsModal(true); }}
         />
       )}
     </div>

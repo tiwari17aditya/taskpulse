@@ -178,6 +178,7 @@ export default function TaskManager({
 
     const newTask = {
       id: 't-' + Date.now(),
+      profileId: activeProfile?.id || 'p-aditya',
       title: newTaskTitle.trim(),
       completed: false,
       myDay: currentFilter === 'my-day',

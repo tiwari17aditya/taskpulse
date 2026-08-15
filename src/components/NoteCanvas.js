@@ -13,7 +13,7 @@ const COLOR_PALETTE = [
   { name: 'Purple', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.3)' },
 ];
 
-export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNote }) {
+export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNote, activeProfile }) {
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -23,8 +23,8 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
   const [searchQuery, setSearchQuery] = useState('');
 
   // Bulk selection state
-  const [selectedNoteIds, setSelectedNoteIds] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedNoteIds, setSelectedNoteIds] = useState([]);
 
   // Filter notes by tag & search
   const filteredNotes = notes.filter(note => {
@@ -39,13 +39,16 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
   const otherNotes = filteredNotes.filter(n => !n.pinned);
 
   const toggleSelectNote = (noteId) => {
-    setSelectedNoteIds(prev =>
-      prev.includes(noteId) ? prev.filter(id => id !== noteId) : [...prev, noteId]
-    );
+    if (selectedNoteIds.includes(noteId)) {
+      setSelectedNoteIds(selectedNoteIds.filter(id => id !== noteId));
+    } else {
+      setSelectedNoteIds([...selectedNoteIds, noteId]);
+    }
   };
 
-  const selectAllNotes = () => {
-    setSelectedNoteIds(filteredNotes.map(n => n.id));
+  const selectAllFilteredNotes = () => {
+    const allIds = filteredNotes.map(n => n.id);
+    setSelectedNoteIds(allIds);
   };
 
   const deselectAllNotes = () => {
@@ -76,6 +79,7 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
 
     const newNote = {
       id: 'n-' + Date.now(),
+      profileId: activeProfile?.id || 'p-aditya',
       title: title.trim() || 'Untitled Note',
       content: content.trim(),
       bgColor: selectedColor,
