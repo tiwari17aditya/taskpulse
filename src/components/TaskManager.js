@@ -54,7 +54,7 @@ export default function TaskManager({
 
   // FAB Comprehensive Creation Modal State
   const [fabTaskTitle, setFabTaskTitle] = useState('');
-  const [fabDueDate, setFabDueDate] = useState('');
+  const [fabDueDate, setFabDueDate] = useState(getTodayStr()); // Default to creation date (today)
   const [fabMyDay, setFabMyDay] = useState(false); // DEFAULT FALSE!
   const [fabStarred, setFabStarred] = useState(false);
   const [fabSelectedTags, setFabSelectedTags] = useState([]);
@@ -67,7 +67,7 @@ export default function TaskManager({
 
   const handleOpenFabModal = () => {
     setFabTaskTitle('');
-    setFabDueDate('');
+    setFabDueDate(getTodayStr()); // Default to task creation date (today), editable by user
     setFabMyDay(false); // DO NOT DIRECTLY INCLUDE IN MY DAY
     setFabStarred(false);
     setFabSelectedTags(activeTag ? [activeTag] : []);

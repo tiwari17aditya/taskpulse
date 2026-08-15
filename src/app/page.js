@@ -258,6 +258,12 @@ export default function Home() {
     setReminders(initialReminders);
     setNotificationSettings(initialNotifSettings);
 
+    // Auto-lock workspace on initial application startup if active profile has privacy lock enabled
+    if (initialActiveProfile && (initialActiveProfile.isLocked || initialActiveProfile.pin)) {
+      setLockTargetProfile(initialActiveProfile);
+      setShowLockModal(true);
+    }
+
     // Initial DB sync & push initial profiles if DB is empty
     if (initialProfiles.length > 0) {
       saveProfilesToDB(initialProfiles);

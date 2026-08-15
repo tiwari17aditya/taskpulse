@@ -31,7 +31,8 @@ export default function ProfileManagerModal({
   const [email, setEmail] = useState('');
   const [avatar, setAvatar] = useState('👤');
   const [color, setColor] = useState('#6366f1');
-  const [role, setRole] = useState('Member');
+  const [role, setRole] = useState('User');
+  const [isLocked, setIsLocked] = useState(false);
 
   if (!isOpen) return null;
 
@@ -40,7 +41,8 @@ export default function ProfileManagerModal({
     setEmail('');
     setAvatar('👤');
     setColor('#6366f1');
-    setRole('Personal');
+    setRole('User');
+    setIsLocked(false);
     setEditingProfileId(null);
     setIsEditing(true);
   };
@@ -51,7 +53,8 @@ export default function ProfileManagerModal({
     setEmail(p.email || '');
     setAvatar(p.avatar || '👤');
     setColor(p.color || '#6366f1');
-    setRole(p.role || 'Member');
+    setRole(p.role || 'User');
+    setIsLocked(p.isLocked || false);
     setIsEditing(true);
   };
 
@@ -63,7 +66,7 @@ export default function ProfileManagerModal({
     if (editingProfileId) {
       updatedProfiles = updatedProfiles.map(p =>
         p.id === editingProfileId
-          ? { ...p, name: name.trim(), email: email.trim(), avatar, color, role }
+          ? { ...p, name: name.trim(), email: email.trim(), avatar, color, role, isLocked }
           : p
       );
     } else {
@@ -73,7 +76,9 @@ export default function ProfileManagerModal({
         email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@taskpulse.app`,
         avatar,
         color,
-        role: role || 'Member'
+        role: role || 'Member',
+        isLocked,
+        pin: '1234'
       };
       updatedProfiles.push(newProfile);
       onSelectProfile(newProfile);
@@ -210,6 +215,28 @@ export default function ProfileManagerModal({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Privacy Lock Toggle */}
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-200 block">Profile Privacy Lock</span>
+                    <span className="text-[10px] text-slate-400 block">Require PIN on startup to open profile</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLocked(!isLocked)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                    isLocked ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}
+                >
+                  {isLocked ? 'Locked 🔒' : 'Unlocked 🔓'}
+                </button>
               </div>
 
               {/* Save Buttons */}
