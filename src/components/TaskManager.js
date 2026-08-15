@@ -968,6 +968,84 @@ export default function TaskManager({
         </div>
         </div>
       )}
+
+      {/* Floating Quick Add Task Action Button (Bottom-Right) */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        {showQuickAddModal && (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl w-80 animate-scale-up space-y-3 mb-2">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-indigo-400" /> Quick Add New Task
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowQuickAddModal(false)}
+                className="text-slate-400 hover:text-slate-200 p-1 rounded-lg bg-slate-800/60"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { addTask(e); setShowQuickAddModal(false); }} className="space-y-3">
+              <input
+                type="text"
+                placeholder="Task title..."
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2 rounded-xl outline-none focus:border-indigo-500"
+                autoFocus
+              />
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-400 block">Due Date (Optional)</label>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDueDate(getTodayStr())}
+                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
+                      selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDueDate(getTomorrowStr())}
+                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
+                      selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    Tomorrow
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDueDate}
+                    onChange={(e) => setSelectedDueDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-lg outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!newTaskTitle.trim()}
+                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-lg transition cursor-pointer"
+              >
+                Add Task Now
+              </button>
+            </form>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowQuickAddModal(!showQuickAddModal)}
+          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+          title="Quick Add Task (+)"
+        >
+          <Plus className={`w-6 h-6 transition-transform duration-300 ${showQuickAddModal ? 'rotate-45' : 'group-hover:rotate-90'}`} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1395,83 +1473,6 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
             ))}
           </div>
         )}
-      </div>
-
-      {/* Floating Quick Add Task Action Button (Bottom-Right) */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
-        {showQuickAddModal && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl w-80 animate-scale-up space-y-3 mb-2">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-indigo-400" /> Quick Add New Task
-              </h4>
-              <button
-                type="button"
-                onClick={() => setShowQuickAddModal(false)}
-                className="text-slate-400 hover:text-slate-200 p-1 rounded-lg bg-slate-800/60"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <form onSubmit={(e) => { addTask(e); setShowQuickAddModal(false); }} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Task title..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2 rounded-xl outline-none focus:border-indigo-500"
-                autoFocus
-              />
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-400 block">Due Date (Optional)</label>
-                <div className="flex items-center gap-1 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDueDate(getTodayStr())}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
-                      selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
-                    }`}
-                  >
-                    Today
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDueDate(getTomorrowStr())}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
-                      selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
-                    }`}
-                  >
-                    Tomorrow
-                  </button>
-                  <input
-                    type="date"
-                    value={selectedDueDate}
-                    onChange={(e) => setSelectedDueDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-lg outline-none"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold rounded-xl shadow-lg transition cursor-pointer"
-              >
-                Add Task Now
-              </button>
-            </form>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setShowQuickAddModal(!showQuickAddModal)}
-          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
-          title="Quick Add Task (+)"
-        >
-          <Plus className={`w-6 h-6 transition-transform duration-300 ${showQuickAddModal ? 'rotate-45' : 'group-hover:rotate-90'}`} />
-        </button>
       </div>
     </div>
   );
