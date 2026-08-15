@@ -330,12 +330,32 @@ export default function Home() {
     if (tags.length > 0) storage.saveTags(tags);
   }, [tags]);
 
-  // Filter tasks, notes, routines & reminders strictly scoped by active profile
-  const targetProfileId = activeProfile?.id || 'p-aditya';
-  const profileTasks = tasks.filter(t => t.profileId === targetProfileId || (!t.profileId && targetProfileId === 'p-aditya'));
-  const profileNotes = notes.filter(n => n.profileId === targetProfileId || (!n.profileId && targetProfileId === 'p-aditya'));
-  const profileRoutines = routines.filter(r => r.profileId === targetProfileId || (!r.profileId && targetProfileId === 'p-aditya'));
-  const profileReminders = reminders.filter(r => r.profileId === targetProfileId || (!r.profileId && targetProfileId === 'p-aditya'));
+  // Filter tasks, notes, routines & reminders scoped by active profile (with fallback for legacy items to Aditya profile)
+  const isPrimaryOrAditya = !activeProfile ||
+    activeProfile?.name?.toLowerCase().includes('aditya') ||
+    activeProfile?.id === 'p-aditya' ||
+    activeProfile?.id === 'p-1' ||
+    profiles[0]?.id === activeProfile?.id;
+
+  const profileTasks = tasks.filter(t =>
+    t.profileId === activeProfile?.id ||
+    (isPrimaryOrAditya && (!t.profileId || t.profileId === 'p-1' || t.profileId === 'p-aditya'))
+  );
+
+  const profileNotes = notes.filter(n =>
+    n.profileId === activeProfile?.id ||
+    (isPrimaryOrAditya && (!n.profileId || n.profileId === 'p-1' || n.profileId === 'p-aditya'))
+  );
+
+  const profileRoutines = routines.filter(r =>
+    r.profileId === activeProfile?.id ||
+    (isPrimaryOrAditya && (!r.profileId || r.profileId === 'p-1' || r.profileId === 'p-aditya'))
+  );
+
+  const profileReminders = reminders.filter(r =>
+    r.profileId === activeProfile?.id ||
+    (isPrimaryOrAditya && (!r.profileId || r.profileId === 'p-1' || r.profileId === 'p-aditya'))
+  );
 
   // Tasks counts for sidebar
   const tasksCount = {
@@ -466,7 +486,8 @@ export default function Home() {
             <NoteCanvas
               notes={profileNotes}
               setNotes={(updatedProfileNotes) => {
-                const otherNotes = notes.filter(n => n.profileId && n.profileId !== targetProfileId);
+                const currentId = activeProfile?.id || 'p-aditya';
+                const otherNotes = notes.filter(n => n.profileId && n.profileId !== currentId);
                 handleSetNotes([...updatedProfileNotes, ...otherNotes]);
               }}
               tags={tags}
@@ -478,7 +499,8 @@ export default function Home() {
             <RoutineManager
               routines={profileRoutines}
               setRoutines={(updatedProfileRoutines) => {
-                const otherRoutines = routines.filter(r => r.profileId && r.profileId !== targetProfileId);
+                const currentId = activeProfile?.id || 'p-aditya';
+                const otherRoutines = routines.filter(r => r.profileId && r.profileId !== currentId);
                 handleSetRoutines([...updatedProfileRoutines, ...otherRoutines]);
               }}
               tags={tags}
