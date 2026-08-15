@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown } from 'lucide-react';
+import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown, Repeat } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -173,11 +173,11 @@ function SidebarInner({
           </button>
         </div>
 
-        {/* View Switcher Tabs (Tasks vs Notes) */}
-        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
+        {/* View Switcher Tabs (Tasks vs Notes vs Routine) */}
+        <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl">
           <button
             onClick={() => { setActiveView('tasks'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
               activeView === 'tasks' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -186,11 +186,20 @@ function SidebarInner({
 
           <button
             onClick={() => { setActiveView('notes'); setActiveTag(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
               activeView === 'notes' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <StickyNote className="w-3.5 h-3.5" /> Notes
+          </button>
+
+          <button
+            onClick={() => { setActiveView('routine'); setActiveTag(null); }}
+            className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition ${
+              activeView === 'routine' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Repeat className="w-3.5 h-3.5" /> Routine
           </button>
         </div>
 
@@ -236,6 +245,17 @@ function SidebarInner({
               <span className="font-mono bg-indigo-500/20 px-2 py-0.5 rounded-full">{notesCount} notes</span>
             </div>
             <p className="text-[11px] text-slate-400">Google Keep style masonry notes with media & colors</p>
+          </div>
+        )}
+
+        {/* Routine Manager Overview */}
+        {activeView === 'routine' && (
+          <div className="p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl space-y-1">
+            <div className="flex items-center justify-between text-xs text-amber-300 font-medium">
+              <span className="flex items-center gap-1.5"><Repeat className="w-3.5 h-3.5" /> Daily Routine</span>
+              <span className="font-mono bg-amber-500/20 px-2 py-0.5 rounded-full">Recurring Engine</span>
+            </div>
+            <p className="text-[11px] text-slate-400">Daily/weekly habit builder with editable target times & streaks</p>
           </div>
         )}
 

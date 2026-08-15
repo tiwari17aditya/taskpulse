@@ -1,5 +1,15 @@
 # Version History
 
+## [v1.1.0-rc1] - 2026-08-15
+
+### Added & Enhanced
+- **Routine Tasks View & Engine (`RoutineManager.js`)**: Dedicated "Routine" sidebar tab with habit cards, frequency controls (Daily, Weekdays, Weekly, Monthly, Custom), and streak & completion metrics.
+- **Editable Target Time Field**: Quick inline time editing pill on every routine card and edit modal allowing users to change target execution times anytime.
+- **Auto "My Day" Population**: Automatic schedule evaluation on startup/date-change to populate due routine tasks directly into the **My Day** daily focus list.
+- **Completion History & Streak Calculation**: Toggling routine tasks complete updates routine completion log dates, calculating active daily streaks (🔥) and 7-day activity matrix badges.
+
+---
+
 ## [v1.0.0-rc5] - 2026-08-13
 
 ### Added & Enhanced

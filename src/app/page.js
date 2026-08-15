@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import TaskManager from '@/components/TaskManager';
 import NoteCanvas from '@/components/NoteCanvas';
+import RoutineManager from '@/components/RoutineManager';
 import ShareRedirectModal from '@/components/ShareRedirectModal';
 import TokenUsageModal from '@/components/TokenUsageModal';
 import LogViewerModal from '@/components/LogViewerModal';
@@ -12,7 +13,7 @@ import NotificationManagerModal from '@/components/NotificationManagerModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck } from 'lucide-react';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat } from 'lucide-react';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
@@ -31,6 +32,7 @@ export default function Home() {
 
   const [tasks, setTasks] = useState([]);
   const [notes, setNotes] = useState([]);
+  const [routines, setRoutines] = useState([]);
   const [tags, setTags] = useState([]);
 
   // Multi-User Profiles state
@@ -50,6 +52,115 @@ export default function Home() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
+  // Routine Auto-Populate & Completion Log helper functions
+  const updateRoutineCompletionLog = (routineId, taskCompleted, completionDate) => {
+    const targetDate = completionDate || new Date().toISOString().split('T')[0];
+    const updated = routines.map(r => {
+      if (r.id === routineId) {
+        let logs = r.logs || [];
+        if (taskCompleted) {
+          if (!logs.includes(targetDate)) {
+            logs = [...logs, targetDate].sort();
+          }
+        } else {
+          logs = logs.filter(d => d !== targetDate);
+        }
+
+        let streak = 0;
+        const sortedLogs = [...new Set(logs)].sort().reverse();
+        if (sortedLogs.length > 0) {
+          const today = new Date();
+          let checkDate = new Date(today);
+          let todayStr = checkDate.toISOString().split('T')[0];
+
+          if (!sortedLogs.includes(todayStr)) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            todayStr = checkDate.toISOString().split('T')[0];
+          }
+
+          while (sortedLogs.includes(todayStr)) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+            todayStr = checkDate.toISOString().split('T')[0];
+          }
+        }
+
+        return { ...r, logs, streak };
+      }
+      return r;
+    });
+
+    setRoutines(updated);
+    storage.saveRoutines(updated);
+  };
+
+  const evaluateRoutineAutoPopulate = (currentTasks, currentRoutines) => {
+    if (!currentRoutines || currentRoutines.length === 0) return currentTasks;
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const dayOfWeek = today.getDay();
+    const dayOfMonth = today.getDate();
+
+    let hasNewTask = false;
+    const updatedTasks = [...currentTasks];
+
+    currentRoutines.forEach(routine => {
+      if (routine.paused) return;
+      if (routine.profileId && activeProfile?.id && routine.profileId !== activeProfile.id) return;
+      if (routine.autoMyDay === false) return;
+
+      let isDueToday = false;
+      const freq = routine.frequency || 'daily';
+      const days = routine.selectedDays || [0, 1, 2, 3, 4, 5, 6];
+
+      if (freq === 'daily') {
+        isDueToday = true;
+      } else if (freq === 'weekdays') {
+        isDueToday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      } else if (freq === 'weekly') {
+        isDueToday = days.includes(dayOfWeek);
+      } else if (freq === 'monthly') {
+        isDueToday = dayOfMonth === 1;
+      } else if (freq === 'custom') {
+        isDueToday = days.includes(dayOfWeek);
+      }
+
+      if (isDueToday) {
+        const existing = updatedTasks.find(t =>
+          (t.routineId === routine.id && t.routineDate === todayStr) ||
+          (t.routineId === routine.id && t.dueDate === todayStr)
+        );
+
+        if (!existing) {
+          const newTask = {
+            id: `t-routine-${routine.id}-${todayStr}`,
+            profileId: routine.profileId || activeProfile?.id || 'p-1',
+            title: routine.title,
+            completed: false,
+            myDay: true,
+            starred: false,
+            dueDate: todayStr,
+            subtasks: [],
+            tags: routine.tags || [],
+            notes: routine.notes || '',
+            createdAt: new Date().toISOString(),
+            routineId: routine.id,
+            routineDate: todayStr,
+            routineTime: routine.targetTime || '08:00'
+          };
+          updatedTasks.unshift(newTask);
+          hasNewTask = true;
+        }
+      }
+    });
+
+    if (hasNewTask) {
+      storage.saveTasks(updatedTasks);
+    }
+    return updatedTasks;
+  };
+
   // Sync data from database (NeonDB / Supabase) to local state & localStorage
   const syncDataFromDB = async (isManual = false) => {
     if (isSyncing && !isManual) return;
@@ -67,8 +178,9 @@ export default function Home() {
       if (dbTasks && dbTasks.error) {
         errorMsg = dbTasks.error;
       } else if (Array.isArray(dbTasks)) {
-        setTasks(dbTasks);
-        storage.saveTasks(dbTasks);
+        const populatedTasks = evaluateRoutineAutoPopulate(dbTasks, routines);
+        setTasks(populatedTasks);
+        storage.saveTasks(populatedTasks);
       }
 
       if (dbNotes && dbNotes.error) {
@@ -94,15 +206,17 @@ export default function Home() {
 
   // Load initial local data & setup real-time background sync polling + tab focus listener
   useEffect(() => {
-    // 1. Initial hydration from local storage for fast render
     const initialLocalTasks = storage.getTasks();
     const initialLocalNotes = storage.getNotes();
+    const initialRoutines = storage.getRoutines();
     const initialProfiles = storage.getProfiles();
     const initialActiveProfile = storage.getActiveProfile();
     const initialReminders = storage.getReminders();
     const initialNotifSettings = storage.getNotificationSettings();
 
-    setTasks(initialLocalTasks);
+    setRoutines(initialRoutines);
+    const populatedTasks = evaluateRoutineAutoPopulate(initialLocalTasks, initialRoutines);
+    setTasks(populatedTasks);
     setNotes(initialLocalNotes);
     setTags(storage.getTags());
     setProfiles(initialProfiles);
@@ -139,8 +253,18 @@ export default function Home() {
     };
   }, []);
 
-  // Save tasks on change & update local storage
+  // Save tasks on change & update local storage & routine logs
   const handleSetTasks = (newTasks) => {
+    // Check if any routine task changed completion status
+    newTasks.forEach(task => {
+      if (task.routineId) {
+        const oldTask = tasks.find(t => t.id === task.id);
+        if (oldTask && oldTask.completed !== task.completed) {
+          updateRoutineCompletionLog(task.routineId, task.completed, task.routineDate || task.dueDate);
+        }
+      }
+    });
+
     setTasks(newTasks);
     storage.saveTasks(newTasks);
   };
@@ -245,11 +369,18 @@ export default function Home() {
                   {activeTag ? `Tag: #${activeTag}` : currentFilter.replace('-', ' ')}
                 </h2>
               </div>
-            ) : (
+            ) : activeView === 'notes' ? (
               <div className="flex items-center gap-2">
                 <StickyNote className="w-5 h-5 text-indigo-400" />
                 <h2 className="text-lg font-bold text-slate-100">
                   {activeTag ? `Notes Tagged #${activeTag}` : 'Keep Note Vault'}
+                </h2>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Repeat className="w-5 h-5 text-amber-400" />
+                <h2 className="text-lg font-bold text-slate-100">
+                  Daily & Recurring Routines
                 </h2>
               </div>
             )}
@@ -259,7 +390,7 @@ export default function Home() {
             {/* Quick Profile Switch Header Pill */}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-full font-medium text-slate-200 transition"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-full font-medium text-slate-200 transition cursor-pointer"
               title="Switch Profile"
             >
               <span className="text-xs">{activeProfile?.avatar || '👤'}</span>
@@ -288,7 +419,7 @@ export default function Home() {
         </header>
 
         {/* View Content Body */}
-        <div className="p-6 flex-1 overflow-hidden">
+        <div className="p-6 flex-1 overflow-hidden overflow-y-auto">
           {activeView === 'tasks' ? (
             <TaskManager
               tasks={profileTasks}
@@ -300,13 +431,23 @@ export default function Home() {
               onOpenNotificationModal={() => setShowNotificationModal(true)}
               activeProfile={activeProfile}
             />
-          ) : (
+          ) : activeView === 'notes' ? (
             <NoteCanvas
               notes={profileNotes}
               setNotes={handleSetNotes}
               tags={tags}
               activeTag={activeTag}
               onShareNote={(note) => handleOpenShareModal({ title: note.title, content: note.content, media: note.media })}
+            />
+          ) : (
+            <RoutineManager
+              routines={routines.filter(r => !r.profileId || r.profileId === activeProfile?.id)}
+              setRoutines={(updatedProfileRoutines) => {
+                const otherRoutines = routines.filter(r => r.profileId && r.profileId !== activeProfile?.id);
+                handleSetRoutines([...updatedProfileRoutines, ...otherRoutines]);
+              }}
+              tags={tags}
+              activeProfile={activeProfile}
             />
           )}
         </div>

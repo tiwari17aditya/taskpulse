@@ -8,6 +8,7 @@ const PROFILES_KEY = 'pulse_profiles_v1';
 const ACTIVE_PROFILE_KEY = 'pulse_active_profile_v1';
 const REMINDERS_KEY = 'pulse_reminders_v1';
 const NOTIFICATION_SETTINGS_KEY = 'pulse_notif_settings_v1';
+const ROUTINES_KEY = 'pulse_routines_v1';
 
 // Default starter profiles
 export const DEFAULT_PROFILES = [
@@ -94,8 +95,52 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
   emailRecipient: 'user@taskpulse.app',
 };
 
+export const DEFAULT_ROUTINES = [
+  {
+    id: 'r-1',
+    profileId: 'p-1',
+    title: 'Morning Meditation & 20-Min Workout',
+    notes: 'Start the morning with light stretching and mindfulness.',
+    frequency: 'daily',
+    selectedDays: [0, 1, 2, 3, 4, 5, 6],
+    targetTime: '07:30',
+    autoMyDay: true,
+    tags: ['Personal'],
+    createdAt: new Date().toISOString(),
+    logs: [],
+    streak: 0
+  },
+  {
+    id: 'r-2',
+    profileId: 'p-1',
+    title: 'Review Sprint Progress & Commit Status',
+    notes: 'Check deployment logs and prioritize open GitHub issues.',
+    frequency: 'weekdays',
+    selectedDays: [1, 2, 3, 4, 5],
+    targetTime: '09:15',
+    autoMyDay: true,
+    tags: ['Work', 'Project'],
+    createdAt: new Date().toISOString(),
+    logs: [],
+    streak: 0
+  }
+];
+
 // Helper functions for Local Storage + Supabase fallback
 export const storage = {
+  getRoutines: () => {
+    if (typeof window === 'undefined') return DEFAULT_ROUTINES;
+    try {
+      const data = localStorage.getItem(ROUTINES_KEY);
+      return data ? JSON.parse(data) : DEFAULT_ROUTINES;
+    } catch (e) {
+      return DEFAULT_ROUTINES;
+    }
+  },
+  saveRoutines: (routines) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
+  },
   getTasks: () => {
     if (typeof window === 'undefined') return [];
     try {

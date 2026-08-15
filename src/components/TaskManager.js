@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, ChevronLeft, Check, X, ListTodo, Paperclip, Pencil, Bell, Clock, Sparkles } from 'lucide-react';
+import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, ChevronLeft, Check, X, ListTodo, Paperclip, Pencil, Bell, Clock, Sparkles, Repeat } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from './MediaUploader';
 import { saveTaskToDB, deleteTaskFromDB, deleteTasksFromDB } from '@/lib/dbAdapter';
@@ -1101,6 +1101,12 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
                 </div>
               )}
             </div>
+
+            {task.routineId && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center gap-1">
+                <Repeat className="w-3 h-3" /> Routine {task.routineTime ? `• ${task.routineTime}` : ''}
+              </span>
+            )}
 
             {task.tags?.map(t => {
               const tagObj = tags.find(tg => tg.name === t);
