@@ -332,6 +332,15 @@ export default function ProfileManagerModal({
                                   {p.role}
                                 </span>
                               )}
+                              {p.isLocked ? (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                                  🔒 Locked
+                                </span>
+                              ) : (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold bg-slate-800 text-slate-400">
+                                  🔓 Unlocked
+                                </span>
+                              )}
                             </div>
                             <span className="text-[11px] text-slate-500">{p.email}</span>
                           </div>

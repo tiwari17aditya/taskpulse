@@ -344,17 +344,18 @@ export default function Home() {
   };
 
 
-  // Profile management handlers (Require PIN unlock BEFORE switching activeProfile!)
+  // Profile management handlers
   const handleSelectProfile = (targetProfile) => {
-    setLockTargetProfile(targetProfile);
     setShowProfileModal(false);
-    if (targetProfile.id === activeProfile?.id && isProfileUnlocked) {
-      // Re-locking current active profile
+    if (targetProfile.isLocked) {
+      setLockTargetProfile(targetProfile);
       setIsProfileUnlocked(false);
+      setShowLockModal(true);
     } else {
-      setIsProfileUnlocked(false);
+      setActiveProfile(targetProfile);
+      storage.setActiveProfile(targetProfile.id);
+      setIsProfileUnlocked(true);
     }
-    setShowLockModal(true);
   };
 
   const handleSaveProfiles = (updatedProfiles) => {
@@ -498,17 +499,43 @@ export default function Home() {
               <span className="text-[10px] font-mono text-slate-500 uppercase">({activeProfile?.role || 'Member'})</span>
             </button>
 
-            {/* Profile Lock Button */}
+            {/* Interactive Profile Privacy Lock / Unlock Toggle Button */}
             <button
               onClick={() => {
-                setLockTargetProfile(activeProfile);
-                setShowLockModal(true);
+                const newLockState = !activeProfile?.isLocked;
+                const updatedProfiles = profiles.map(p =>
+                  p.id === activeProfile?.id ? { ...p, isLocked: newLockState } : p
+                );
+                handleSaveProfiles(updatedProfiles);
+                const updatedActive = { ...activeProfile, isLocked: newLockState };
+                setActiveProfile(updatedActive);
+
+                if (newLockState) {
+                  setLockTargetProfile(updatedActive);
+                  setIsProfileUnlocked(false);
+                  setShowLockModal(true);
+                } else {
+                  setIsProfileUnlocked(true);
+                }
               }}
-              className="flex items-center gap-1 px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-full font-medium text-slate-300 transition cursor-pointer"
-              title="Lock Active Profile for Privacy (LDAP PIN Protected)"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold text-xs border transition cursor-pointer ${
+                activeProfile?.isLocked
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title={activeProfile?.isLocked ? "Privacy Lock is ENABLED (PIN required to access). Click to unlock & disable lock." : "Privacy Lock is DISABLED (No PIN required). Click to enable lock."}
             >
-              <Lock className="w-3 h-3 text-amber-400" />
-              <span className="hidden md:inline text-[11px]">Lock</span>
+              {activeProfile?.isLocked ? (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Locked 🔒</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden sm:inline">Unlocked 🔓</span>
+                </>
+              )}
             </button>
 
             {/* Admin Trigger Button (Positioned immediately to the right of Profile, ONLY visible to RBAC Admin role) */}
