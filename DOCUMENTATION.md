@@ -126,6 +126,27 @@ CREATE TABLE IF NOT EXISTS notes (
 
 ---
 
+## Enterprise RBAC & Security System (v1.1.0-beta)
+
+### 1. Role-Based Access Control (`src/config/rbac.json`)
+- **Roles**: `User` (Standard workspace access to Tasks, Keep Notes, and Routines) vs `Admin` (System Control Panel, Database Sync Status, Version Audits, System Logs, and RBAC Management).
+- **Default Role**: Standard users are assigned `User` role by default upon creation.
+- **Admin Panel Delegation**: Admins can create new member profiles and promote or demote members inside the **Admin Control Panel** (accessible via the top header Admin button for logged-in Admins).
+
+### 2. LDAP-Style Profile Privacy Locking (`ProfileLockModal.js`)
+- **Profile Lock Screen**: Users can lock their active workspace using a 4-digit PIN/Password.
+- **Shared Master Admin Password**: All Admin role profiles share the **SAME Master Admin Password** (default: `1234`). Updating the Master Admin PIN from any Admin profile (`test1`, `test2`, etc.) instantly updates it globally for ALL Admin accounts.
+- **Forgot PIN & Reset**: Includes 1-click PIN reset options to restore lock PINs to default (`1234`). Admins can also reset any member's PIN from the Admin Panel.
+
+### 3. Exclusive Floating Action Button (`+`) Task Modal
+- **Single Entry Point**: All task creation forms have been consolidated into a single, prominent **Floating Action Button (`+`)** at the bottom-right corner (`w-16 h-16`).
+- **Full Card Task Modal**: Clicking `+` opens a spacious whole-card modal overlay featuring task title, interactive month calendar date picker, editable date field, tags, notes, subtasks, and default `myDay: false`.
+
+### 4. First-Time Visitor Onboarding Tutorial (`FirstTimeTutorialModal.js`)
+- **Auto-Trigger**: Automatically triggers for first-time visitors (`localStorage` check) to guide users through task creation, workspace navigation, profile lock security, and explicitly directs users to the **User Guide / Manual** (`BookOpen` icon) button in the header.
+
+---
+
 ## How to Verify NeonDB Data
 
 1. Log into your [Neon Console](https://console.neon.tech).
@@ -149,4 +170,5 @@ CREATE TABLE IF NOT EXISTS notes (
   ```bash
   cmd /c git push -u origin main
   ```
+
 

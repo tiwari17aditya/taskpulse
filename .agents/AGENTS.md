@@ -17,6 +17,10 @@
 - **No Hallucinations**: Never claim a feature exists, was tested, or is implemented unless strictly verified in the codebase.
 - **Clarify When Uncertain**: If any requirement is ambiguous, underspecified, or confusing, explicitly ask the user for clarification before assuming or generating incorrect code.
 
+## Continuous Documentation & UI Version Maintenance Rule
+- **Always Keep User Manual & Version Up to Date**: Whenever enhancing the project, adding features, or modifying security/UI workflows, ALWAYS update `DOCUMENTATION.md` (User Manual), `VERSION.md` (Release History), and the in-app UI version badges to reflect the exact state of the project.
+
+
 ## Session Packup Workflow (`/packup`)
 When the user triggers `/packup` or requests a session packup:
 1. **Git & GitHub Push**: Execute `git add .`, `git commit`, and `git push` to synchronize all workspace commits to GitHub `main`.

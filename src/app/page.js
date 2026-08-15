@@ -15,7 +15,9 @@ import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
 import ProfileLockModal from '@/components/ProfileLockModal';
-import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat, Lock, Unlock } from 'lucide-react';
+import FirstTimeTutorialModal from '@/components/FirstTimeTutorialModal';
+import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat, Lock, Unlock, HelpCircle } from 'lucide-react';
+
 
 
 export default function Home() {
@@ -57,6 +59,7 @@ export default function Home() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
   const [lockTargetProfile, setLockTargetProfile] = useState(null);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
 
   // Routine Auto-Populate & Completion Log helper functions
   const updateRoutineCompletionLog = (routineId, taskCompleted, completionDate) => {
@@ -221,6 +224,11 @@ export default function Home() {
       } else {
         const now = new Date();
         setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        // Check first-time visitor onboarding tutorial
+        const hasSeenTutorial = localStorage.getItem('taskpulse_has_seen_tutorial');
+        if (!hasSeenTutorial) {
+          setShowTutorialModal(true);
+        }
       }
     } catch (e) {
       console.warn('DB Sync failed:', e.message);
@@ -630,6 +638,19 @@ export default function Home() {
           }}
           profiles={profiles}
           onSaveProfiles={handleSaveProfiles}
+        />
+      )}
+
+      {showTutorialModal && (
+        <FirstTimeTutorialModal
+          isOpen={showTutorialModal}
+          onClose={() => {
+            setShowTutorialModal(false);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('taskpulse_has_seen_tutorial', 'true');
+            }
+          }}
+          onOpenUserGuide={() => setShowGuideModal(true)}
         />
       )}
     </div>

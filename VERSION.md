@@ -1,6 +1,20 @@
 # Version History
 
+## [v1.1.0-beta] - 2026-08-15
+
+### Added & Enhanced
+- **Exclusive Floating Action Button (`+`) Modal**: Replaced top inline task creation inputs with a spacious floating action button modal featuring interactive month calendar picker, editable date field, tags, notes, and default `myDay: false`.
+- **Enterprise RBAC Framework (`src/config/rbac.json`)**: Configured role-based access control separating `User` and `Admin` permissions. Cleaned up sample starter profiles, ensuring standard users default to `User` role.
+- **Top Header Admin Control Button**: Positioned the Admin trigger button (`ShieldCheck` icon) immediately to the right of the Profile pill, strictly guarded by `activeProfile.role === 'Admin'`. Encapsulated Database Status and Version badges inside the Admin Control Panel.
+- **LDAP-Style Profile Privacy Lock (`ProfileLockModal.js`)**: Added profile privacy lock screen, 4-digit PIN unlock, PIN change, and PIN reset features.
+- **Shared Master Admin PIN across All Admin Accounts**: All Admin role profiles share the same Master Admin Password. Updating the Master Admin PIN from any Admin profile (`test1`, `test2`, etc.) instantly updates it for ALL Admin accounts globally.
+- **Admin Panel Member Creation & Management**: Added "Add New Member" form and member promotion/demotion controls inside the Admin Control Panel.
+- **First-Time User Interactive Onboarding Tutorial (`FirstTimeTutorialModal.js`)**: Built an interactive 4-step onboarding tutorial that automatically pops up for first-time visitors, guiding users through task creation, workspace navigation, profile lock security, and explicitly directing them to the **User Guide / Manual** button.
+
+---
+
 ## [v1.1.0-rc2] - 2026-08-15
+
 
 ### Added & Enhanced
 - **Gmail SMTP Nodemailer Transport**: Integrated Nodemailer direct email dispatch endpoint (`/api/notifications/email`) configured with Gmail App Password credentials for automated reminder digests.
