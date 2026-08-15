@@ -54,6 +54,8 @@
 | 2026-08-15 | e9b5ac43-0cfc-47ff-ae36-94aa368ff7a3 | 24200 | 10500 | 34700 | $0.0260 | Restructured root directory: moved tracker files to tracker/, docs to docs/, scripts to samples/scripts/, updated AGENTS.md, created root README.md, & purged obsolete .venv |
 | 2026-08-15 | e9b5ac43-0cfc-47ff-ae36-94aa368ff7a3 | 25600 | 11200 | 36800 | $0.0276 | Restructured repository into modular layout: main-code/ (src, public, package.json, configs), audits/ (token_usage, VERSION, logs), docs/, samples/, & updated AGENTS.md |
 | 2026-08-15 | e9b5ac43-0cfc-47ff-ae36-94aa368ff7a3 | 27100 | 11900 | 39000 | $0.0293 | Restored Next.js build files (package.json, src/, public/) to root for 100% Vercel URL deployment & npm run dev compatibility |
+| 2026-08-15 | e9b5ac43-0cfc-47ff-ae36-94aa368ff7a3 | 28500 | 12600 | 41100 | $0.0308 | Re-established main-code/ directory structure with root delegation scripts & vercel.json for automated Vercel URL deployment |
+
 
 
 

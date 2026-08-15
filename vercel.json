@@ -1,4 +1,6 @@
 {
   "framework": "nextjs",
-  "cleanUrls": true
+  "buildCommand": "cd main-code && npm run build",
+  "installCommand": "cd main-code && npm install",
+  "outputDirectory": "main-code/.next"
 }
