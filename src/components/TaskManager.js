@@ -52,6 +52,75 @@ export default function TaskManager({
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [showCalendarFilters, setShowCalendarFilters] = useState(false);
 
+  // FAB Comprehensive Creation Modal State
+  const [fabTaskTitle, setFabTaskTitle] = useState('');
+  const [fabDueDate, setFabDueDate] = useState('');
+  const [fabMyDay, setFabMyDay] = useState(false); // DEFAULT FALSE!
+  const [fabStarred, setFabStarred] = useState(false);
+  const [fabSelectedTags, setFabSelectedTags] = useState([]);
+  const [fabNotes, setFabNotes] = useState('');
+  const [fabSubtasks, setFabSubtasks] = useState([]);
+  const [fabSubtaskInput, setFabSubtaskInput] = useState('');
+  const [showCalendarInFAB, setShowCalendarInFAB] = useState(false);
+  const [fabCalMonth, setFabCalMonth] = useState(new Date().getMonth());
+  const [fabCalYear, setFabCalYear] = useState(new Date().getFullYear());
+
+  const handleOpenFabModal = () => {
+    setFabTaskTitle('');
+    setFabDueDate('');
+    setFabMyDay(false); // DO NOT DIRECTLY INCLUDE IN MY DAY
+    setFabStarred(false);
+    setFabSelectedTags(activeTag ? [activeTag] : []);
+    setFabNotes('');
+    setFabSubtasks([]);
+    setFabSubtaskInput('');
+    setShowCalendarInFAB(false);
+    setShowQuickAddModal(true);
+  };
+
+  const handleAddFabSubtask = (e) => {
+    e.preventDefault();
+    if (!fabSubtaskInput.trim()) return;
+    setFabSubtasks([...fabSubtasks, { id: 'st-' + Date.now(), title: fabSubtaskInput.trim(), completed: false }]);
+    setFabSubtaskInput('');
+  };
+
+  const handleRemoveFabSubtask = (id) => {
+    setFabSubtasks(fabSubtasks.filter(st => st.id !== id));
+  };
+
+  const toggleFabTag = (tagName) => {
+    if (fabSelectedTags.includes(tagName)) {
+      setFabSelectedTags(fabSelectedTags.filter(t => t !== tagName));
+    } else {
+      setFabSelectedTags([...fabSelectedTags, tagName]);
+    }
+  };
+
+  const handleCreateTaskFromFAB = (e) => {
+    e.preventDefault();
+    if (!fabTaskTitle.trim()) return;
+
+    const newTask = {
+      id: 't-' + Date.now(),
+      profileId: activeProfile?.id || 'p-aditya',
+      title: fabTaskTitle.trim(),
+      completed: false,
+      myDay: fabMyDay, // DEFAULT FALSE UNLESS TOGGLED
+      starred: fabStarred,
+      dueDate: fabDueDate,
+      subtasks: fabSubtasks,
+      tags: fabSelectedTags.length > 0 ? fabSelectedTags : (activeTag ? [activeTag] : ['Work']),
+      notes: fabNotes.trim(),
+      media: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    setTasks([newTask, ...tasks]);
+    saveTaskToDB(newTask);
+    setShowQuickAddModal(false);
+  };
+
   const addTaskOnDate = (title, dateStr) => {
     if (!title || !title.trim()) return;
     const newTask = {
@@ -59,7 +128,7 @@ export default function TaskManager({
       profileId: activeProfile?.id || 'p-1',
       title: title.trim(),
       completed: false,
-      myDay: dateStr === getTodayStr(),
+      myDay: false, // DO NOT DIRECTLY INCLUDE IN MY DAY
       starred: false,
       dueDate: dateStr,
       subtasks: [],
@@ -969,81 +1038,311 @@ export default function TaskManager({
         </div>
       )}
 
-      {/* Floating Quick Add Task Action Button (Bottom-Right) */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-        {showQuickAddModal && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl w-80 animate-scale-up space-y-3 mb-2">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-indigo-400" /> Quick Add New Task
-              </h4>
+      {/* Floating Action Button & Whole Creation Card Modal */}
+      {showQuickAddModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-xl space-y-5 animate-scale-up my-auto max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-100">Create New Task Card</h3>
+                  <p className="text-xs text-slate-400">Task Name is required. All other properties are 100% optional.</p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowQuickAddModal(false)}
-                className="text-slate-400 hover:text-slate-200 p-1 rounded-lg bg-slate-800/60"
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 transition cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={(e) => { addTask(e); setShowQuickAddModal(false); }} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Task title..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2 rounded-xl outline-none focus:border-indigo-500"
-                autoFocus
-              />
+            <form onSubmit={handleCreateTaskFromFAB} className="space-y-4">
+              {/* Task Name (Required) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                  Task Name <span className="text-indigo-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Prepare monthly strategy presentation..."
+                  value={fabTaskTitle}
+                  onChange={(e) => setFabTaskTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-sm text-slate-100 px-3.5 py-2.5 rounded-xl outline-none focus:border-indigo-500 transition shadow-inner"
+                  autoFocus
+                  required
+                />
+              </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-400 block">Due Date (Optional)</label>
-                <div className="flex items-center gap-1 flex-wrap">
+              {/* Due Date & Interactive Calendar View Picker (Optional) */}
+              <div className="space-y-2 bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Due Date (Optional)
+                  </label>
                   <button
                     type="button"
-                    onClick={() => setSelectedDueDate(getTodayStr())}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
-                      selectedDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    onClick={() => setShowCalendarInFAB(!showCalendarInFAB)}
+                    className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <Calendar className="w-3 h-3" />
+                    {showCalendarInFAB ? 'Hide Calendar View' : 'Open Calendar View'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFabDueDate(getTodayStr())}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
+                      fabDueDate === getTodayStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     Today
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedDueDate(getTomorrowStr())}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition ${
-                      selectedDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    onClick={() => setFabDueDate(getTomorrowStr())}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
+                      fabDueDate === getTomorrowStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     Tomorrow
                   </button>
-                  <input
-                    type="date"
-                    value={selectedDueDate}
-                    onChange={(e) => setSelectedDueDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-lg outline-none"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setFabDueDate(getNextWeekStr())}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
+                      fabDueDate === getNextWeekStr() ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Next Week
+                  </button>
+
+                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1">
+                    <span className="text-[10px] text-slate-500 font-medium">Editable Date:</span>
+                    <input
+                      type="date"
+                      value={fabDueDate}
+                      onChange={(e) => setFabDueDate(e.target.value)}
+                      className="bg-transparent text-slate-200 text-xs outline-none"
+                    />
+                  </div>
+
+                  {fabDueDate && (
+                    <button
+                      type="button"
+                      onClick={() => setFabDueDate('')}
+                      className="text-[11px] text-rose-400 hover:underline ml-auto"
+                    >
+                      Clear Date
+                    </button>
+                  )}
+                </div>
+
+                {/* Embedded Interactive Calendar Grid inside FAB Modal */}
+                {showCalendarInFAB && (
+                  <div className="mt-3 p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2 animate-fade-in">
+                    <div className="flex items-center justify-between text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fabCalMonth === 0) { setFabCalMonth(11); setFabCalYear(y => y - 1); }
+                          else setFabCalMonth(m => m - 1);
+                        }}
+                        className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-bold text-slate-200">
+                        {['January','February','March','April','May','June','July','August','September','October','November','December'][fabCalMonth]} {fabCalYear}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fabCalMonth === 11) { setFabCalMonth(0); setFabCalYear(y => y + 1); }
+                          else setFabCalMonth(m => m + 1);
+                        }}
+                        className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 text-center">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                        <span key={d} className="text-[10px] font-bold text-slate-500">{d}</span>
+                      ))}
+                      {(() => {
+                        const daysInM = new Date(fabCalYear, fabCalMonth + 1, 0).getDate();
+                        const firstD = new Date(fabCalYear, fabCalMonth, 1).getDay();
+                        const grid = [];
+                        for (let i = 0; i < firstD; i++) grid.push(null);
+                        for (let d = 1; d <= daysInM; d++) grid.push(d);
+
+                        return grid.map((day, idx) => {
+                          if (!day) return <div key={`fab-empty-${idx}`} />;
+                          const pad = n => String(n).padStart(2, '0');
+                          const dateStr = `${fabCalYear}-${pad(fabCalMonth + 1)}-${pad(day)}`;
+                          const isSelected = fabDueDate === dateStr;
+
+                          return (
+                            <button
+                              key={dateStr}
+                              type="button"
+                              onClick={() => { setFabDueDate(dateStr); setShowCalendarInFAB(false); }}
+                              className={`py-1 rounded text-xs font-semibold transition ${
+                                isSelected ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-950 hover:bg-indigo-500/20 text-slate-300'
+                              }`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Optional Toggles: My Day & Priority Star */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFabMyDay(!fabMyDay)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
+                    fabMyDay
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Sun className="w-4 h-4" />
+                  {fabMyDay ? 'Added to My Day' : 'Add to My Day (Off by default)'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFabStarred(!fabStarred)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
+                    fabStarred
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Star className={`w-4 h-4 ${fabStarred ? 'fill-amber-400' : ''}`} />
+                  {fabStarred ? 'Starred Priority' : 'Mark Important'}
+                </button>
+              </div>
+
+              {/* Optional Tags Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-indigo-400" /> Tags (Optional)
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map(tag => {
+                    const isSelected = fabSelectedTags.includes(tag.name);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleFabTag(tag.name)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1 cursor-pointer ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-500/20 text-indigo-200'
+                            : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                        #{tag.name}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={!newTaskTitle.trim()}
-                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-lg transition cursor-pointer"
-              >
-                Add Task Now
-              </button>
+              {/* Optional Notes */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 block">Notes & Details (Optional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="Add extra context, links, or instructions..."
+                  value={fabNotes}
+                  onChange={(e) => setFabNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 p-2.5 rounded-xl outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+
+              {/* Optional Subtasks Checklist */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 block">Sub-tasks Checklist (Optional)</label>
+                {fabSubtasks.length > 0 && (
+                  <div className="space-y-1 max-h-24 overflow-y-auto">
+                    {fabSubtasks.map(st => (
+                      <div key={st.id} className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950 text-xs text-slate-300">
+                        <span>• {st.title}</span>
+                        <button type="button" onClick={() => handleRemoveFabSubtask(st.id)} className="text-slate-500 hover:text-rose-400">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add a step..."
+                    value={fabSubtaskInput}
+                    onChange={(e) => setFabSubtaskInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddFabSubtask(e); } }}
+                    className="flex-1 bg-slate-950 border border-slate-800 text-xs text-slate-200 px-3 py-1.5 rounded-lg outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddFabSubtask}
+                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-lg cursor-pointer"
+                  >
+                    Add Step
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Footer */}
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickAddModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!fabTaskTitle.trim()}
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 text-white text-xs font-semibold rounded-xl shadow-lg transition cursor-pointer"
+                >
+                  Create Task
+                </button>
+              </div>
             </form>
           </div>
-        )}
+        </div>
+      )}
 
+      {/* Floating Action Button (+) */}
+      <div className="fixed bottom-6 right-6 z-40">
         <button
           type="button"
-          onClick={() => setShowQuickAddModal(!showQuickAddModal)}
-          className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+          onClick={handleOpenFabModal}
+          className="w-13 h-13 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
           title="Quick Add Task (+)"
         >
-          <Plus className={`w-6 h-6 transition-transform duration-300 ${showQuickAddModal ? 'rotate-45' : 'group-hover:rotate-90'}`} />
+          <Plus className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
         </button>
       </div>
     </div>

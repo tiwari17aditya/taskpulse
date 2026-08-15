@@ -302,6 +302,13 @@ export default function Home() {
     storage.saveNotes(newNotes);
   };
 
+  // Save routines on change & update local storage
+  const handleSetRoutines = (newRoutines) => {
+    setRoutines(newRoutines);
+    storage.saveRoutines(newRoutines);
+  };
+
+
   // Profile management handlers
   const handleSelectProfile = (profile) => {
     setActiveProfile(profile);
