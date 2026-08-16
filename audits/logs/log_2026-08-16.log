@@ -9,3 +9,5 @@
 [2026-08-16 13:55:00] [FEAT] Updated src/app/api/notifications/email/route.js to output structured HTML task table and proverb/quote footer banner (Enhancement 8).
 [2026-08-16 13:55:10] [FEAT] Updated src/components/NotificationManagerModal.js with recipient email validation guard, alert on missing recipient address, commented out non-email channels for now, and added Mail Template Preview Modal (Enhancements 7 & 8).
 [2026-08-16 13:55:30] [DOCS] Updated audits/ENHANCEMENTS.md, audits/VERSION.md, docs/DOCUMENTATION.md, and audits/token_usage.md.
+[2026-08-16 21:30:00] [FEAT] Added profileId column to tasks and notes tables in NeonDB PostgreSQL routes.
+[2026-08-16 21:31:00] [FEAT] Created serverless NeonDB route src/app/api/db/routines/route.js and integrated fetchRoutinesFromDB(), saveRoutinesToDB(), and deleteRoutineFromDB() in dbAdapter.js and page.js for 100% database persistence across devices and profiles.

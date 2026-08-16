@@ -6,6 +6,8 @@ import {
   Sparkles, Tag, AlertCircle, Play, Pause, Check, X, ChevronRight, BarChart2
 } from 'lucide-react';
 
+import { deleteRoutineFromDB } from '@/lib/dbAdapter';
+
 const WEEKDAYS = [
   { id: 0, label: 'Sun', short: 'S' },
   { id: 1, label: 'Mon', short: 'M' },
@@ -161,6 +163,7 @@ export default function RoutineManager({
   const handleDeleteRoutine = (routineId) => {
     if (confirm('Are you sure you want to delete this routine? Past completion logs will be removed.')) {
       setRoutines(routines.filter(r => r.id !== routineId));
+      deleteRoutineFromDB(routineId);
     }
   };
 

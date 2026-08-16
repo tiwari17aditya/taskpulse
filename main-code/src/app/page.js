@@ -12,7 +12,7 @@ import ProfileManagerModal from '@/components/ProfileManagerModal';
 import NotificationManagerModal from '@/components/NotificationManagerModal';
 import AdminPanelModal from '@/components/AdminPanelModal';
 import { storage } from '@/lib/storage';
-import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB } from '@/lib/dbAdapter';
+import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB, fetchRoutinesFromDB, saveRoutinesToDB, deleteRoutineFromDB } from '@/lib/dbAdapter';
 import UserGuideModal from '@/components/UserGuideModal';
 import ProfileLockModal from '@/components/ProfileLockModal';
 import FirstTimeTutorialModal from '@/components/FirstTimeTutorialModal';
@@ -193,18 +193,30 @@ export default function Home() {
     setSyncError(null);
 
     try {
-      const [dbTasks, dbNotes, dbProfiles] = await Promise.all([
+      const [dbTasks, dbNotes, dbProfiles, dbRoutines] = await Promise.all([
         fetchTasksFromDB(),
         fetchNotesFromDB(),
-        fetchProfilesFromDB()
+        fetchProfilesFromDB(),
+        fetchRoutinesFromDB()
       ]);
 
       let errorMsg = null;
 
+      let activeRoutinesList = routines;
+      if (Array.isArray(dbRoutines)) {
+        if (dbRoutines.length > 0) {
+          activeRoutinesList = dbRoutines;
+          setRoutines(dbRoutines);
+          storage.saveRoutines(dbRoutines);
+        } else if (routines.length > 0) {
+          saveRoutinesToDB(routines);
+        }
+      }
+
       if (dbTasks && dbTasks.error) {
         errorMsg = dbTasks.error;
       } else if (Array.isArray(dbTasks)) {
-        const populatedTasks = evaluateRoutineAutoPopulate(dbTasks, routines);
+        const populatedTasks = evaluateRoutineAutoPopulate(dbTasks, activeRoutinesList);
         setTasks(populatedTasks);
         storage.saveTasks(populatedTasks);
       }
@@ -354,10 +366,11 @@ export default function Home() {
     storage.saveNotes(newNotes);
   };
 
-  // Save routines on change & update local storage
+  // Save routines on change & update local storage + database
   const handleSetRoutines = (newRoutines) => {
     setRoutines(newRoutines);
     storage.saveRoutines(newRoutines);
+    saveRoutinesToDB(newRoutines);
   };
 
 

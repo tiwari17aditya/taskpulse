@@ -16,6 +16,7 @@ async function ensureNotesTableExists(sql) {
   await sql`
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY,
+      "profileId" TEXT,
       title TEXT NOT NULL,
       content TEXT,
       "bgColor" TEXT,
@@ -25,6 +26,11 @@ async function ensureNotesTableExists(sql) {
       "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
   `;
+  try {
+    await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS "profileId" TEXT;`;
+  } catch (e) {
+    console.warn('Could not run ALTER TABLE notes:', e.message);
+  }
 }
 
 export async function GET() {
@@ -51,15 +57,16 @@ export async function POST(request) {
     const sql = getNeonSql();
     await ensureNotesTableExists(sql);
 
-    const { id, title, content = '', bgColor = '', pinned = false, tags = [], media = [], createdAt } = body;
+    const { id, profileId = 'p-aditya', title, content = '', bgColor = '', pinned = false, tags = [], media = [], createdAt } = body;
 
     const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
     const mediaJson = typeof media === 'string' ? media : JSON.stringify(media || []);
 
     await sql`
-      INSERT INTO notes (id, title, content, "bgColor", pinned, tags, media, "createdAt")
+      INSERT INTO notes (id, "profileId", title, content, "bgColor", pinned, tags, media, "createdAt")
       VALUES (
         ${id},
+        ${profileId},
         ${title},
         ${content},
         ${bgColor},
@@ -69,6 +76,7 @@ export async function POST(request) {
         ${createdAt || new Date().toISOString()}
       )
       ON CONFLICT (id) DO UPDATE SET
+        "profileId" = EXCLUDED."profileId",
         title = EXCLUDED.title,
         content = EXCLUDED.content,
         "bgColor" = EXCLUDED."bgColor",

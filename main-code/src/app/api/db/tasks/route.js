@@ -16,6 +16,7 @@ async function ensureTasksTableExists(sql) {
   await sql`
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
+      "profileId" TEXT,
       title TEXT NOT NULL,
       completed BOOLEAN DEFAULT false,
       "myDay" BOOLEAN DEFAULT false,
@@ -30,6 +31,7 @@ async function ensureTasksTableExists(sql) {
     );
   `;
   try {
+    await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS "profileId" TEXT;`;
     await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS "completedAt" TEXT;`;
   } catch (e) {
     console.warn('Could not run ALTER TABLE tasks:', e.message);
@@ -60,16 +62,17 @@ export async function POST(request) {
     const sql = getNeonSql();
     await ensureTasksTableExists(sql);
 
-    const { id, title, completed = false, myDay = false, starred = false, dueDate = '', subtasks = [], tags = [], notes = '', media = [], createdAt, completedAt = null } = body;
+    const { id, profileId = 'p-aditya', title, completed = false, myDay = false, starred = false, dueDate = '', subtasks = [], tags = [], notes = '', media = [], createdAt, completedAt = null } = body;
 
     const subtasksJson = typeof subtasks === 'string' ? subtasks : JSON.stringify(subtasks || []);
     const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
     const mediaJson = typeof media === 'string' ? media : JSON.stringify(media || []);
 
     await sql`
-      INSERT INTO tasks (id, title, completed, "myDay", starred, "dueDate", subtasks, tags, notes, media, "createdAt", "completedAt")
+      INSERT INTO tasks (id, "profileId", title, completed, "myDay", starred, "dueDate", subtasks, tags, notes, media, "createdAt", "completedAt")
       VALUES (
         ${id},
+        ${profileId},
         ${title},
         ${completed},
         ${myDay},
@@ -83,6 +86,7 @@ export async function POST(request) {
         ${completedAt}
       )
       ON CONFLICT (id) DO UPDATE SET
+        "profileId" = EXCLUDED."profileId",
         title = EXCLUDED.title,
         completed = EXCLUDED.completed,
         "myDay" = EXCLUDED."myDay",
