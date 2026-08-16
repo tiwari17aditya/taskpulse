@@ -1,6 +1,18 @@
 # Version History
 
-## [v1.1.0-beta] - 2026-08-15
+## [v1.2.0-beta] - 2026-08-16
+
+### Added & Enhanced
+- **Tag Management for Members & Admins**: Added inline tag renaming and tag deletion tools in `Sidebar.js` and task cards allowing members and admins to edit tags at any time.
+- **Calendar View Numeric Item Counts**: Replaced dot indicators (`.`) in `HistoryCalendar` with clear numeric count badges for active/due tasks, completed tasks, routine completions, and scheduled reminders.
+- **Separate Routine Tasks Calendar View**: Introduced dedicated Routine Tasks Calendar mode toggle inside `HistoryCalendar` to track habit execution logs independently.
+- **Separated "My Day" Routine Tasks View**: Divided **My Day** view into two distinct visual sections: `☀️ Regular Focus Tasks` and `🔁 Routine Tasks & Daily Habits`.
+- **Flexible Date Filter Input**: Enhanced top Date Filter toolbar to support both interactive calendar selection and direct manual text typing (e.g., `YYYY-MM-DD`).
+- **Strict Current-Day "My Day" Incomplete Eviction**: Automated daily eviction logic removing incomplete tasks from previous days from My Day so focus list stays strictly tied to today.
+- **Streamlined Email Dispatch & Recipient Validation**: Commented out non-email channels for current scope, added recipient email configuration prompt, and enforced alert when recipient email is missing before dispatching notifications.
+- **Tabular Email Template Preview with Proverb**: Built interactive **Preview Default Mail Template** modal rendering dark-mode styled HTML task tables and an inspiring quote/proverb footer.
+
+---
 
 ### Added & Enhanced
 - **Exclusive Floating Action Button (`+`) Modal**: Replaced top inline task creation inputs with a spacious floating action button modal featuring interactive month calendar picker, editable date field, tags, notes, and default `myDay: false`.

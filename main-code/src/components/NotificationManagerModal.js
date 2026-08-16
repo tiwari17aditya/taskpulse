@@ -38,8 +38,15 @@ export default function NotificationManagerModal({
   const [sendingSmtp, setSendingSmtp] = useState(false);
   const [digestStatus, setDigestStatus] = useState(null);
   const [sendingDigest, setSendingDigest] = useState(false);
+  const [showMailPreview, setShowMailPreview] = useState(false); // Requirement 8: Mail template preview modal
 
   const handleTestSmtpEmail = async () => {
+    // Enhancement 7 — Before 1st time entering recipient email, show alert
+    if (!emailRecipient || !emailRecipient.trim() || !emailRecipient.includes('@')) {
+      alert("Please provide a valid recipient address to continue");
+      return;
+    }
+
     setSendingSmtp(true);
     setSmtpStatus(null);
     try {
@@ -47,7 +54,7 @@ export default function NotificationManagerModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com',
+          to: emailRecipient.trim(),
           subject: 'TaskPulse SMTP Connection Test ⏰',
           htmlText: `Hello ${activeProfile?.name || 'User'}, your TaskPulse SMTP email server integration is active and operating properly.`,
           tasksSummary: tasks.filter(t => !t.completed).slice(0, 3)
@@ -67,10 +74,16 @@ export default function NotificationManagerModal({
   };
 
   const handleSend7AmDigest = async () => {
+    // Enhancement 7 — Before 1st time entering recipient email, show alert
+    if (!emailRecipient || !emailRecipient.trim() || !emailRecipient.includes('@')) {
+      alert("Please provide a valid recipient address to continue");
+      return;
+    }
+
     setSendingDigest(true);
     setDigestStatus(null);
     try {
-      const recipient = emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com';
+      const recipient = emailRecipient.trim();
       const myDayTasks = tasks.filter(t => t.myDay && !t.completed);
       const res = await fetch('/api/notifications/email', {
         method: 'POST',
@@ -584,7 +597,7 @@ export default function NotificationManagerModal({
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={handleTestSmtpEmail}
@@ -593,6 +606,15 @@ export default function NotificationManagerModal({
                   >
                     <Send className={`w-3.5 h-3.5 ${sendingSmtp ? 'animate-spin' : ''}`} />
                     {sendingSmtp ? 'Dispatching SMTP Email...' : 'Send Test SMTP Email Notification'}
+                  </button>
+
+                  {/* Requirement 8: Mail Template Preview Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMailPreview(true)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow transition cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Preview Default Mail Template
                   </button>
                 </div>
               </div>
@@ -608,36 +630,25 @@ export default function NotificationManagerModal({
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={openMailto}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow transition"
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow transition cursor-pointer"
                   >
                     <Mail className="w-3.5 h-3.5 text-indigo-400" /> Open Mailto Client Digest
                   </button>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+              {/* Requirement 7: Non-email features commented out for now so only Email Send feature is active */}
+              {/* 
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3 opacity-60">
                 <div className="flex items-center gap-2.5">
                   <Smartphone className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-xs font-bold text-slate-200">Automated Mobile Messaging Shortcuts (SMS & WhatsApp)</h3>
+                  <h3 className="text-xs font-bold text-slate-200">Automated Mobile Messaging Shortcuts (SMS & WhatsApp) [Disabled]</h3>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Send task reminders directly to mobile phone numbers or WhatsApp groups using free native deep-links.
+                  Non-email messaging features are commented out for current release.
                 </p>
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    onClick={openSMS}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" /> Dispatch SMS Mobile Alert
-                  </button>
-                  <button
-                    onClick={openWhatsApp}
-                    className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition"
-                  >
-                    <Send className="w-3.5 h-3.5" /> Dispatch WhatsApp Message
-                  </button>
-                </div>
               </div>
+              */}
             </div>
           )}
 
@@ -745,6 +756,108 @@ export default function NotificationManagerModal({
           )}
         </div>
       </div>
+
+      {/* Requirement 8: Beautiful Mail Template Preview Modal */}
+      {showMailPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100">Default Email Template Preview</h3>
+                  <span className="text-[10px] text-indigo-400 font-mono">HTML Email Render Output</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMailPreview(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 bg-slate-950/90">
+              {/* Preview Container */}
+              <div className="border border-slate-800 rounded-2xl bg-slate-900 overflow-hidden shadow-xl">
+                {/* Header Banner */}
+                <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 p-6 text-center text-white">
+                  <h1 className="text-xl font-extrabold tracking-wide">⚡ TaskPulse Notification</h1>
+                  <p className="text-xs text-indigo-200 mt-1">Automated Workspace Summary & Task Reminders</p>
+                </div>
+
+                <div className="p-5 space-y-4 text-xs text-slate-300">
+                  <p className="leading-relaxed">
+                    Hello <strong className="text-slate-100">{activeProfile?.name || 'User'}</strong>,<br />
+                    Here is your scheduled TaskPulse automated digest and task summary for <strong className="text-indigo-400">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</strong>:
+                  </p>
+
+                  {/* Tabular Data Representation */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">📌 Task Details Table</h4>
+                    <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-900 text-slate-400 text-[11px] uppercase border-b border-slate-800">
+                            <th className="p-2.5">Task Title</th>
+                            <th className="p-2.5">Due Date</th>
+                            <th className="p-2.5">Priority / Tags</th>
+                            <th className="p-2.5 text-right">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/80">
+                          {tasks.slice(0, 5).map((t, idx) => (
+                            <tr key={t.id || idx} className="hover:bg-slate-900/50">
+                              <td className="p-2.5 font-semibold text-slate-200">{t.title}</td>
+                              <td className="p-2.5 text-indigo-400 font-mono">{t.dueDate || 'Today'}</td>
+                              <td className="p-2.5 text-amber-400">
+                                {t.tags && t.tags.length > 0 ? t.tags.join(', ') : (t.starred ? 'Starred' : 'Normal')}
+                              </td>
+                              <td className="p-2.5 text-right">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  t.completed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-indigo-500/20 text-indigo-300'
+                                }`}>
+                                  {t.completed ? 'COMPLETED' : 'PENDING'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                          {tasks.length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="p-4 text-center text-slate-500">No active tasks in workspace.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Proverb & Quote Footer Banner (Requirement 8) */}
+                  <div className="p-4 bg-indigo-950/40 border-l-4 border-indigo-500 rounded-r-xl space-y-1 mt-4">
+                    <p className="italic text-indigo-200 leading-relaxed text-xs">
+                      "The secret of getting ahead is getting started. Focus on being productive instead of busy."
+                    </p>
+                    <span className="text-[11px] font-bold text-indigo-400 block">— Mark Twain & Tim Ferriss</span>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800 text-center text-[10px] text-slate-500">
+                    Sent to: <strong className="text-slate-300">{emailRecipient || activeProfile?.email || 'user@taskpulse.app'}</strong> • TaskPulse SMTP Service
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-3 border-t border-slate-800 bg-slate-900/80 flex items-center justify-end">
+              <button
+                onClick={() => setShowMailPreview(false)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown, Repeat, ShieldCheck } from 'lucide-react';
+import { Sun, Star, Calendar, ListTodo, StickyNote, Tag, Share2, Plus, History, BookOpen, X, Bell, User, ChevronDown, Repeat, ShieldCheck, Edit3, Trash2, Check } from 'lucide-react';
 
 export default function Sidebar({
   activeView,
@@ -117,6 +117,11 @@ function SidebarInner({
   const [newTagColor, setNewTagColor] = useState('#6366f1');
   const [showAddTag, setShowAddTag] = useState(false);
 
+  // Tag Editing & Deleting State (Enhancement 1)
+  const [editingTagId, setEditingTagId] = useState(null);
+  const [editTagName, setEditTagName] = useState('');
+  const [editTagColor, setEditTagColor] = useState('#6366f1');
+
   const addTag = (e) => {
     e.preventDefault();
     if (!newTagName.trim()) return;
@@ -127,6 +132,29 @@ function SidebarInner({
     setTags([...tags, newTag]);
     setNewTagName('');
     setShowAddTag(false);
+  };
+
+  const startEditingTag = (tag) => {
+    setEditingTagId(tag.id);
+    setEditTagName(tag.name);
+    setEditTagColor(tag.color || '#6366f1');
+  };
+
+  const saveTagEdit = (tagId) => {
+    if (!editTagName.trim()) return;
+    const cleanName = editTagName.trim().replace(/^#/, '');
+    const updated = tags.map(t => t.id === tagId ? { ...t, name: cleanName, color: editTagColor } : t);
+    setTags(updated);
+    setEditingTagId(null);
+  };
+
+  const deleteTag = (tagId) => {
+    const targetTag = tags.find(t => t.id === tagId);
+    if (!targetTag) return;
+    if (confirm(`Delete tag #${targetTag.name}?`)) {
+      if (activeTag === targetTag.name) setActiveTag(null);
+      setTags(tags.filter(t => t.id !== tagId));
+    }
   };
 
   const navItems = [
@@ -288,56 +316,132 @@ function SidebarInner({
           </div>
         )}
 
-        {/* Tags Section */}
+        {/* Tags Section — Enhancement 1: Members/Admins can edit/delete tags anytime */}
         <div className="space-y-2">
           <div className="flex items-center justify-between px-2">
             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <Tag className="w-3 h-3" /> Tags
+              <Tag className="w-3 h-3 text-indigo-400" /> Workspace Tags
             </span>
-            <button onClick={() => setShowAddTag(!showAddTag)} className="text-slate-400 hover:text-slate-200 p-0.5 cursor-pointer">
+            <button
+              onClick={() => setShowAddTag(!showAddTag)}
+              className="text-slate-400 hover:text-indigo-400 p-0.5 cursor-pointer transition"
+              title="Add New Tag"
+            >
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {showAddTag && (
-            <form onSubmit={addTag} className="p-2 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+            <form onSubmit={addTag} className="p-2 bg-slate-950 border border-slate-800 rounded-xl space-y-2 shadow-lg animate-fade-in">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="New tag..."
+                  placeholder="Tag name..."
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 px-2 py-1 rounded-lg outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-200 px-2 py-1 rounded-lg outline-none focus:border-indigo-500"
                 />
                 <input
                   type="color"
                   value={newTagColor}
                   onChange={(e) => setNewTagColor(e.target.value)}
                   className="w-6 h-6 rounded border-0 cursor-pointer bg-transparent"
+                  title="Tag color"
                 />
               </div>
-              <button type="submit" className="w-full py-1 bg-indigo-600 text-white rounded text-[11px] font-medium cursor-pointer">
-                Save Tag
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="submit" className="flex-1 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[11px] font-semibold cursor-pointer transition">
+                  Create Tag
+                </button>
+                <button type="button" onClick={() => setShowAddTag(false)} className="px-2 py-1 bg-slate-800 text-slate-400 hover:text-slate-200 rounded text-[11px] cursor-pointer">
+                  Cancel
+                </button>
+              </div>
             </form>
           )}
 
-          <div className="space-y-1 max-h-40 overflow-y-auto">
+          <div className="space-y-1 max-h-48 overflow-y-auto pr-0.5">
             {tags.map(tag => {
               const isSelected = activeTag === tag.name;
+              const isEditingThis = editingTagId === tag.id;
+
+              if (isEditingThis) {
+                return (
+                  <div key={tag.id} className="p-1.5 bg-slate-950 border border-indigo-500/50 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={editTagName}
+                        onChange={(e) => setEditTagName(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 text-xs text-slate-100 px-2 py-0.5 rounded-lg outline-none focus:border-indigo-500"
+                      />
+                      <input
+                        type="color"
+                        value={editTagColor}
+                        onChange={(e) => setEditTagColor(e.target.value)}
+                        className="w-5 h-5 rounded border-0 cursor-pointer bg-transparent shrink-0"
+                      />
+                    </div>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => saveTagEdit(tag.id)}
+                        className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-[10px] cursor-pointer"
+                        title="Save Changes"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingTagId(null)}
+                        className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-[10px] cursor-pointer"
+                        title="Cancel"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
-                <button
+                <div
                   key={tag.id}
-                  onClick={() => setActiveTag(isSelected ? null : tag.name)}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
-                    isSelected ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
+                  className={`group w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition ${
+                    isSelected ? 'bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tag.color }}></span>
-                    <span>#{tag.name}</span>
+                  <button
+                    onClick={() => setActiveTag(isSelected ? null : tag.name)}
+                    className="flex-1 flex items-center gap-2 text-left truncate cursor-pointer"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }}></span>
+                    <span className="truncate">#{tag.name}</span>
+                  </button>
+
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditingTag(tag);
+                      }}
+                      className="p-1 text-slate-400 hover:text-indigo-400 rounded-md hover:bg-slate-800 cursor-pointer"
+                      title="Edit Tag"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTag(tag.id);
+                      }}
+                      className="p-1 text-slate-400 hover:text-rose-400 rounded-md hover:bg-slate-800 cursor-pointer"
+                      title="Delete Tag"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

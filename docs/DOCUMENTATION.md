@@ -4,6 +4,40 @@
 
 ---
 
+## 🚀 Key v1.2.0-beta Priority Enhancements
+
+1. **Tag Management for Members & Admins**:
+   - Members and admins can create, rename/edit, and delete workspace tags at any point in time.
+   - Hovering over any tag row in `Sidebar.js` reveals inline **Edit (pencil)** and **Delete (trash)** controls.
+2. **Numeric Item Counts in Calendar View**:
+   - Replaced dot badges (`.`) on calendar date cells in `HistoryCalendar` with clear numeric item count badges:
+     - `X●`: Active due tasks count.
+     - `X✓`: Completed tasks count.
+     - `X🔁`: Routine habit completions count.
+     - `X🔔`: Scheduled reminders count.
+3. **Separate Routine Tasks Calendar View**:
+   - `HistoryCalendar` includes a 3-way view toggle: `[ All Items | 📋 Tasks Calendar | 🔁 Routine Calendar ]`.
+   - Routine Calendar mode tracks daily habit execution logs (`routine.logs`) independently.
+4. **Separated "My Day" Routine Tasks View**:
+   - **My Day** (`my-day`) focus view divides active tasks into two distinct visual sections:
+     - `☀️ Regular Focus Tasks`
+     - `🔁 Routine Tasks & Daily Habits`
+5. **Flexible Date Filter (Calendar Picker + Manual Placeholder Input)**:
+   - Upgraded top "Filter by Date" toolbar in `TaskManager.js` with dual input support:
+     - Select dates visually via the standard calendar picker.
+     - Type dates manually into the text field (e.g., `YYYY-MM-DD`) for instant date filtering.
+6. **Strict Current-Day "My Day" Eviction Logic**:
+   - Enforces midnight / current day auto-cleanup: incomplete tasks from previous days are automatically evicted from My Day (`myDay: false`) so My Day stays strictly aligned with today.
+7. **Streamlined Email Service & Recipient Prompting**:
+   - Comments out non-email channels for current release scope to focus exclusively on Email Notifications.
+   - Prompts user to configure and save recipient email address.
+   - Blocks email dispatch and displays alert (`"Please provide a valid recipient address to continue"`) if recipient address is missing or invalid.
+8. **Formatted Tabular Email Preview & Template with Proverb/Quote**:
+   - Provides interactive **Preview Default Mail Template** modal rendering dark-mode styled HTML task tables and an inspiring quote/proverb banner (`Mark Twain & Tim Ferriss`).
+   - Dispatches formatted HTML emails via Nodemailer SMTP endpoint (`/api/notifications/email`).
+
+---
+
 ## Architecture & Tech Stack Overview (100% Free-Tier)
 
 - **Framework**: Next.js 14+ (App Router) + React 18/19.

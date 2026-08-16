@@ -13,6 +13,7 @@ export default function TaskManager({
   currentFilter,
   activeTag,
   reminders = [],
+  routines = [],
   onOpenNotificationModal,
   activeProfile
 }) {
@@ -506,15 +507,31 @@ export default function TaskManager({
                 >
                   Next Week
                 </button>
-                <input
-                  type="date"
-                  value={customFilterDate}
-                  onChange={(e) => {
-                    setCustomFilterDate(e.target.value);
-                    setFilterDate(e.target.value ? 'custom' : 'all');
-                  }}
-                  className="bg-slate-950 border border-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-lg outline-none"
-                />
+                {/* Flexible Date Filter: Manual placeholder editing or calendar picker selection */}
+                <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5">
+                  <input
+                    type="text"
+                    placeholder="YYYY-MM-DD"
+                    value={customFilterDate}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomFilterDate(val);
+                      setFilterDate(val.trim() ? 'custom' : 'all');
+                    }}
+                    className="w-24 bg-transparent text-slate-200 text-[11px] outline-none font-mono placeholder:text-slate-600"
+                    title="Type date manually (YYYY-MM-DD) or pick from calendar"
+                  />
+                  <input
+                    type="date"
+                    value={customFilterDate}
+                    onChange={(e) => {
+                      setCustomFilterDate(e.target.value);
+                      setFilterDate(e.target.value ? 'custom' : 'all');
+                    }}
+                    className="w-5 h-5 bg-transparent border-0 text-slate-300 text-[11px] cursor-pointer outline-none shrink-0"
+                    title="Open calendar date picker"
+                  />
+                </div>
               </div>
             </div>
 
@@ -684,6 +701,7 @@ export default function TaskManager({
           <HistoryCalendar
             tasks={tasks}
             reminders={reminders}
+            routines={routines}
             onAddTaskOnDate={addTaskOnDate}
             onSelectDay={(dateStr) => {
               if (currentFilter === 'completed') {
@@ -720,26 +738,94 @@ export default function TaskManager({
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {activeTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  selectedTask={selectedTask}
-                  setSelectedTask={setSelectedTask}
-                  toggleTaskComplete={toggleTaskComplete}
-                  toggleStar={toggleStar}
-                  updateTaskDueDate={updateTaskDueDate}
-                  tags={tags}
-                  getTodayStr={getTodayStr}
-                  getTomorrowStr={getTomorrowStr}
-                  getNextWeekStr={getNextWeekStr}
-                  isSelectMode={isSelectMode}
-                  isSelectedForBulk={selectedTaskIds.includes(task.id)}
-                  toggleSelectTask={toggleSelectTask}
-                  onRenameTask={updateTaskTitle}
-                />
-              ))}
+            <div className="space-y-4">
+              {currentFilter === 'my-day' ? (
+                <>
+                  {/* Regular My Day Tasks Section */}
+                  {activeTasks.filter(t => !t.routineId).length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1 text-xs font-bold text-amber-400 uppercase tracking-wider">
+                        <Sun className="w-3.5 h-3.5" /> ☀️ Regular Focus Tasks ({activeTasks.filter(t => !t.routineId).length})
+                      </div>
+                      {activeTasks.filter(t => !t.routineId).map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          selectedTask={selectedTask}
+                          setSelectedTask={setSelectedTask}
+                          toggleTaskComplete={toggleTaskComplete}
+                          toggleStar={toggleStar}
+                          updateTaskDueDate={updateTaskDueDate}
+                          tags={tags}
+                          getTodayStr={getTodayStr}
+                          getTomorrowStr={getTomorrowStr}
+                          getNextWeekStr={getNextWeekStr}
+                          isSelectMode={isSelectMode}
+                          isSelectedForBulk={selectedTaskIds.includes(task.id)}
+                          toggleSelectTask={toggleSelectTask}
+                          onRenameTask={updateTaskTitle}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Routine My Day Tasks Section */}
+                  {activeTasks.filter(t => t.routineId).length > 0 && (
+                    <div className="space-y-2 pt-2 border-t border-slate-800/60">
+                      <div className="flex items-center gap-2 px-1 text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                        <Repeat className="w-3.5 h-3.5" /> 🔁 Routine Tasks & Daily Habits ({activeTasks.filter(t => t.routineId).length})
+                      </div>
+                      {activeTasks.filter(t => t.routineId).map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          selectedTask={selectedTask}
+                          setSelectedTask={setSelectedTask}
+                          toggleTaskComplete={toggleTaskComplete}
+                          toggleStar={toggleStar}
+                          updateTaskDueDate={updateTaskDueDate}
+                          tags={tags}
+                          getTodayStr={getTodayStr}
+                          getTomorrowStr={getTomorrowStr}
+                          getNextWeekStr={getNextWeekStr}
+                          isSelectMode={isSelectMode}
+                          isSelectedForBulk={selectedTaskIds.includes(task.id)}
+                          toggleSelectTask={toggleSelectTask}
+                          onRenameTask={updateTaskTitle}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {activeTasks.length === 0 && (
+                    <div className="py-6 text-center text-xs text-slate-500">
+                      No focus items in My Day for today.
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-2">
+                  {activeTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      selectedTask={selectedTask}
+                      setSelectedTask={setSelectedTask}
+                      toggleTaskComplete={toggleTaskComplete}
+                      toggleStar={toggleStar}
+                      updateTaskDueDate={updateTaskDueDate}
+                      tags={tags}
+                      getTodayStr={getTodayStr}
+                      getTomorrowStr={getTomorrowStr}
+                      getNextWeekStr={getNextWeekStr}
+                      isSelectMode={isSelectMode}
+                      isSelectedForBulk={selectedTaskIds.includes(task.id)}
+                      toggleSelectTask={toggleSelectTask}
+                      onRenameTask={updateTaskTitle}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1477,14 +1563,17 @@ function TaskCard({ task, selectedTask, setSelectedTask, toggleTaskComplete, tog
   );
 }
 
-// ─── Enhancement 11 — Interactive Task Calendar Component ─────────────────────
+// ─── Enhancement 11 — Interactive Task & Routine Calendar Component ─────────────────────
 
-function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAddTaskOnDate }) {
+function HistoryCalendar({ tasks, reminders = [], routines = [], onSelectDay, selectedDay, onAddTaskOnDate }) {
   const now = new Date();
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
   const [calendarYear, setCalendarYear] = useState(now.getFullYear());
   const [focusedDay, setFocusedDay] = useState(selectedDay || '');
   const [quickTitle, setQuickTitle] = useState('');
+
+  // Enhancement 3: Separate Calendar mode toggle for Routine tasks
+  const [calendarType, setCalendarType] = useState('all'); // 'all' | 'tasks' | 'routines'
 
   const pad = n => String(n).padStart(2, '0');
   const getDaysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
@@ -1512,16 +1601,27 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
   const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
   const firstDay = getFirstDayOfMonth(calendarMonth, calendarYear);
 
-  // Group tasks by date
+  // Group regular tasks by date
   const completedByDate = {};
   const dueByDate = {};
   tasks.forEach(t => {
+    if (calendarType === 'routines' && !t.routineId) return;
+    if (calendarType === 'tasks' && t.routineId) return;
+
     if (t.completed) {
       const dateKey = t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : '');
       if (dateKey) completedByDate[dateKey] = (completedByDate[dateKey] || 0) + 1;
     } else if (t.dueDate) {
       dueByDate[t.dueDate] = (dueByDate[t.dueDate] || 0) + 1;
     }
+  });
+
+  // Group routine task logs by date
+  const routineLogsByDate = {};
+  routines.forEach(r => {
+    (r.logs || []).forEach(logDate => {
+      routineLogsByDate[logDate] = (routineLogsByDate[logDate] || 0) + 1;
+    });
   });
 
   const remindersByDate = {};
@@ -1535,6 +1635,9 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
 
   // Filter tasks & reminders for selected day
   const dayTasks = tasks.filter(t => {
+    if (calendarType === 'routines' && !t.routineId) return false;
+    if (calendarType === 'tasks' && t.routineId) return false;
+
     if (t.completed) {
       const d = t.completedAt || (t.createdAt ? t.createdAt.split('T')[0] : '');
       return d === activeSelectedDay;
@@ -1553,6 +1656,46 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
   return (
     <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-1 touch-pan-y animate-fade-in">
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
+        {/* Sub-Header & Separate Calendar Mode Controls (Enhancement 3) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-indigo-400" /> Date-Based Calendar Activity
+            </h2>
+            <p className="text-[11px] text-slate-400">View tasks, completions & routine schedule by day</p>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setCalendarType('all')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                calendarType === 'all' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              All Items
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarType('tasks')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                calendarType === 'tasks' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              📋 Tasks Calendar
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarType('routines')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                calendarType === 'routines' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              🔁 Routine Calendar
+            </button>
+          </div>
+        </div>
+
         {/* Month Navigation */}
         <div className="flex items-center justify-between">
           <button
@@ -1565,7 +1708,9 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
             <span className="text-base font-bold text-slate-100 tracking-wide block">
               {MONTH_NAMES[calendarMonth]} {calendarYear}
             </span>
-            <span className="text-[10px] text-indigo-400 font-medium">Interactive Multi-View Calendar</span>
+            <span className="text-[10px] text-indigo-400 font-medium">
+              {calendarType === 'routines' ? '🔁 Dedicated Routine Tasks Calendar' : calendarType === 'tasks' ? '📋 Dedicated Regular Tasks Calendar' : 'Interactive Multi-View Calendar'}
+            </span>
           </div>
           <button
             onClick={nextMonth}
@@ -1587,10 +1732,11 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
         {/* Calendar Grid Cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {cells.map((day, idx) => {
-            if (!day) return <div key={`empty-${idx}`} className="min-h-[44px] rounded-xl bg-slate-950/20" />;
+            if (!day) return <div key={`empty-${idx}`} className="min-h-[48px] rounded-xl bg-slate-950/20" />;
             const dateStr = `${calendarYear}-${pad(calendarMonth + 1)}-${pad(day)}`;
             const completedCount = completedByDate[dateStr] || 0;
             const dueCount = dueByDate[dateStr] || 0;
+            const routineLogCount = routineLogsByDate[dateStr] || 0;
             const reminderCount = remindersByDate[dateStr] || 0;
             const isToday = dateStr === todayCalStr;
             const isSelected = dateStr === activeSelectedDay;
@@ -1599,28 +1745,59 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
               <button
                 key={dateStr}
                 onClick={() => { setFocusedDay(dateStr); if (onSelectDay) onSelectDay(dateStr); }}
-                className={`relative flex flex-col items-center justify-between p-1.5 min-h-[50px] sm:min-h-[56px] rounded-xl text-xs font-semibold transition active:scale-95 border ${
+                className={`relative flex flex-col items-center justify-between p-1.5 min-h-[54px] sm:min-h-[60px] rounded-xl text-xs font-semibold transition active:scale-95 border ${
                   isSelected
                     ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50'
                     : isToday
                     ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20'
-                    : (completedCount > 0 || dueCount > 0 || reminderCount > 0)
+                    : (completedCount > 0 || dueCount > 0 || routineLogCount > 0 || reminderCount > 0)
                     ? 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-750'
                     : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:bg-slate-800/40 hover:text-slate-300'
                 }`}
               >
                 <span className="text-xs font-bold leading-none">{day}</span>
 
-                {/* Badge Dots */}
-                <div className="flex items-center gap-1 mt-1">
+                {/* Enhancement 2: Numeric counts in place of "." for completed and pending items */}
+                <div className="flex flex-wrap items-center justify-center gap-1 mt-1 w-full">
                   {dueCount > 0 && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-indigo-400'}`} title={`${dueCount} active due tasks`} />
+                    <span
+                      className={`px-1 py-0.2 text-[9px] font-bold rounded ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                      }`}
+                      title={`${dueCount} active due items`}
+                    >
+                      {dueCount}●
+                    </span>
                   )}
                   {completedCount > 0 && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-400'}`} title={`${completedCount} completed tasks`} />
+                    <span
+                      className={`px-1 py-0.2 text-[9px] font-bold rounded ${
+                        isSelected ? 'bg-emerald-300/30 text-white' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      }`}
+                      title={`${completedCount} completed items`}
+                    >
+                      {completedCount}✓
+                    </span>
+                  )}
+                  {routineLogCount > 0 && (
+                    <span
+                      className={`px-1 py-0.2 text-[9px] font-bold rounded ${
+                        isSelected ? 'bg-amber-300/30 text-white' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      }`}
+                      title={`${routineLogCount} routine completions`}
+                    >
+                      {routineLogCount}🔁
+                    </span>
                   )}
                   {reminderCount > 0 && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-200' : 'bg-amber-400'}`} title={`${reminderCount} scheduled reminders`} />
+                    <span
+                      className={`px-1 py-0.2 text-[9px] font-bold rounded ${
+                        isSelected ? 'bg-amber-200/30 text-white' : 'bg-amber-400/20 text-amber-200 border border-amber-400/40'
+                      }`}
+                      title={`${reminderCount} reminders`}
+                    >
+                      {reminderCount}🔔
+                    </span>
                   )}
                 </div>
               </button>
@@ -1630,12 +1807,12 @@ function HistoryCalendar({ tasks, reminders = [], onSelectDay, selectedDay, onAd
 
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400 pt-3 border-t border-slate-800">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-400" /> Active Due Task</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Completed Task</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> Scheduled Reminder</span>
+          <span className="flex items-center gap-1.5"><span className="px-1 bg-indigo-500/20 text-indigo-300 rounded font-bold">X●</span> Active Due</span>
+          <span className="flex items-center gap-1.5"><span className="px-1 bg-emerald-500/20 text-emerald-300 rounded font-bold">X✓</span> Completed</span>
+          <span className="flex items-center gap-1.5"><span className="px-1 bg-amber-500/20 text-amber-300 rounded font-bold">X🔁</span> Routine Done</span>
+          <span className="flex items-center gap-1.5"><span className="px-1 bg-amber-400/20 text-amber-200 rounded font-bold">X🔔</span> Reminders</span>
         </div>
       </div>
-
     </div>
   );
 }

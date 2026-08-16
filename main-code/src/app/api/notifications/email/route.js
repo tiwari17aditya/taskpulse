@@ -41,29 +41,65 @@ export async function POST(req) {
     });
 
     const defaultHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #090d16; color: #f1f5f9; padding: 24px; borderRadius: 16px;">
-        <div style="max-width: 550px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 24px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 20px;">
-            <h2 style="color: #818cf8; margin: 0; font-size: 20px;">🚀 TaskPulse Notification</h2>
-            <span style="font-size: 11px; background: #312e81; color: #c7d2fe; padding: 4px 8px; border-radius: 9999px; font-weight: bold;">Daily Reminder</span>
+      <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #020617; color: #f8fafc; padding: 32px 16px;">
+        <div style="max-width: 600px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          
+          <!-- Header Banner -->
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 28px 24px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; tracking-wide: 0.5px;">⚡ TaskPulse Notification</h1>
+            <p style="color: #e0e7ff; margin: 0; font-size: 13px; opacity: 0.9;">Automated Workspace Summary & Task Reminders</p>
           </div>
 
-          <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">
-            ${htmlText || 'Here is your automated TaskPulse reminder for upcoming tasks & routines.'}
-          </p>
+          <!-- Body Container -->
+          <div style="padding: 24px;">
+            <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6; margin-top: 0;">
+              ${htmlText || 'Hello! Here is your scheduled TaskPulse automated digest and task summary.'}
+            </p>
 
-          ${tasksSummary ? `
-            <div style="background: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin: 16px 0;">
-              <h4 style="margin: 0 0 10px 0; color: #f59e0b; font-size: 13px;">📌 Today's Focus Items:</h4>
-              <ul style="margin: 0; padding-left: 20px; color: #94a3b8; font-size: 13px;">
-                ${tasksSummary.map(t => `<li style="margin-bottom: 6px;"><strong>${t.title}</strong> ${t.dueDate ? `(Due: ${t.dueDate})` : ''}</li>`).join('')}
-              </ul>
+            ${tasksSummary && tasksSummary.length > 0 ? `
+              <div style="margin: 20px 0;">
+                <h3 style="color: #818cf8; font-size: 14px; margin: 0 0 12px 0; text-transform: uppercase; tracking-wider: 1px;">📌 Task Overview & Details</h3>
+                <table style="width: 100%; border-collapse: collapse; background: #020617; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #1e293b; color: #94a3b8; text-align: left; font-size: 11px; text-transform: uppercase;">
+                      <th style="padding: 10px 12px;">Task Title</th>
+                      <th style="padding: 10px 12px;">Due Date</th>
+                      <th style="padding: 10px 12px;">Priority / Tags</th>
+                      <th style="padding: 10px 12px; text-align: right;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tasksSummary.map((t, idx) => `
+                      <tr style="border-top: 1px solid #1e293b; color: #e2e8f0;">
+                        <td style="padding: 10px 12px; font-weight: 600;">${t.title || 'Untitled Task'}</td>
+                        <td style="padding: 10px 12px; color: #818cf8;">${t.dueDate || 'Today'}</td>
+                        <td style="padding: 10px 12px; color: #fbbf24;">${t.tags ? t.tags.join(', ') : (t.starred ? 'Starred' : 'Normal')}</td>
+                        <td style="padding: 10px 12px; text-align: right;">
+                          <span style="background: ${t.completed ? '#065f46' : '#312e81'}; color: ${t.completed ? '#34d399' : '#a5b4fc'}; padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold;">
+                            ${t.completed ? 'COMPLETED' : 'PENDING'}
+                          </span>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+
+            <!-- Proverb & Quote Banner (Enhancement 8) -->
+            <div style="margin-top: 24px; padding: 16px 20px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 8px;">
+              <p style="margin: 0 0 4px 0; font-size: 13px; font-style: italic; color: #c7d2fe; line-height: 1.5;">
+                "The secret of getting ahead is getting started. Focus on being productive instead of busy."
+              </p>
+              <span style="font-size: 11px; font-weight: bold; color: #818cf8;">— Mark Twain & Tim Ferriss</span>
             </div>
-          ` : ''}
 
-          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e293b; text-align: center; font-size: 11px; color: #64748b;">
-            Sent automatically by TaskPulse SMTP Dispatcher • ${new Date().toLocaleTimeString()}
+            <!-- Footer -->
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e293b; text-align: center; font-size: 11px; color: #64748b;">
+              TaskPulse Automated Dispatcher • ${new Date().toLocaleTimeString()}
+            </div>
           </div>
+
         </div>
       </div>
     `;

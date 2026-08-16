@@ -105,15 +105,29 @@ export default function Home() {
   };
 
   const evaluateRoutineAutoPopulate = (currentTasks, currentRoutines) => {
-    if (!currentRoutines || currentRoutines.length === 0) return currentTasks;
-
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     const dayOfWeek = today.getDay();
     const dayOfMonth = today.getDate();
 
-    let hasNewTask = false;
-    const updatedTasks = [...currentTasks];
+    let hasChanges = false;
+    let updatedTasks = currentTasks.map(task => {
+      // Enhancement 6 — "my day" corresponds strictly to current day.
+      // If task is incomplete and in My Day from a previous date, remove it from My Day.
+      if (task.myDay && !task.completed) {
+        const taskDate = task.myDayDate || task.routineDate || (task.createdAt ? task.createdAt.split('T')[0] : '');
+        if (taskDate && taskDate < todayStr) {
+          hasChanges = true;
+          return { ...task, myDay: false };
+        }
+      }
+      return task;
+    });
+
+    if (!currentRoutines || currentRoutines.length === 0) {
+      if (hasChanges) storage.saveTasks(updatedTasks);
+      return updatedTasks;
+    }
 
     currentRoutines.forEach(routine => {
       if (routine.paused) return;
@@ -149,6 +163,7 @@ export default function Home() {
             title: routine.title,
             completed: false,
             myDay: true,
+            myDayDate: todayStr,
             starred: false,
             dueDate: todayStr,
             subtasks: [],
@@ -160,12 +175,12 @@ export default function Home() {
             routineTime: routine.targetTime || '08:00'
           };
           updatedTasks.unshift(newTask);
-          hasNewTask = true;
+          hasChanges = true;
         }
       }
     });
 
-    if (hasNewTask) {
+    if (hasChanges) {
       storage.saveTasks(updatedTasks);
     }
     return updatedTasks;
@@ -597,6 +612,7 @@ export default function Home() {
               currentFilter={currentFilter}
               activeTag={activeTag}
               reminders={profileReminders}
+              routines={profileRoutines}
               onOpenNotificationModal={() => setShowNotificationModal(true)}
               activeProfile={activeProfile}
             />

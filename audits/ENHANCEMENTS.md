@@ -4,6 +4,19 @@ This document outlines the architectural roadmap, upcoming core features, notifi
 
 ---
 
+## 🚀 Active Top-Priority Enhancements (Released v1.2.0-beta)
+
+1. **Tag Editing for Members & Admins**: Members and admins can create, rename, edit, and delete tags at any point in time from the sidebar tag section and task cards.
+2. **Numeric Calendar Item Counts**: Dots (`.`) on calendar cells replaced with numeric badges showing active due items, completed items, routine habit logs, and scheduled reminders.
+3. **Separate Routine Tasks Calendar View**: Added a dedicated **Routine Calendar** mode toggle in the interactive calendar grid to view habit completions independently.
+4. **Separated "My Day" Routine View**: **My Day** view is divided into two distinct visual sections: `☀️ Regular Focus Tasks` and `🔁 Routine Tasks & Daily Habits`.
+5. **Flexible Date Filter Input**: Top "Filter by Date" toolbar supports both calendar date picker and direct manual typing (e.g., `YYYY-MM-DD`).
+6. **Strict Current-Day "My Day" Incomplete Eviction**: Automated daily eviction removes incomplete items from previous days from **My Day** so the view stays strictly tied to today.
+7. **Streamlined Email Service & Recipient Guard**: Commented out non-email channels for now, added email recipient configuration prompt, and enforced alert when recipient address is missing before dispatch.
+8. **Formatted Tabular Email Preview & Template with Proverb**: Added **Preview Default Mail Template** modal rendering clean dark-mode HTML task tables and an inspiring proverb/quote banner (`Mark Twain & Tim Ferriss`).
+
+---
+
 ## 1. Advance Task Reminder & Notification Engine
 - **Advance Trigger Presets**: Configure alerts **15 minutes**, **1 hour**, **1 day**, or **custom advance duration** prior to scheduled task due times.
 - **In-App Visual & Sound Alerts**: Native browser audio chime and floating banner notifications when due dates approach.
