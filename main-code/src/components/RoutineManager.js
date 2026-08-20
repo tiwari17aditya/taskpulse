@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   Repeat, Clock, Calendar, Flame, CheckCircle2, Plus, Edit3, Trash2, 
-  Sparkles, Tag, AlertCircle, Play, Pause, Check, X, ChevronRight, BarChart2
+  Sparkles, Tag, AlertCircle, Play, Pause, Check, X, ChevronRight, BarChart2, Hash, Archive
 } from 'lucide-react';
 
 import { deleteRoutineFromDB } from '@/lib/dbAdapter';
@@ -26,15 +26,18 @@ export default function RoutineManager({
 }) {
   const [showModal, setShowModal] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState(null);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived'
 
   // Form State
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
-  const [frequency, setFrequency] = useState('daily');
+  const [frequency, setFrequency] = useState('weekly');
+  const [interval, setInterval] = useState(1);
   const [targetTime, setTargetTime] = useState('08:00');
-  const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4, 5, 6]);
+  const [selectedDays, setSelectedDays] = useState([1, 2, 5]); // Mon, Tue, Fri
   const [selectedTags, setSelectedTags] = useState([]);
   const [autoMyDay, setAutoMyDay] = useState(true);
+  const [maxIterations, setMaxIterations] = useState('');
 
   // Inline Quick Time Edit State
   const [editingTimeId, setEditingTimeId] = useState(null);
@@ -45,11 +48,13 @@ export default function RoutineManager({
     setEditingRoutine(null);
     setTitle('');
     setNotes('');
-    setFrequency('daily');
+    setFrequency('weekly');
+    setInterval(1);
     setTargetTime('08:00');
-    setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+    setSelectedDays([1, 2, 5]);
     setSelectedTags([]);
     setAutoMyDay(true);
+    setMaxIterations('');
     setShowModal(true);
   };
 
@@ -57,11 +62,13 @@ export default function RoutineManager({
     setEditingRoutine(routine);
     setTitle(routine.title);
     setNotes(routine.notes || '');
-    setFrequency(routine.frequency || 'daily');
+    setFrequency(routine.frequency || 'weekly');
+    setInterval(routine.interval || 1);
     setTargetTime(routine.targetTime || '08:00');
-    setSelectedDays(routine.selectedDays || [0, 1, 2, 3, 4, 5, 6]);
+    setSelectedDays(routine.selectedDays || [1, 2, 5]);
     setSelectedTags(routine.tags || []);
     setAutoMyDay(routine.autoMyDay !== false);
+    setMaxIterations(routine.maxIterations || '');
     setShowModal(true);
   };
 
@@ -69,8 +76,8 @@ export default function RoutineManager({
     setFrequency(newFreq);
     if (newFreq === 'daily') setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
     else if (newFreq === 'weekdays') setSelectedDays([1, 2, 3, 4, 5]);
-    else if (newFreq === 'weekly') setSelectedDays([1]); // Default Monday
-    else if (newFreq === 'monthly') setSelectedDays([1]); // 1st of month
+    else if (newFreq === 'weekly') setSelectedDays([1, 2, 5]);
+    else if (newFreq === 'monthly') setSelectedDays([1]);
   };
 
   const toggleDay = (dayId) => {
@@ -104,10 +111,12 @@ export default function RoutineManager({
             title: title.trim(),
             notes: notes.trim(),
             frequency,
+            interval: Math.max(1, Number(interval) || 1),
             targetTime,
             selectedDays,
             tags: selectedTags,
             autoMyDay,
+            maxIterations: maxIterations ? Number(maxIterations) : null,
           };
         }
         return r;
@@ -116,18 +125,21 @@ export default function RoutineManager({
     } else {
       const newRoutine = {
         id: 'r-' + Date.now(),
-        profileId: activeProfile?.id || 'p-1',
+        profileId: activeProfile?.id || 'p-aditya',
         title: title.trim(),
         notes: notes.trim(),
         frequency,
+        interval: Math.max(1, Number(interval) || 1),
         targetTime,
         selectedDays,
         tags: selectedTags,
         autoMyDay,
+        maxIterations: maxIterations ? Number(maxIterations) : null,
         createdAt: new Date().toISOString(),
         logs: [],
         streak: 0,
         paused: false,
+        isArchived: false,
       };
       setRoutines([newRoutine, ...routines]);
     }
@@ -148,7 +160,6 @@ export default function RoutineManager({
     setEditingTimeId(null);
   };
 
-  // Toggle Pause/Resume
   const handleTogglePause = (routineId) => {
     const updated = routines.map(r => {
       if (r.id === routineId) {
@@ -159,147 +170,121 @@ export default function RoutineManager({
     setRoutines(updated);
   };
 
-  // Delete Routine
   const handleDeleteRoutine = (routineId) => {
-    if (confirm('Are you sure you want to delete this routine? Past completion logs will be removed.')) {
-      setRoutines(routines.filter(r => r.id !== routineId));
+    if (window.confirm('Are you sure you want to delete this routine?')) {
+      const updated = routines.filter(r => r.id !== routineId);
+      setRoutines(updated);
       deleteRoutineFromDB(routineId);
     }
   };
 
-  // Calculate stats
-  const totalRoutines = routines.length;
-  const activeRoutines = routines.filter(r => !r.paused).length;
-  const maxStreak = routines.reduce((max, r) => Math.max(max, r.streak || 0), 0);
-
-  // Format 24h time to 12h display
   const formatTimeDisplay = (timeStr) => {
     if (!timeStr) return '08:00 AM';
     const [h, m] = timeStr.split(':');
-    let hour = parseInt(h, 10);
+    const hour = parseInt(h, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12;
-    return `${hour}:${m} ${ampm}`;
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${m} ${ampm}`;
   };
 
-  // Last 7 days helper for activity matrix
   const getLast7Days = () => {
     const days = [];
-    const today = new Date();
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
+      const d = new Date();
+      d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
-      const dayName = WEEKDAYS[d.getDay()].short;
-      days.push({ dateStr, dayName, isToday: i === 0 });
+      const shortDay = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()];
+      days.push({ dateStr, shortDay });
     }
     return days;
   };
 
   const last7Days = getLast7Days();
 
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* Header & Stats Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400">
-                <Repeat className="w-5 h-5" />
-              </div>
-              <h1 className="text-xl font-bold text-slate-100">Daily & Recurring Routines</h1>
-            </div>
-            <p className="text-xs text-slate-400">
-              Configure daily, weekly, or custom routines. Scheduled routines auto-populate into your <span className="text-amber-400 font-semibold">My Day</span> tasks with real-time streak tracking.
-            </p>
-          </div>
+  // Filter routines by active vs archived
+  const activeRoutines = routines.filter(r => !r.isArchived);
+  const archivedRoutines = routines.filter(r => r.isArchived);
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleOpenCreate}
-              className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition transform active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Add Routine Task
-            </button>
+  const displayedRoutines = activeTab === 'active' ? activeRoutines : archivedRoutines;
+
+  return (
+    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-12">
+      {/* Top Banner Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+            <Repeat className="w-6 h-6 stroke-[2.5]" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              Habits & Recurring Routines
+            </h2>
+            <p className="text-xs text-slate-400">
+              Schedule routines with custom intervals, weekdays, and max iteration limits.
+            </p>
           </div>
         </div>
 
-        {/* Quick Metrics Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-4 border-t border-slate-800/80">
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
-              <BarChart2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Total Routines</span>
-              <span className="text-base font-bold text-slate-200">{totalRoutines}</span>
-            </div>
+        <div className="flex items-center gap-2">
+          {/* Active / Archived Tab Toggle */}
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                activeTab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Active ({activeRoutines.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('archived')}
+              className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                activeTab === 'archived' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Archive className="w-3.5 h-3.5" /> Archived ({archivedRoutines.length})
+            </button>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              <Play className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Active Schedule</span>
-              <span className="text-base font-bold text-emerald-400">{activeRoutines} Active</span>
-            </div>
-          </div>
-
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
-              <Flame className="w-4 h-4 fill-amber-400" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Best Active Streak</span>
-              <span className="text-base font-bold text-amber-400">{maxStreak} {maxStreak === 1 ? 'Day' : 'Days'} 🔥</span>
-            </div>
-          </div>
-
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Auto My Day</span>
-              <span className="text-base font-bold text-slate-200">Enabled</span>
-            </div>
-          </div>
+          <button
+            onClick={handleOpenCreate}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> New Routine
+          </button>
         </div>
       </div>
 
-      {/* Routine Cards List */}
-      {routines.length === 0 ? (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
-            <Repeat className="w-6 h-6" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-200">No Routine Tasks Configured</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Create your daily habits, morning rituals, or weekly reports to auto-populate into your daily workspace.
-            </p>
-          </div>
-          <button
-            onClick={handleOpenCreate}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Create First Routine
-          </button>
+      {/* Routine Cards Grid */}
+      {displayedRoutines.length === 0 ? (
+        <div className="text-center py-16 bg-slate-900/30 border border-slate-800/60 rounded-2xl space-y-3">
+          <Repeat className="w-12 h-12 text-slate-600 mx-auto" />
+          <h3 className="text-sm font-semibold text-slate-300">
+            {activeTab === 'archived' ? 'No Archived Routines' : 'No Active Routines Found'}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            {activeTab === 'archived'
+              ? 'Routines that reach their maximum iteration limit will automatically appear here.'
+              : 'Create repeating routines to automatically populate tasks into your daily schedule.'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {routines.map(routine => {
+          {displayedRoutines.map((routine) => {
             const isEditingTime = editingTimeId === routine.id;
-            const completedTotal = (routine.logs || []).length;
             const streak = routine.streak || 0;
+            const completedTotal = (routine.logs || []).length;
+            const isIterationMaxed = routine.maxIterations && completedTotal >= Number(routine.maxIterations);
 
             return (
               <div
                 key={routine.id}
                 className={`bg-slate-900 border ${
-                  routine.paused ? 'border-slate-800/60 opacity-60' : 'border-slate-800 hover:border-slate-700'
+                  routine.isArchived
+                    ? 'border-amber-500/30 bg-slate-900/70'
+                    : routine.paused
+                    ? 'border-slate-800/60 opacity-60'
+                    : 'border-slate-800 hover:border-slate-700'
                 } rounded-2xl p-5 shadow-lg space-y-4 transition flex flex-col justify-between`}
               >
                 <div className="space-y-3">
@@ -311,9 +296,14 @@ export default function RoutineManager({
                           {routine.title}
                         </h3>
                         <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono">
-                          {routine.frequency}
+                          {routine.frequency} {routine.interval > 1 ? `(Every ${routine.interval})` : ''}
                         </span>
-                        {routine.paused && (
+                        {routine.isArchived && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono">
+                            Archived (Max Iterations Done)
+                          </span>
+                        )}
+                        {routine.paused && !routine.isArchived && (
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono">
                             Paused
                           </span>
@@ -359,7 +349,6 @@ export default function RoutineManager({
 
                   {/* Target Time & Days Pills */}
                   <div className="flex items-center gap-3 flex-wrap text-xs text-slate-300 pt-1">
-                    {/* Editable Target Time Pill */}
                     <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
                       <Clock className="w-3.5 h-3.5 text-amber-400" />
                       {isEditingTime ? (
@@ -388,7 +377,7 @@ export default function RoutineManager({
                         <button
                           onClick={() => { setEditingTimeId(routine.id); setTempTime(routine.targetTime || '08:00'); }}
                           className="font-mono text-slate-200 font-semibold hover:text-indigo-400 transition flex items-center gap-1 cursor-pointer"
-                          title="Click to edit Target Time at any point of time"
+                          title="Click to edit Target Time"
                         >
                           <span>{formatTimeDisplay(routine.targetTime)}</span>
                           <Edit3 className="w-3 h-3 opacity-40 hover:opacity-100" />
@@ -414,6 +403,13 @@ export default function RoutineManager({
                         );
                       })}
                     </div>
+
+                    {/* Iteration count progress */}
+                    {routine.maxIterations && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-amber-300 font-bold">
+                        {completedTotal} / {routine.maxIterations} iterations
+                      </span>
+                    )}
                   </div>
 
                   {/* Tags */}
@@ -437,7 +433,7 @@ export default function RoutineManager({
                     </div>
 
                     <span className="text-[11px] text-slate-400 font-mono">
-                      Completed: <strong className="text-slate-200">{completedTotal}</strong> days
+                      Completed: <strong className="text-slate-200">{completedTotal}</strong> times
                     </span>
                   </div>
 
@@ -448,22 +444,17 @@ export default function RoutineManager({
                       {last7Days.map(day => {
                         const isCompleted = (routine.logs || []).includes(day.dateStr);
                         return (
-                          <div key={day.dateStr} className="flex flex-col items-center gap-0.5">
-                            <span className={`text-[9px] font-mono ${day.isToday ? 'text-indigo-400 font-bold' : 'text-slate-500'}`}>
-                              {day.dayName}
-                            </span>
-                            <div
-                              className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs transition ${
-                                isCompleted
-                                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold shadow-sm'
-                                  : day.isToday
-                                  ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
-                                  : 'bg-slate-900 border border-slate-800 text-slate-700'
-                              }`}
-                              title={`${day.dateStr}: ${isCompleted ? 'Completed' : 'Pending/Not logged'}`}
-                            >
-                              {isCompleted ? <Check className="w-3.5 h-3.5" /> : '•'}
-                            </div>
+                          <div
+                            key={day.dateStr}
+                            className={`w-7 h-7 rounded-lg flex flex-col items-center justify-center text-[9px] font-bold border transition ${
+                              isCompleted
+                                ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                                : 'bg-slate-900/60 border-slate-800/60 text-slate-600'
+                            }`}
+                            title={`${day.dateStr}: ${isCompleted ? 'Completed ✓' : 'Incomplete'}`}
+                          >
+                            <span>{day.shortDay}</span>
+                            <span>{isCompleted ? '✓' : '•'}</span>
                           </div>
                         );
                       })}
@@ -476,34 +467,35 @@ export default function RoutineManager({
         </div>
       )}
 
-      {/* Modal for Creating / Editing Routine Task */}
+      {/* Routine Edit/Create Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-scale-up">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Repeat className="w-5 h-5 text-indigo-400" />
-                <h2 className="text-base font-bold text-slate-100">
-                  {editingRoutine ? 'Edit Routine Task' : 'Configure New Routine Task'}
-                </h2>
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                  <Repeat className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-100">
+                  {editingRoutine ? 'Edit Routine Task' : 'Configure New Habit Routine'}
+                </h3>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60 cursor-pointer"
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-800 transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveRoutine} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-              {/* Title */}
+            <form onSubmit={handleSaveRoutine} className="p-5 space-y-4 overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-300 block">
                   Routine Task Title <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Morning 20-Min Meditation & Workout"
+                  placeholder="e.g. Morning Meditation & Workout"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-sm text-slate-100 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-500"
@@ -511,7 +503,7 @@ export default function RoutineManager({
                 />
               </div>
 
-              {/* Frequency & Target Time */}
+              {/* Frequency & Interval */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-300 block">Frequency</label>
@@ -523,13 +515,38 @@ export default function RoutineManager({
                     <option value="daily">Everyday (Daily)</option>
                     <option value="weekdays">Weekdays Only (Mon-Fri)</option>
                     <option value="weekly">Weekly (Selected Days)</option>
-                    <option value="monthly">Monthly (1st of Month)</option>
+                    <option value="monthly">Monthly (Specific Day)</option>
+                    <option value="yearly">Yearly (Annual)</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-                    <span>Target Time (Editable Anytime)</span>
+                    <span>Recur Every (Interval)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="52"
+                      value={interval}
+                      onChange={(e) => setInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-500 font-bold text-center"
+                    />
+                    <span className="text-xs text-slate-400 font-semibold uppercase">
+                      {frequency === 'daily' ? (interval > 1 ? 'Days' : 'Day') :
+                       frequency === 'weekly' ? (interval > 1 ? 'Weeks' : 'Week') :
+                       frequency === 'monthly' ? (interval > 1 ? 'Months' : 'Month') : (interval > 1 ? 'Years' : 'Year')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Target Time & Max Iterations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                    <span>Target Time</span>
                     <Clock className="w-3.5 h-3.5 text-amber-400" />
                   </label>
                   <input
@@ -540,33 +557,52 @@ export default function RoutineManager({
                     required
                   />
                 </div>
-              </div>
 
-              {/* Selected Days (if weekly/daily/custom) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300 block">Scheduled Days</label>
-                <div className="grid grid-cols-7 gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                  {WEEKDAYS.map(day => {
-                    const isSelected = selectedDays.includes(day.id);
-                    return (
-                      <button
-                        type="button"
-                        key={day.id}
-                        onClick={() => toggleDay(day.id)}
-                        className={`py-2 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                          isSelected
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'text-slate-500 hover:text-slate-300'
-                        }`}
-                      >
-                        {day.short}
-                      </button>
-                    );
-                  })}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                    <span>Max Iterations (Optional)</span>
+                    <Hash className="w-3.5 h-3.5 text-indigo-400" />
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Unlimited"
+                    value={maxIterations}
+                    onChange={(e) => setMaxIterations(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-500 font-mono"
+                  />
                 </div>
               </div>
 
-              {/* Description / Notes */}
+              {/* Scheduled Days for Weekly */}
+              {frequency === 'weekly' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Scheduled Weekdays ({selectedDays.length} days selected in interval week):
+                  </label>
+                  <div className="grid grid-cols-7 gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                    {WEEKDAYS.map(day => {
+                      const isSelected = selectedDays.includes(day.id);
+                      return (
+                        <button
+                          type="button"
+                          key={day.id}
+                          onClick={() => toggleDay(day.id)}
+                          className={`py-2 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white shadow-sm'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {day.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-300 block">Routine Notes (Optional)</label>
                 <textarea
@@ -578,7 +614,7 @@ export default function RoutineManager({
                 />
               </div>
 
-              {/* Tags Selection */}
+              {/* Tags */}
               {tags && tags.length > 0 && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-300 block">Tags</label>

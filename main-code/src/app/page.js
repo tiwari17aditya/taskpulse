@@ -13,12 +13,12 @@ import NotificationManagerModal from '@/components/NotificationManagerModal';
 import AdminPanelModal from '@/components/AdminPanelModal';
 import { storage } from '@/lib/storage';
 import { getCurrentDBProvider, fetchTasksFromDB, saveTaskToDB, fetchNotesFromDB, saveNoteToDB, fetchProfilesFromDB, saveProfilesToDB, deleteProfileFromDB, fetchRoutinesFromDB, saveRoutinesToDB, deleteRoutineFromDB } from '@/lib/dbAdapter';
+import { mergeAndExtractTags } from '@/lib/tagUtils';
+import { evaluateRoutineAutoPopulate, updateRoutineCompletionLog } from '@/lib/routineUtils';
 import UserGuideModal from '@/components/UserGuideModal';
 import ProfileLockModal from '@/components/ProfileLockModal';
 import FirstTimeTutorialModal from '@/components/FirstTimeTutorialModal';
 import { Sun, Calendar, Star, CheckCircle2, ListTodo, StickyNote, Tag, Cloud, ShieldCheck, Database, BookOpen, Menu, RefreshCw, Bell, UserCheck, Repeat, Lock, Unlock, HelpCircle } from 'lucide-react';
-
-
 
 export default function Home() {
   const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'notes'
@@ -61,130 +61,6 @@ export default function Home() {
   const [lockTargetProfile, setLockTargetProfile] = useState(null);
   const [isProfileUnlocked, setIsProfileUnlocked] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false);
-
-  // Routine Auto-Populate & Completion Log helper functions
-  const updateRoutineCompletionLog = (routineId, taskCompleted, completionDate) => {
-    const targetDate = completionDate || new Date().toISOString().split('T')[0];
-    const updated = routines.map(r => {
-      if (r.id === routineId) {
-        let logs = r.logs || [];
-        if (taskCompleted) {
-          if (!logs.includes(targetDate)) {
-            logs = [...logs, targetDate].sort();
-          }
-        } else {
-          logs = logs.filter(d => d !== targetDate);
-        }
-
-        let streak = 0;
-        const sortedLogs = [...new Set(logs)].sort().reverse();
-        if (sortedLogs.length > 0) {
-          const today = new Date();
-          let checkDate = new Date(today);
-          let todayStr = checkDate.toISOString().split('T')[0];
-
-          if (!sortedLogs.includes(todayStr)) {
-            checkDate.setDate(checkDate.getDate() - 1);
-            todayStr = checkDate.toISOString().split('T')[0];
-          }
-
-          while (sortedLogs.includes(todayStr)) {
-            streak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-            todayStr = checkDate.toISOString().split('T')[0];
-          }
-        }
-
-        return { ...r, logs, streak };
-      }
-      return r;
-    });
-
-    setRoutines(updated);
-    storage.saveRoutines(updated);
-  };
-
-  const evaluateRoutineAutoPopulate = (currentTasks, currentRoutines) => {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const dayOfWeek = today.getDay();
-    const dayOfMonth = today.getDate();
-
-    let hasChanges = false;
-    let updatedTasks = currentTasks.map(task => {
-      // Enhancement 6 — "my day" corresponds strictly to current day.
-      // If task is incomplete and in My Day from a previous date, remove it from My Day.
-      if (task.myDay && !task.completed) {
-        const taskDate = task.myDayDate || task.routineDate || (task.createdAt ? task.createdAt.split('T')[0] : '');
-        if (taskDate && taskDate < todayStr) {
-          hasChanges = true;
-          return { ...task, myDay: false };
-        }
-      }
-      return task;
-    });
-
-    if (!currentRoutines || currentRoutines.length === 0) {
-      if (hasChanges) storage.saveTasks(updatedTasks);
-      return updatedTasks;
-    }
-
-    currentRoutines.forEach(routine => {
-      if (routine.paused) return;
-      if (routine.profileId && activeProfile?.id && routine.profileId !== activeProfile.id) return;
-      if (routine.autoMyDay === false) return;
-
-      let isDueToday = false;
-      const freq = routine.frequency || 'daily';
-      const days = routine.selectedDays || [0, 1, 2, 3, 4, 5, 6];
-
-      if (freq === 'daily') {
-        isDueToday = true;
-      } else if (freq === 'weekdays') {
-        isDueToday = dayOfWeek >= 1 && dayOfWeek <= 5;
-      } else if (freq === 'weekly') {
-        isDueToday = days.includes(dayOfWeek);
-      } else if (freq === 'monthly') {
-        isDueToday = dayOfMonth === 1;
-      } else if (freq === 'custom') {
-        isDueToday = days.includes(dayOfWeek);
-      }
-
-      if (isDueToday) {
-        const existing = updatedTasks.find(t =>
-          (t.routineId === routine.id && t.routineDate === todayStr) ||
-          (t.routineId === routine.id && t.dueDate === todayStr)
-        );
-
-        if (!existing) {
-          const newTask = {
-            id: `t-routine-${routine.id}-${todayStr}`,
-            profileId: routine.profileId || activeProfile?.id || 'p-1',
-            title: routine.title,
-            completed: false,
-            myDay: true,
-            myDayDate: todayStr,
-            starred: false,
-            dueDate: todayStr,
-            subtasks: [],
-            tags: routine.tags || [],
-            notes: routine.notes || '',
-            createdAt: new Date().toISOString(),
-            routineId: routine.id,
-            routineDate: todayStr,
-            routineTime: routine.targetTime || '08:00'
-          };
-          updatedTasks.unshift(newTask);
-          hasChanges = true;
-        }
-      }
-    });
-
-    if (hasChanges) {
-      storage.saveTasks(updatedTasks);
-    }
-    return updatedTasks;
-  };
 
   // Sync data from database (NeonDB / Supabase) to local state & localStorage
   const syncDataFromDB = async (isManual = false) => {
@@ -256,6 +132,22 @@ export default function Home() {
         }
       }
 
+      // Automatically harvest and preserve tags from database tasks, notes, and routines
+      if (Array.isArray(dbTasks) || Array.isArray(dbNotes) || Array.isArray(dbRoutines)) {
+        setTags(prevTags => {
+          const currentStored = storage.getTags();
+          const baseTags = (currentStored && currentStored.length > 0) ? currentStored : prevTags;
+          const merged = mergeAndExtractTags(
+            baseTags,
+            Array.isArray(dbTasks) ? dbTasks : [],
+            Array.isArray(dbNotes) ? dbNotes : [],
+            Array.isArray(dbRoutines) ? dbRoutines : []
+          );
+          storage.saveTags(merged);
+          return merged;
+        });
+      }
+
       if (errorMsg) {
         setSyncError(errorMsg);
       } else {
@@ -284,6 +176,12 @@ export default function Home() {
     const initialActiveProfile = storage.getActiveProfile();
     const initialReminders = storage.getReminders();
     const initialNotifSettings = storage.getNotificationSettings();
+    const initialStoredTags = storage.getTags();
+
+    // Harvest and initialize all workspace tags from local storage and existing items
+    const mergedInitialTags = mergeAndExtractTags(initialStoredTags, initialLocalTasks, initialLocalNotes, initialRoutines);
+    setTags(mergedInitialTags);
+    storage.saveTags(mergedInitialTags);
 
     // Enforce Admin role persistence for Aditya profile
     let sanitizedProfiles = initialProfiles.length > 0 ? initialProfiles : storage.getProfiles();
@@ -351,7 +249,9 @@ export default function Home() {
       if (task.routineId) {
         const oldTask = tasks.find(t => t.id === task.id);
         if (oldTask && oldTask.completed !== task.completed) {
-          updateRoutineCompletionLog(task.routineId, task.completed, task.routineDate || task.dueDate);
+          const updated = updateRoutineCompletionLog(routines, task.routineId, task.completed, task.routineDate || task.dueDate);
+          setRoutines(updated);
+          storage.saveRoutines(updated);
         }
       }
     });
@@ -403,6 +303,12 @@ export default function Home() {
   const handleSaveSettings = (updatedSettings) => {
     setNotificationSettings(updatedSettings);
     storage.saveNotificationSettings(updatedSettings);
+  };
+
+  // Save tags on change & update local storage
+  const handleSetTags = (newTags) => {
+    setTags(newTags);
+    storage.saveTags(newTags);
   };
 
   // Save tags on change
@@ -460,7 +366,7 @@ export default function Home() {
         currentFilter={currentFilter}
         setCurrentFilter={setCurrentFilter}
         tags={tags}
-        setTags={setTags}
+        setTags={handleSetTags}
         activeTag={activeTag}
         setActiveTag={setActiveTag}
         tasksCount={tasksCount}

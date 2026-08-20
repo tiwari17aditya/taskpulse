@@ -1,5 +1,17 @@
 # Version History
 
+## [v1.3.0-beta] - 2026-08-20
+
+### Added & Enhanced
+- **Architectural Modularity Refactoring**: Decomposed monolithic `TaskManager.js` into clean, maintainable subcomponents (`TaskCalendarView.js`, `QuickAddTaskModal.js`, `TaskDetailDrawer.js`) and isolated domain modules (`dateUtils.js`, `tagUtils.js`, `routineUtils.js`).
+- **Flexible Recurrence & Scheduling Engine**: Built universal recurrence engine supporting One-Time (default), Daily, Weekly (multi-day weekday picker, e.g. Mon/Tue/Fri = 3 days/week), Monthly, Yearly, and Custom Interval (`N` Weeks/Days/Months).
+- **Max Iterations & Auto-Archiving**: Added iteration count limits to recurring routines/tasks; once maximum completion iterations are reached, the task automatically pauses and moves to the Archived view.
+- **Autonomous Slash Commands System (`.agents/commands/`)**: Created custom workspace slash command catalog including `/check-data-flow`, `/check-modularity`, `/scout-skills`, `/refine-prompt`, `/packup`, `/test-db`, `/switch-db`, `/test-email`, `/sync-docs`, and `/build-check`.
+- **Workspace Tag Auto-Harvesting & Persistence**: Resolved tag synchronization across refreshes by implementing automatic tag extraction from database items and bidirectional localStorage/DB syncing.
+- **Global vs Workspace Customizations Architecture**: Defined guidelines and directory paths for machine-wide (`C:\Users\Admin\.gemini\config\`) vs workspace-level (`.agents/`) skill execution.
+
+---
+
 ## [v1.2.0-beta] - 2026-08-16
 
 ### Added & Enhanced

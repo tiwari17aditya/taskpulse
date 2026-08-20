@@ -87,6 +87,30 @@ taskpulse/
 
 ---
 
+## ⚡ TaskPulse Workspace Slash Commands
+
+TaskPulse supports autonomous slash commands for rapid developer workflows. You can type any command in the AI assistant prompt, or type `/commands` to get the list:
+
+| Command | Category | Description |
+| :--- | :--- | :--- |
+| `/commands` | Help | Displays the full catalog of available slash commands and descriptions. |
+| `/check-data-flow` | Integrity | Validates end-to-end data pipeline from UI state (tasks, subtasks, notes, routines, tags, media) through API routes (`/api/db/tasks`, `/api/db/notes`) to structured database tables (NeonDB/Supabase/Local). |
+| `/packup` | Session | Automates git commit & push to GitHub `main`, updates logs, token metrics, version history, and generates a session closing report. |
+| `/test-db` | Database | Tests connectivity, latency, and schema health for the active DB provider in `.env`. |
+| `/switch-db [provider]` | Config | Switches `NEXT_PUBLIC_DB_PROVIDER` (`neondb`, `supabase`, `local`) and verifies adapter integration. |
+| `/test-email` | SMTP | Sends a formatted test email with task table and quote banner via `/api/notifications/email`. |
+| `/sync-docs` | Docs | Synchronizes `docs/DOCUMENTATION.md`, `UserGuideModal.js`, and `audits/VERSION.md`. |
+| `/build-check` | Pre-flight | Runs Next.js build verification to guarantee zero production/SSR errors. |
+| `/clean-logs` | Maintenance | Prunes stale logs in `audits/logs/` and calculates token rollups. |
+| `/add-tag-feature` | Scaffolding | Ensures tag additions and filters stay synchronized across TaskManager, Sidebar, and KeepNotes. |
+| `/audit-tokens` | Metrics | Logs token usage to `audits/token_usage.md`. |
+| `/bump-version [version]` | Release | Updates version tags across `package.json`, documentation, and UI badges. |
+| `/verify-routes` | Routing | Validates dynamic sharing routes (`/share/[code]`) and REST endpoints. |
+| `/schedule-health` | Monitoring | Creates a background cron timer for autonomous periodic diagnostics. |
+
+---
+
+
 ## Database Schemas & Auto-Migration
 
 When `NEXT_PUBLIC_DB_PROVIDER=neondb` is set in `.env`, the serverless routes automatically execute the following SQL table creation schemas on first API access:
