@@ -157,7 +157,7 @@ export default function AdminPanelModal({
                   <Database className="w-3 h-3 text-indigo-400" /> NeonDB PostgreSQL Active
                 </span>
                 <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
+                  <ShieldCheck className="w-3 h-3" /> v1.3.1-beta
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -529,7 +529,7 @@ export default function AdminPanelModal({
                   <Database className="w-3 h-3 text-indigo-400" /> NeonDB PostgreSQL Active
                 </span>
                 <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> v1.0.0-beta
+                  <ShieldCheck className="w-3 h-3" /> v1.3.1-beta
                 </span>
               </div>
               <p className="text-xs text-slate-400">

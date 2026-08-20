@@ -266,7 +266,7 @@ export default function UserGuideModal({ onClose }) {
         {/* Modal Footer */}
         <div className="border-t border-slate-800 pt-3 flex items-center justify-between shrink-0 text-xs">
           <span className="flex items-center gap-1.5 text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> TaskPulse Documentation Suite v1.0.0-alpha
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> TaskPulse Documentation Suite v1.3.1-beta
           </span>
           <button
             onClick={onClose}

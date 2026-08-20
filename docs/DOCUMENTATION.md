@@ -4,6 +4,23 @@
 
 ---
 
+## 🚀 Key v1.3.1-beta Priority Enhancements
+
+1. **Planned vs. History Calendar View Synchronization**:
+   - **Planned Calendar**: Displays forward-looking scheduled tasks by `dueDate`.
+   - **History Calendar**: Displays retrospective accomplishments by `completedAt`.
+2. **Integrated Day & Interval Agenda Breakdown**:
+   - Selecting any date or date interval (Selected Day, Today, Next 7 Days, Last 7 Days, This Month, Custom From/To) renders active due tasks and completed tasks in an agenda panel directly under the calendar.
+3. **Instant Bidirectional Reactivity**:
+   - Checking an item immediately applies strike-through styles, triggers celebration confetti, persists to PostgreSQL/LocalStorage, and instantly recalculates calendar numeric count badges (`● Due` ↔ `✓ Done`).
+   - Unchecking an item immediately restores it to active pending status and recalibrates calendar counts in real time.
+4. **Inline Quick Task Addition for Calendar Dates**:
+   - Rapid inline `+ Add task for [Selected Date]` creation form embedded in the day agenda header.
+5. **Modular Component Architecture (`TaskCard.js`)**:
+   - Isolated `TaskCard.js` under `src/components/task-manager/TaskCard.js` for clean code reuse across list and calendar views.
+
+---
+
 ## 🚀 Key v1.2.0-beta Priority Enhancements
 
 1. **Tag Management for Members & Admins**:

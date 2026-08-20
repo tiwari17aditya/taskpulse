@@ -1,5 +1,16 @@
 # Version History
 
+## [v1.3.1-beta] - 2026-08-20
+
+### Added & Enhanced
+- **Planned vs. History Calendar View Synchronization**: Clearly separated Planned Calendar (forward-looking due dates) and History Calendar (retrospective completion dates).
+- **Integrated Day & Interval Agenda in Calendar**: Selecting any day or date interval (Selected Day, Today, Next 7 Days, Last 7 Days, This Month, Custom Date Range) displays active due tasks and completed tasks directly below the calendar grid.
+- **Instant Bidirectional Reactivity**: Checking or unchecking a task directly in the Calendar updates status live with confetti animations, synchronizes to PostgreSQL/LocalStorage, and immediately recalculates calendar day cell count badges (`● Due` ↔ `✓ Done`).
+- **Inline Quick Task Addition for Calendar Days**: Added quick "+ Add task for [Selected Date]" input directly in the calendar day agenda header.
+- **Modular `TaskCard.js` Extraction**: Extracted `TaskCard` into `src/components/task-manager/TaskCard.js`, eliminating code duplication and standardizing task card interactions across list and calendar views.
+
+---
+
 ## [v1.3.0-beta] - 2026-08-20
 
 ### Added & Enhanced
