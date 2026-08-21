@@ -22,6 +22,8 @@ export default function RoutineManager({
   routines,
   setRoutines,
   tags,
+  activeTag,
+  setActiveTag,
   activeProfile,
 }) {
   const [showModal, setShowModal] = useState(false);
@@ -201,11 +203,30 @@ export default function RoutineManager({
 
   const last7Days = getLast7Days();
 
-  // Filter routines by active vs archived
-  const activeRoutines = routines.filter(r => !r.isArchived);
-  const archivedRoutines = routines.filter(r => r.isArchived);
+  // Extract all unique tags present across routines (routine-specific tags)
+  const routineTags = Array.from(new Set(
+    routines.flatMap(r => r.tags || []).filter(Boolean)
+  )).map(tagName => {
+    const tagDef = tags?.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    const count = routines.filter(r => (r.tags || []).includes(tagName)).length;
+    return {
+      name: tagName,
+      color: tagDef?.color || '#6366f1',
+      count
+    };
+  });
 
-  const displayedRoutines = activeTab === 'active' ? activeRoutines : archivedRoutines;
+  // Filter routines by active vs archived AND active tag
+  const baseRoutines = activeTab === 'active' 
+    ? routines.filter(r => !r.isArchived)
+    : routines.filter(r => r.isArchived);
+
+  const displayedRoutines = activeTag
+    ? baseRoutines.filter(r => (r.tags || []).includes(activeTag))
+    : baseRoutines;
+
+  const activeRoutinesCount = routines.filter(r => !r.isArchived).length;
+  const archivedRoutinesCount = routines.filter(r => r.isArchived).length;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-12">
@@ -234,7 +255,7 @@ export default function RoutineManager({
                 activeTab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Active ({activeRoutines.length})
+              Active ({activeRoutinesCount})
             </button>
             <button
               onClick={() => setActiveTab('archived')}
@@ -242,7 +263,7 @@ export default function RoutineManager({
                 activeTab === 'archived' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Archive className="w-3.5 h-3.5" /> Archived ({archivedRoutines.length})
+              <Archive className="w-3.5 h-3.5" /> Archived ({archivedRoutinesCount})
             </button>
           </div>
 
@@ -254,6 +275,63 @@ export default function RoutineManager({
           </button>
         </div>
       </div>
+
+      {/* Routine Tag Filter Toolbar */}
+      {routineTags.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-900/80 border border-slate-800 rounded-xl text-xs shadow-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-indigo-400" /> Filter by Routine Tag:
+            </span>
+
+            {/* All Routines Button */}
+            <button
+              onClick={() => setActiveTag && setActiveTag(null)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                !activeTag
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+              }`}
+            >
+              <span>All Routines</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${!activeTag ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                {baseRoutines.length}
+              </span>
+            </button>
+
+            {/* Individual Routine Tag Badges */}
+            {routineTags.map(tag => {
+              const isSelected = activeTag === tag.name;
+              return (
+                <button
+                  key={tag.name}
+                  onClick={() => setActiveTag && setActiveTag(isSelected ? null : tag.name)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-indigo-500/20 border border-indigo-500 text-indigo-200 shadow-sm'
+                      : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
+                  <span>#{tag.name}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-800/80 text-slate-400">
+                    {tag.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {activeTag && (
+            <button
+              onClick={() => setActiveTag && setActiveTag(null)}
+              className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold transition cursor-pointer flex items-center gap-1"
+            >
+              <span>✕ Clear Tag Filter</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Routine Cards Grid */}
       {displayedRoutines.length === 0 ? (
@@ -415,11 +493,26 @@ export default function RoutineManager({
                   {/* Tags */}
                   {routine.tags && routine.tags.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {routine.tags.map(t => (
-                        <span key={t} className="text-[10px] text-slate-400 bg-slate-800/60 border border-slate-700/60 px-2 py-0.5 rounded-full">
-                          #{t}
-                        </span>
-                      ))}
+                      {routine.tags.map(t => {
+                        const isTagActive = activeTag === t;
+                        const tagDef = tags?.find(tag => tag.name.toLowerCase() === t.toLowerCase());
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setActiveTag && setActiveTag(isTagActive ? null : t)}
+                            className={`text-[10px] px-2 py-0.5 rounded-full border transition cursor-pointer flex items-center gap-1 ${
+                              isTagActive
+                                ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 font-semibold ring-1 ring-indigo-500'
+                                : 'bg-slate-800/60 border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                            }`}
+                            title={`Filter routines by #${t}`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tagDef?.color || '#6366f1' }}></span>
+                            <span>#{t}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

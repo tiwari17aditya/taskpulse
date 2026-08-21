@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pin, Plus, Share2, Trash2, Tag, Palette, Image as ImageIcon, Music, Video, FileText, Check, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Pin, Plus, Share2, Trash2, Tag, Palette, Image as ImageIcon, Music, Video, FileText, Check, ExternalLink, CheckCircle2, Pencil } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 import { saveNoteToDB, deleteNoteFromDB, deleteNotesFromDB } from '@/lib/dbAdapter';
 
@@ -21,6 +21,14 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
   const [selectedTags, setSelectedTags] = useState(['Ideas']);
   const [mediaList, setMediaList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Note Editing Modal State
+  const [editingNote, setEditingNote] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editColor, setEditColor] = useState(COLOR_PALETTE[0].bg);
+  const [editTags, setEditTags] = useState([]);
+  const [editMediaList, setEditMediaList] = useState([]);
 
   // Bulk selection state
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -97,6 +105,41 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
     setIsCreating(false);
   };
 
+  // Open note for editing
+  const handleOpenEdit = (note) => {
+    setEditingNote(note);
+    setEditTitle(note.title || '');
+    setEditContent(note.content || '');
+    setEditColor(note.bgColor || COLOR_PALETTE[0].bg);
+    setEditTags(note.tags || []);
+    setEditMediaList(note.media || []);
+  };
+
+  // Save edited note
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    if (!editingNote) return;
+
+    const updatedNote = {
+      ...editingNote,
+      title: editTitle.trim() || 'Untitled Note',
+      content: editContent.trim(),
+      bgColor: editColor,
+      tags: editTags,
+      media: editMediaList,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updated = notes.map(n => n.id === editingNote.id ? updatedNote : n);
+    setNotes(updated);
+    saveNoteToDB(updatedNote);
+    setEditingNote(null);
+  };
+
+  const toggleTagInEditing = (tagName) => {
+    setEditTags(prev => prev.includes(tagName) ? prev.filter(t => t !== tagName) : [...prev, tagName]);
+  };
+
   const togglePin = (noteId) => {
     let targetNote = null;
     const updated = notes.map(n => {
@@ -113,6 +156,7 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
   const deleteNote = (noteId) => {
     setNotes(notes.filter(n => n.id !== noteId));
     deleteNoteFromDB(noteId); // Direct sync delete to NeonDB
+    if (editingNote?.id === noteId) setEditingNote(null);
   };
 
   const toggleTagInCreation = (tagName) => {
@@ -287,6 +331,7 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
                 onPin={togglePin}
                 onDelete={deleteNote}
                 onShare={onShareNote}
+                onEdit={handleOpenEdit}
                 tags={tags}
                 isSelectMode={isSelectMode}
                 isSelectedForBulk={selectedNoteIds.includes(note.id)}
@@ -313,6 +358,7 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
                 onPin={togglePin}
                 onDelete={deleteNote}
                 onShare={onShareNote}
+                onEdit={handleOpenEdit}
                 tags={tags}
                 isSelectMode={isSelectMode}
                 isSelectedForBulk={selectedNoteIds.includes(note.id)}
@@ -322,17 +368,120 @@ export default function NoteCanvas({ notes, setNotes, tags, activeTag, onShareNo
           </div>
         )}
       </div>
+
+      {/* Edit Note Modal (Editable at any time) */}
+      {editingNote && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-400" /> Edit Note
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingNote(null)}
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-800 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4 overflow-y-auto">
+              <input
+                type="text"
+                placeholder="Title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-sm font-semibold text-slate-100 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-500"
+              />
+
+              <textarea
+                rows={5}
+                placeholder="Note body..."
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-300 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-500 resize-none leading-relaxed"
+              />
+
+              {/* Media Attachments Section */}
+              <MediaUploader media={editMediaList} onMediaChange={setEditMediaList} />
+
+              {/* Color & Tag Picker */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-3">
+                <div className="flex items-center gap-1.5">
+                  {COLOR_PALETTE.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => setEditColor(c.bg)}
+                      className={`w-5 h-5 rounded-full border transition cursor-pointer ${editColor === c.bg ? 'ring-2 ring-indigo-400 scale-110' : ''}`}
+                      style={{ backgroundColor: c.bg, borderColor: c.border }}
+                      title={c.name}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 flex-wrap">
+                  {tags.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => toggleTagInEditing(t.name)}
+                      className={`text-[10px] px-2 py-0.5 rounded-full border transition cursor-pointer ${
+                        editTags.includes(t.name) ? 'bg-indigo-500/20 border-indigo-500 text-indigo-200' : 'bg-slate-950 border-slate-800 text-slate-500'
+                      }`}
+                    >
+                      #{t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => deleteNote(editingNote.id)}
+                  className="px-3 py-2 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Note
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingNote(null)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function NoteCard({ note, onPin, onDelete, onShare, tags, isSelectMode, isSelectedForBulk, toggleSelectNote }) {
+function NoteCard({ note, onPin, onDelete, onShare, onEdit, tags, isSelectMode, isSelectedForBulk, toggleSelectNote }) {
   return (
     <div
       onClick={() => {
-        if (isSelectMode) toggleSelectNote(note.id);
+        if (isSelectMode) {
+          toggleSelectNote(note.id);
+        } else {
+          onEdit && onEdit(note);
+        }
       }}
-      className={`group relative rounded-2xl p-4 border transition-all duration-200 hover:shadow-xl flex flex-col justify-between space-y-3 ${
+      className={`group relative rounded-2xl p-4 border transition-all duration-200 hover:shadow-xl flex flex-col justify-between space-y-3 cursor-pointer ${
         isSelectedForBulk ? 'ring-2 ring-indigo-500' : ''
       }`}
       style={{
@@ -359,8 +508,9 @@ function NoteCard({ note, onPin, onDelete, onShare, tags, isSelectMode, isSelect
             <h4 className="text-sm font-semibold text-slate-100 line-clamp-1">{note.title}</h4>
           </div>
           <button
-            onClick={() => onPin(note.id)}
-            className={`p-1 rounded-lg transition ${note.pinned ? 'text-indigo-400' : 'text-slate-600 opacity-0 group-hover:opacity-100 hover:text-slate-300'}`}
+            onClick={(e) => { e.stopPropagation(); onPin(note.id); }}
+            className={`p-1 rounded-lg transition cursor-pointer ${note.pinned ? 'text-indigo-400' : 'text-slate-600 opacity-0 group-hover:opacity-100 hover:text-slate-300'}`}
+            title={note.pinned ? "Unpin Note" : "Pin Note"}
           >
             <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-indigo-400' : ''}`} />
           </button>
@@ -372,7 +522,7 @@ function NoteCard({ note, onPin, onDelete, onShare, tags, isSelectMode, isSelect
         {note.media && note.media.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-white/5">
             {note.media.map(m => (
-              <div key={m.id || m.url} className="rounded-lg overflow-hidden border border-white/10 bg-black/20">
+              <div key={m.id || m.url} className="rounded-lg overflow-hidden border border-white/10 bg-black/20" onClick={(e) => e.stopPropagation()}>
                 {m.type === 'image' && (
                   <img src={m.url} alt={m.name} className="w-full max-h-40 object-cover" />
                 )}
@@ -410,18 +560,25 @@ function NoteCard({ note, onPin, onDelete, onShare, tags, isSelectMode, isSelect
           })}
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onEdit && onEdit(note)}
+            title="Edit Note"
+            className="p-1 text-slate-400 hover:text-indigo-400 transition cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => onShare(note)}
             title="Instant Codeshare / Toffeeshare Redirect"
-            className="p-1 text-slate-400 hover:text-indigo-400 transition"
+            className="p-1 text-slate-400 hover:text-indigo-400 transition cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(note.id)}
             title="Delete Note"
-            className="p-1 text-slate-400 hover:text-rose-400 transition"
+            className="p-1 text-slate-400 hover:text-rose-400 transition cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

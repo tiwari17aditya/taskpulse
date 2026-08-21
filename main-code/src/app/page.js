@@ -252,6 +252,7 @@ export default function Home() {
           const updated = updateRoutineCompletionLog(routines, task.routineId, task.completed, task.routineDate || task.dueDate);
           setRoutines(updated);
           storage.saveRoutines(updated);
+          saveRoutinesToDB(updated);
         }
       }
     });
@@ -417,7 +418,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Repeat className="w-5 h-5 text-amber-400" />
                 <h2 className="text-lg font-bold text-slate-100">
-                  Daily & Recurring Routines
+                  {activeTag ? `Routines Tagged #${activeTag}` : 'Daily & Recurring Routines'}
                 </h2>
               </div>
             )}
@@ -557,6 +558,8 @@ export default function Home() {
                 handleSetRoutines([...updatedProfileRoutines, ...otherRoutines]);
               }}
               tags={tags}
+              activeTag={activeTag}
+              setActiveTag={setActiveTag}
               activeProfile={activeProfile}
             />
           ) : (

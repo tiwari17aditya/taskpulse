@@ -72,11 +72,17 @@ export function updateRoutineCompletionLog(routines = [], routineId, taskComplet
 }
 
 /**
- * Evaluates routine rules and generates daily routine tasks into My Day
+ * Evaluates routine rules and generates daily routine tasks into My Day.
+ * Strictly respects target scheduled time, prevents duplicate re-population,
+ * and maintains completed status once checked off for today.
  */
 export function evaluateRoutineAutoPopulate(currentTasks = [], currentRoutines = [], activeProfileId = null) {
   const today = new Date();
   const todayStr = getTodayStr();
+  const currentHours = String(today.getHours()).padStart(2, '0');
+  const currentMinutes = String(today.getMinutes()).padStart(2, '0');
+  const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
   const dayOfWeek = today.getDay();
   const dayOfMonth = today.getDate();
   const currentMonth = today.getMonth();
@@ -127,7 +133,6 @@ export function evaluateRoutineAutoPopulate(currentTasks = [], currentRoutines =
     } else if (freq === 'weekdays') {
       isDueToday = dayOfWeek >= 1 && dayOfWeek <= 5;
     } else if (freq === 'weekly') {
-      // Matches selected days in the active interval week (e.g. Mon, Tue, Fri = 3 days in that week)
       if (days.includes(dayOfWeek)) {
         isDueToday = (diffWeeks % interval) === 0;
       }
@@ -141,33 +146,52 @@ export function evaluateRoutineAutoPopulate(currentTasks = [], currentRoutines =
     }
 
     if (isDueToday) {
-      const existing = updatedTasks.find(t =>
+      const isCompletedTodayInLogs = (routine.logs || []).includes(todayStr);
+      const targetTime = routine.targetTime || '00:00';
+      const isTimeReached = !routine.targetTime || currentTimeStr >= targetTime;
+
+      const existingIndex = updatedTasks.findIndex(t =>
         (t.routineId === routine.id && t.routineDate === todayStr) ||
         (t.routineId === routine.id && t.dueDate === todayStr)
       );
 
-      if (!existing) {
-        const newTask = {
-          id: `t-routine-${routine.id}-${todayStr}`,
-          profileId: routine.profileId || activeProfileId || 'p-aditya',
-          title: routine.title,
-          completed: false,
-          myDay: true,
-          myDayDate: todayStr,
-          starred: false,
-          dueDate: todayStr,
-          subtasks: [],
-          tags: routine.tags || [],
-          notes: routine.notes || '',
-          createdAt: new Date().toISOString(),
-          routineId: routine.id,
-          routineDate: todayStr,
-          routineTime: routine.targetTime || '08:00',
-          maxIterations: routine.maxIterations || null,
-          iterationNumber: completedCount + 1
-        };
-        updatedTasks.unshift(newTask);
-        hasChanges = true;
+      if (existingIndex !== -1) {
+        // If task already exists, sync completion status if routine logs indicate it's completed
+        const existing = updatedTasks[existingIndex];
+        if (isCompletedTodayInLogs && !existing.completed) {
+          updatedTasks[existingIndex] = {
+            ...existing,
+            completed: true,
+            completedAt: existing.completedAt || todayStr
+          };
+          hasChanges = true;
+        }
+      } else {
+        // Only auto-populate into My Day when scheduled time is reached, OR if it was already completed today
+        if (isTimeReached || isCompletedTodayInLogs) {
+          const newTask = {
+            id: `t-routine-${routine.id}-${todayStr}`,
+            profileId: routine.profileId || activeProfileId || 'p-aditya',
+            title: routine.title,
+            completed: isCompletedTodayInLogs,
+            completedAt: isCompletedTodayInLogs ? todayStr : null,
+            myDay: true,
+            myDayDate: todayStr,
+            starred: false,
+            dueDate: todayStr,
+            subtasks: [],
+            tags: routine.tags || [],
+            notes: routine.notes || '',
+            createdAt: new Date().toISOString(),
+            routineId: routine.id,
+            routineDate: todayStr,
+            routineTime: routine.targetTime || '08:00',
+            maxIterations: routine.maxIterations || null,
+            iterationNumber: completedCount + 1
+          };
+          updatedTasks.unshift(newTask);
+          hasChanges = true;
+        }
       }
     }
   });

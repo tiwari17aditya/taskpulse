@@ -4,6 +4,24 @@
 
 ---
 
+## 🚀 Key v1.3.2-beta Priority Enhancements
+
+1. **Routine Tag Filtering & Interactive Tag Badges**:
+   - Integrated a dedicated Routine Tag Filter toolbar in `RoutineManager.js` displaying all tags present on active routines with count badges.
+   - Clicking any tag badge on a routine card or in the toolbar filters routines to show only tasks/habits associated with that tag.
+   - Clicking "All Routines" or deselecting the tag restores visibility of all scheduled routines.
+2. **Universal Note Editing at Any Point in Time**:
+   - Any note in `NoteCanvas.js` can be edited at any time by clicking the note card or the dedicated Edit pencil icon.
+   - Opens an Edit Note Modal to update title, body content, background color theme, tags, and media attachments with immediate database persistence (`saveNoteToDB`).
+3. **Scheduled-Time Auto-Population for Routine Tasks in "My Day"**:
+   - Routine tasks now strictly auto-populate into "My Day" only when their scheduled target time (`targetTime`) has arrived for today.
+   - Once checked off or completed in My Day, routine tasks remain marked as completed for that day and never re-populate as uncompleted duplicate tasks on background DB polling.
+4. **Database Tag Confirmation & Contextual Tag Scoping**:
+   - Confirmed full structured persistence of `tags` as JSONB arrays across PostgreSQL (`tasks`, `notes`, `routines` tables) and LocalStorage.
+   - Contextualized tag headers in `Sidebar.js` (`Tasks Tags`, `Note Tags`, `Routine Tags`) to keep domain workflows clearly separated.
+
+---
+
 ## 🚀 Key v1.3.1-beta Priority Enhancements
 
 1. **Planned vs. History Calendar View Synchronization**:

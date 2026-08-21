@@ -316,11 +316,12 @@ function SidebarInner({
           </div>
         )}
 
-        {/* Tags Section — Enhancement 1: Members/Admins can edit/delete tags anytime */}
+        {/* Tags Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between px-2">
             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <Tag className="w-3 h-3 text-indigo-400" /> Workspace Tags
+              <Tag className="w-3 h-3 text-indigo-400" />
+              {activeView === 'tasks' ? 'Tasks Tags' : activeView === 'notes' ? 'Note Tags' : 'Routine Tags'}
             </span>
             <button
               onClick={() => setShowAddTag(!showAddTag)}
