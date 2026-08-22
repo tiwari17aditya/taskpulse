@@ -105,19 +105,20 @@ if (mode === 'inspect') {
     if (val !== undefined && val !== '') {
       try {
         console.log(`Adding ${key}...`);
-        // Remove existing key if already present to avoid duplication error
-        try {
-          execSync(`npx.cmd vercel env rm ${key} production --yes`, { stdio: 'ignore' });
-        } catch (_) {}
-
-        // Add to production
-        execSync(`echo ${JSON.stringify(val)} | npx.cmd vercel env add ${key} production`, { stdio: 'pipe' });
-        console.log(`  ✓ Added ${key}`);
+        const isPublic = key.startsWith('NEXT_PUBLIC_');
+        const envTargets = isPublic ? 'production,preview,development' : 'production,preview';
+        const sensitivityFlag = isPublic ? '--no-sensitive' : '--sensitive';
+        execSync(`npx.cmd vercel env add ${key} ${envTargets} --value ${JSON.stringify(val)} --force --yes --non-interactive ${sensitivityFlag}`, {
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'pipe']
+        });
+        console.log(`  ✓ Successfully added ${key}`);
         successCount++;
       } catch (e) {
         console.log(`  ⚠️ Notice adding ${key}: ${e.message}`);
       }
     }
   }
-  console.log(`\n🎉 Sync complete: ${successCount} environment variables synced to Vercel Production.`);
+  console.log(`\n🎉 Sync complete: ${successCount} environment variables synced to Vercel.`);
 }
+
