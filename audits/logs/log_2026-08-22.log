@@ -4,3 +4,6 @@
 [2026-08-22 15:46:21] [INFO] Updated NotificationManagerModal.js with inline recipient address editing, dynamic SMTP server status badge, and real-time validation.
 [2026-08-22 15:46:44] [INFO] Successfully tested and verified Gmail SMTP server connection (smtp.gmail.com:587) and dispatched test email to tiwari17aditya@gmail.com with Message ID <146a5e68-43e2-841e-bb92-0aa3c1682704@gmail.com> (Server response: 250 2.0.0 OK).
 [2026-08-22 15:48:02] [SUCCESS] Production build completed with 0 compilation and 0 hydration errors.
+[2026-08-22 15:56:32] [INFO] Dev server restarted with active root .env. GET /api/notifications/email confirmed configured: true.
+[2026-08-22 15:56:42] [SUCCESS] Live HTTP POST to http://localhost:3000/api/notifications/email returned success: true, Message ID <25dcb0c3-f7bf-318d-70ab-3916a3658ccf@gmail.com>, Server response: 250 2.0.0 OK.
+
