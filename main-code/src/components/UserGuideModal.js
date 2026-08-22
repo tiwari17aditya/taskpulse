@@ -325,15 +325,128 @@ export default function UserGuideModal({ onClose }) {
                 </div>
               </div>
 
-              {/* Data Flow Diagram Card */}
-              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                <span className="font-bold text-xs text-slate-200">🔄 End-to-End Data Pipeline & Failover Flow:</span>
-                <div className="p-2.5 rounded-lg bg-slate-900 font-mono text-[11px] text-slate-300 space-y-1">
-                  <div className="text-indigo-400">1. User Mutation ➔ TaskPulse UI State</div>
-                  <div className="text-emerald-400">2. Optimistic Local Write ➔ Browser LocalStorage</div>
-                  <div className="text-purple-400">3. Serverless API Route ➔ POST /api/db/tasks</div>
-                  <div className="text-cyan-400">4. SQL UPSERT (JSONB) ➔ NeonDB PostgreSQL</div>
-                  <div className="text-slate-400">5. Failover Guard ➔ If offline, cached locally with zero data loss</div>
+              {/* Interactive Mermaid Code Viewer with 1-Click Copy */}
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Code className="w-4 h-4 text-indigo-400" />
+                    <span className="font-bold text-xs text-slate-200">Raw Mermaid Architecture Syntax</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = `graph TD
+    subgraph Client_Layer [🖥️ Client Application Layer]
+        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]
+        TM[Microsoft To-Do Engine<br/>TaskManager.js]
+        KN[Google Keep Notes Vault<br/>NoteCanvas.js]
+        RM[Apple Reminders and Routines<br/>RoutineManager.js]
+        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]
+        NM[Automated Dispatches<br/>NotificationManagerModal.js]
+    end
+
+    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]
+        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]
+        LS[Browser LocalStorage<br/>Indexed offline state]
+        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]
+    end
+
+    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]
+        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]
+        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]
+        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]
+        API_Routines[/api/db/routines<br/>Habit streaks]
+        API_Email[/api/notifications/email<br/>Nodemailer SMTP]
+        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]
+    end
+
+    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]
+        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]
+        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]
+        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]
+        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]
+        TWILIO[Twilio REST API<br/>Carrier Gateway]
+        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]
+    end
+
+    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]
+        CS[Codeshare.io<br/>Live Collaborative Code]
+        TS[Toffeeshare<br/>P2P Encrypted File Transfer]
+        EXC[Excalidraw<br/>Virtual Whiteboard]
+        CRY[CryptPad<br/>Zero-Knowledge Docs]
+        CYB[CyberChef<br/>Cyber Swiss Army Knife]
+        DRW[Draw.io<br/>Architecture Diagrams]
+    end
+
+    UI --> TM & KN & RM & SU & NM
+    TM & KN & RM --> DA
+    NM --> VAL
+    DA --> LS
+    DA --> API_Tasks & API_Notes & API_Profiles & API_Routines
+    NM --> API_Email & API_SMS
+    SU --> CS & TS & EXC & CRY & CYB & DRW
+
+    API_Tasks & API_Notes & API_Profiles & API_Routines --> NEON
+    API_Tasks & API_Notes & API_Profiles & API_Routines -.-> SUPA
+    API_Email --> GMAIL
+    API_SMS --> NTFY & TWILIO
+    Client_Layer -.-> VERCEL`;
+                        navigator.clipboard.writeText(code);
+                        alert("✅ Mermaid architecture code copied to clipboard!");
+                      }}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer shadow"
+                    >
+                      📋 Copy Mermaid Code
+                    </button>
+                    <a
+                      href="https://mermaid.live"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition"
+                    >
+                      🎨 Open in Mermaid Live Editor ↗
+                    </a>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <pre className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 font-mono text-[10.5px] text-indigo-200 overflow-x-auto max-h-48 leading-relaxed">
+{`graph TD
+    subgraph Client_Layer [🖥️ Client Application Layer]
+        UI[Modern Dark Glassmorphism UI]
+        TM[Microsoft To-Do Engine]
+        KN[Google Keep Notes Vault]
+        RM[Apple Reminders and Routines]
+        SU[OSS Sharing and Productivity]
+        NM[Automated Dispatches]
+    end
+
+    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]
+        DA[dbAdapter.js] --> LS[LocalStorage]
+    end
+
+    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]
+        API_Tasks[/api/db/tasks]
+        API_Notes[/api/db/notes]
+        API_Profiles[/api/db/profiles]
+        API_Email[/api/notifications/email]
+        API_SMS[/api/notifications/sms]
+    end
+
+    subgraph External_Cloud [☁️ Cloud Infrastructure]
+        NEON[(NeonDB PostgreSQL)]
+        NTFY[Ntfy.sh Free Hub]
+        GMAIL[Gmail SMTP Server]
+        VERCEL[Vercel Edge Cloud]
+    end
+
+    UI --> TM & KN & RM & SU & NM
+    TM & KN & RM --> DA
+    DA --> API_Tasks & API_Notes & API_Profiles
+    API_Tasks & API_Notes --> NEON
+    API_SMS --> NTFY`}
+                  </pre>
                 </div>
               </div>
             </div>

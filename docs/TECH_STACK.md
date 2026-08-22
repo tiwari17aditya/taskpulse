@@ -6,6 +6,9 @@ This document serves as the architectural reference for all technologies, infras
 
 ## 🏛️ 1. Master System Architecture Diagram
 
+> 💡 **Tip**: Click the link below to open and edit this interactive diagram directly in your browser:  
+> 🔗 **[🎨 Open & Render in Mermaid Live Editor](https://mermaid.live)**
+
 ```mermaid
 graph TD
     subgraph Client_Layer [🖥️ Client Application Layer]
