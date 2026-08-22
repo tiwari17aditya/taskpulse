@@ -49,6 +49,7 @@ You can trigger any of these commands at any time in chat. Type `/commands` to v
 | `/audit-tokens` | Appends session token consumption metrics directly to `audits/token_usage.md`. |
 | `/bump-version [version]` | Increments version across `package.json`, `audits/VERSION.md`, `docs/DOCUMENTATION.md`, and the in-app navbar badge. |
 | `/verify-routes` | Tests dynamic route generation for `/share/[code]` and CRUD API endpoints. |
+| `/manage-vercel [mode]` | Automates Vercel linking, zero-effort batch .env sync (push/pull), pre-flight build diagnostics, and live production deployment (`inspect`, `push`, `pull`, `deploy`, `status`). |
 | `/schedule-health` | Spawns a background `/schedule` recurring timer for periodic automated health diagnostics. |
 
 ## Session Packup Workflow (`/packup`)

@@ -21,6 +21,7 @@ All slash commands have dedicated Markdown definition files inside the [`.agents
 | **`/audit-tokens`** | [`audit-tokens.md`](file:///d:/Antigravity-Projects/taskpulse/.agents/commands/audit-tokens.md) | Appends session token consumption metrics directly to `audits/token_usage.md`. |
 | **`/bump-version`** | [`bump-version.md`](file:///d:/Antigravity-Projects/taskpulse/.agents/commands/bump-version.md) | Increments version across `package.json`, `audits/VERSION.md`, `docs/DOCUMENTATION.md`, and UI badges. |
 | **`/verify-routes`** | [`verify-routes.md`](file:///d:/Antigravity-Projects/taskpulse/.agents/commands/verify-routes.md) | Tests dynamic route generation for `/share/[code]` and CRUD API endpoints. |
+| **`/manage-vercel`** | [`manage-vercel.md`](file:///d:/Antigravity-Projects/taskpulse/.agents/commands/manage-vercel.md) | Automates Vercel linking, zero-effort batch .env push/pull, pre-flight build diagnostics, and live production deployment. |
 | **`/schedule-health`** | [`schedule-health.md`](file:///d:/Antigravity-Projects/taskpulse/.agents/commands/schedule-health.md) | Spawns a background `/schedule` recurring timer for periodic automated health diagnostics. |
 
 ---
