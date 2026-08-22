@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Bell, Mail, MessageSquare, Volume2, Shield, Calendar, Clock, Plus, Trash2, CheckCircle2, AlertCircle, X, Send, Sparkles, Smartphone } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Bell, Mail, MessageSquare, Volume2, Shield, Calendar, Clock, Plus, Trash2, CheckCircle2, AlertCircle, X, Send, Sparkles, Smartphone, Check, Power } from 'lucide-react';
+import { COUNTRY_CODES, validatePhoneNumber } from '@/lib/countryCodes';
 
 export default function NotificationManagerModal({
   isOpen,
@@ -26,9 +27,10 @@ export default function NotificationManagerModal({
   const [reminderTime, setReminderTime] = useState('09:00');
   const [reminderMessage, setReminderMessage] = useState('');
 
-  // Notification Settings Form State
+  // Master Notification Channel Toggles (Requirement: Enable/Disable for scheduling)
   const [webPushEnabled, setWebPushEnabled] = useState(notificationSettings?.webPushEnabled ?? true);
   const [emailEnabled, setEmailEnabled] = useState(notificationSettings?.emailEnabled ?? true);
+  const [smsEnabled, setSmsEnabled] = useState(notificationSettings?.smsEnabled ?? true);
   const [soundEnabled, setSoundEnabled] = useState(notificationSettings?.soundEnabled ?? true);
   const [webhookUrl, setWebhookUrl] = useState(notificationSettings?.webhookUrl || '');
   const [emailRecipient, setEmailRecipient] = useState(notificationSettings?.emailRecipient || activeProfile?.email || '');
@@ -36,11 +38,20 @@ export default function NotificationManagerModal({
   // Dispatch Center Navigation (Email vs SMS)
   const [dispatchSubTab, setDispatchSubTab] = useState('email'); // 'email' | 'sms'
 
-  // SMS Gateway State (Scaffold)
-  const [smsPhoneNumber, setSmsPhoneNumber] = useState('+1 (555) 019-2834');
+  // SMS Gateway & Country Code State (Requirement: Country code dropdown + dynamic validation)
+  const [countryCode, setCountryCode] = useState(notificationSettings?.countryCode || '+91');
+  const [smsPhoneNumber, setSmsPhoneNumber] = useState(notificationSettings?.smsPhoneNumber || activeProfile?.phone || '');
   const [smsGatewayProvider, setSmsGatewayProvider] = useState('twilio');
   const [smsStatus, setSmsStatus] = useState(null);
   const [sendingSms, setSendingSms] = useState(false);
+  const [smsDueDateStatus, setSmsDueDateStatus] = useState(null);
+  const [sendingSmsDueDate, setSendingSmsDueDate] = useState(false);
+  const [smsConfigInfo, setSmsConfigInfo] = useState(null);
+
+  // Real-Time Dynamic Mobile Phone Validation
+  const smsValidation = useMemo(() => {
+    return validatePhoneNumber(smsPhoneNumber, countryCode);
+  }, [smsPhoneNumber, countryCode]);
 
   // SMTP Dispatcher State
   const [smtpStatus, setSmtpStatus] = useState(null);
@@ -52,21 +63,27 @@ export default function NotificationManagerModal({
   const [showMailPreview, setShowMailPreview] = useState(false);
   const [smtpConfigInfo, setSmtpConfigInfo] = useState(null);
 
-  // Check SMTP configuration status from backend on open
+  // Check SMTP & SMS configuration status from backend on open
   useEffect(() => {
     if (isOpen) {
       fetch('/api/notifications/email')
         .then(res => res.json())
-        .then(data => {
-          setSmtpConfigInfo(data);
-        })
-        .catch(err => {
-          console.error('Failed to fetch SMTP status:', err);
-        });
+        .then(data => setSmtpConfigInfo(data))
+        .catch(err => console.error('Failed to fetch SMTP status:', err));
+
+      fetch('/api/notifications/sms')
+        .then(res => res.json())
+        .then(data => setSmsConfigInfo(data))
+        .catch(err => console.error('Failed to fetch SMS status:', err));
     }
   }, [isOpen]);
 
   const handleTestSmtpEmail = async () => {
+    if (!emailEnabled) {
+      alert("⚠️ Automated Email notifications are currently disabled. Please toggle Email Notifications ON to send.");
+      return;
+    }
+
     if (!emailRecipient || !emailRecipient.trim() || !emailRecipient.includes('@')) {
       alert("Please provide a valid recipient address to continue");
       return;
@@ -99,6 +116,11 @@ export default function NotificationManagerModal({
   };
 
   const handleSend7AmDigest = async () => {
+    if (!emailEnabled) {
+      alert("⚠️ Automated Email notifications are currently disabled. Please toggle Email Notifications ON to send.");
+      return;
+    }
+
     if (!emailRecipient || !emailRecipient.trim() || !emailRecipient.includes('@')) {
       alert("Please provide a valid recipient address to continue");
       return;
@@ -133,6 +155,11 @@ export default function NotificationManagerModal({
   };
 
   const handleSendDueDateReminders = async () => {
+    if (!emailEnabled) {
+      alert("⚠️ Automated Email notifications are currently disabled. Please toggle Email Notifications ON to send.");
+      return;
+    }
+
     if (!emailRecipient || !emailRecipient.trim() || !emailRecipient.includes('@')) {
       alert("Please provide a valid recipient address to continue");
       return;
@@ -168,20 +195,93 @@ export default function NotificationManagerModal({
     }
   };
 
-  const handleSendTestSms = () => {
-    if (!smsPhoneNumber || !smsPhoneNumber.trim()) {
-      alert("Please enter a valid phone number with country code");
+  const handleSendTestSms = async () => {
+    if (!smsEnabled) {
+      alert("⚠️ Automated SMS notifications are currently disabled. Please toggle SMS Notifications ON to send.");
       return;
     }
+
+    if (!smsValidation.isValid) {
+      alert(`⚠️ Please provide a valid mobile number: ${smsValidation.message}`);
+      return;
+    }
+
     setSendingSms(true);
     setSmsStatus(null);
-    setTimeout(() => {
-      setSendingSms(false);
-      setSmsStatus({
-        type: 'success',
-        text: `📱 SMS Gateway Ready: Simulated dispatch to ${smsPhoneNumber} via ${smsGatewayProvider.toUpperCase()}. (Twilio/Provider credentials will connect in v1.4 Roadmap).`
+    try {
+      const res = await fetch('/api/notifications/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: smsPhoneNumber.trim(),
+          countryCode: countryCode,
+          message: `[TaskPulse Test] Hello ${activeProfile?.name || 'User'}, your mobile SMS notification integration is operating properly!`,
+          provider: smsGatewayProvider
+        })
       });
-    }, 600);
+      const data = await res.json();
+      if (data.success) {
+        setSmsStatus({
+          type: 'success',
+          text: `✅ SMS Sent to ${data.recipient}! Status: ${data.status} (Message ID: ${data.messageId})`
+        });
+      } else {
+        setSmsStatus({
+          type: 'error',
+          text: `⚠️ SMS Dispatch failed: ${data.error}`
+        });
+      }
+    } catch (e) {
+      setSmsStatus({ type: 'error', text: `⚠️ Dispatch Error: ${e.message}` });
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
+  const handleSendDueDateSms = async () => {
+    if (!smsEnabled) {
+      alert("⚠️ Automated SMS notifications are currently disabled. Please toggle SMS Notifications ON to send.");
+      return;
+    }
+
+    if (!smsValidation.isValid) {
+      alert(`⚠️ Please provide a valid mobile number: ${smsValidation.message}`);
+      return;
+    }
+
+    setSendingSmsDueDate(true);
+    setSmsDueDateStatus(null);
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dueTasks = tasks.filter(t => !t.completed && (t.dueDate === todayStr || t.dueDate === 'Today' || t.starred));
+
+      const res = await fetch('/api/notifications/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: smsPhoneNumber.trim(),
+          countryCode: countryCode,
+          tasksSummary: dueTasks,
+          provider: smsGatewayProvider
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSmsDueDateStatus({
+          type: 'success',
+          text: `✅ SMS Due-Date Digest (${dueTasks.length} tasks) dispatched to ${data.recipient}!`
+        });
+      } else {
+        setSmsDueDateStatus({
+          type: 'error',
+          text: `⚠️ SMS dispatch failed: ${data.error}`
+        });
+      }
+    } catch (e) {
+      setSmsDueDateStatus({ type: 'error', text: `⚠️ SMS Error: ${e.message}` });
+    } finally {
+      setSendingSmsDueDate(false);
+    }
   };
 
   useEffect(() => {
@@ -250,7 +350,10 @@ export default function NotificationManagerModal({
     const updatedSettings = {
       webPushEnabled,
       emailEnabled,
+      smsEnabled,
       soundEnabled,
+      countryCode,
+      smsPhoneNumber: smsPhoneNumber.trim(),
       webhookUrl: webhookUrl.trim(),
       emailRecipient: emailRecipient.trim()
     };
@@ -258,7 +361,7 @@ export default function NotificationManagerModal({
     if (onSaveSettings) {
       onSaveSettings(updatedSettings);
     }
-    alert('✅ Notification settings & recipient email saved to database and active profile!');
+    alert('✅ Notification settings, email recipient & mobile SMS profile saved to database!');
   };
 
   const handleUpdateRecipient = (newEmail) => {
@@ -267,9 +370,31 @@ export default function NotificationManagerModal({
       onSaveSettings({
         webPushEnabled,
         emailEnabled,
+        smsEnabled,
         soundEnabled,
+        countryCode,
+        smsPhoneNumber,
         webhookUrl,
         emailRecipient: newEmail
+      });
+    }
+  };
+
+  const handleUpdatePhone = (newPhone, newCountryCode = countryCode) => {
+    setSmsPhoneNumber(newPhone);
+    if (newCountryCode !== countryCode) {
+      setCountryCode(newCountryCode);
+    }
+    if (onSaveSettings) {
+      onSaveSettings({
+        webPushEnabled,
+        emailEnabled,
+        smsEnabled,
+        soundEnabled,
+        countryCode: newCountryCode,
+        smsPhoneNumber: newPhone,
+        webhookUrl,
+        emailRecipient
       });
     }
   };
@@ -644,6 +769,45 @@ export default function NotificationManagerModal({
               {/* SUBTAB A: EMAIL NOTIFICATIONS */}
               {dispatchSubTab === 'email' && (
                 <div className="space-y-4">
+                  {/* Master Email Enable/Disable Switch */}
+                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-lg ${emailEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100">Email Dispatches & Morning Digest</span>
+                          <span className={`text-[10px] font-mono font-semibold px-2 py-0.2 rounded-full ${
+                            emailEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            {emailEnabled ? 'SCHEDULE ACTIVE' : 'DISABLED'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">Master scheduling toggle for 7:00 AM Morning Digest and Due-Date alert emails</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailEnabled(!emailEnabled)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                        emailEnabled
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/30'
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      {emailEnabled ? 'Enabled' : 'Disabled'}
+                    </button>
+                  </div>
+
+                  {!emailEnabled && (
+                    <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span>Automated email scheduling and dispatches are currently <strong>DISABLED</strong>. Turn the switch above ON to dispatch emails.</span>
+                    </div>
+                  )}
+
                   {/* Recipient Target Email Configuration Bar */}
                   <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
                     <div className="flex items-center justify-between">
@@ -702,7 +866,7 @@ export default function NotificationManagerModal({
                       <button
                         type="button"
                         onClick={handleSendDueDateReminders}
-                        disabled={sendingDueDate}
+                        disabled={sendingDueDate || !emailEnabled}
                         className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 via-indigo-600 to-violet-600 hover:from-amber-500 hover:to-violet-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
                       >
                         <Send className={`w-3.5 h-3.5 ${sendingDueDate ? 'animate-spin' : ''}`} />
@@ -745,7 +909,7 @@ export default function NotificationManagerModal({
                       <button
                         type="button"
                         onClick={handleSend7AmDigest}
-                        disabled={sendingDigest}
+                        disabled={sendingDigest || !emailEnabled}
                         className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
                       >
                         <Send className={`w-3.5 h-3.5 ${sendingDigest ? 'animate-spin' : ''}`} />
@@ -776,7 +940,7 @@ export default function NotificationManagerModal({
                       <button
                         type="button"
                         onClick={handleTestSmtpEmail}
-                        disabled={sendingSmtp}
+                        disabled={sendingSmtp || !emailEnabled}
                         className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
                       >
                         <Send className={`w-3.5 h-3.5 ${sendingSmtp ? 'animate-spin' : ''}`} />
@@ -795,64 +959,202 @@ export default function NotificationManagerModal({
                 </div>
               )}
 
-              {/* SUBTAB B: SMS & MOBILE NOTIFICATIONS (SCAFFOLD) */}
+              {/* SUBTAB B: SMS & MOBILE NOTIFICATIONS */}
               {dispatchSubTab === 'sms' && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+                  {/* Master SMS Enable/Disable Switch */}
+                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-lg ${smsEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                        <Smartphone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100">SMS & Mobile Notifications</span>
+                          <span className={`text-[10px] font-mono font-semibold px-2 py-0.2 rounded-full ${
+                            smsEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            {smsEnabled ? 'SCHEDULE ACTIVE' : 'DISABLED'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">Master scheduling toggle for mobile SMS reminders, urgent alerts, and due date texts</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSmsEnabled(!smsEnabled)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                        smsEnabled
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/30'
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      {smsEnabled ? 'Enabled' : 'Disabled'}
+                    </button>
+                  </div>
+
+                  {!smsEnabled && (
+                    <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span>Automated SMS scheduling and mobile dispatches are currently <strong>DISABLED</strong>. Turn the switch above ON to dispatch SMS.</span>
+                    </div>
+                  )}
+
+                  {/* 1. Country Code Selector & Dynamic Mobile Validation Form */}
+                  <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Smartphone className="w-4 h-4 text-indigo-400" />
                         <div>
-                          <h3 className="text-xs font-bold text-slate-100">SMS Gateway Configuration</h3>
-                          <span className="text-[10px] text-slate-400">Mobile carrier dispatch routing</span>
+                          <h3 className="text-xs font-bold text-slate-100">Mobile Phone & Country Code Setup</h3>
+                          <span className="text-[10px] text-slate-400">International dialing code and dynamic number validation</span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
-                        SMS Scaffold Ready
+                      <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
+                        smsConfigInfo?.configured
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                      }`}>
+                        {smsConfigInfo?.status || 'SMS Gateway Ready'}
                       </span>
                     </div>
 
-                    <div className="space-y-3 pt-1">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">Mobile Phone Number (with Country Code):</label>
-                        <input
-                          type="tel"
-                          value={smsPhoneNumber}
-                          onChange={e => setSmsPhoneNumber(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-indigo-500 font-mono"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-1">
+                      {/* Country Code Dropdown */}
+                      <div className="md:col-span-5 space-y-1">
+                        <label className="block text-xs font-medium text-slate-300">
+                          Country & Calling Code:
+                        </label>
+                        <select
+                          value={countryCode}
+                          onChange={e => handleUpdatePhone(smsPhoneNumber, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 outline-none focus:border-indigo-500"
+                        >
+                          {COUNTRY_CODES.map(c => (
+                            <option key={`${c.code}-${c.name}`} value={c.code}>
+                              {c.flag} {c.name} ({c.code})
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">SMS Gateway Provider:</label>
-                        <select
-                          value={smsGatewayProvider}
-                          onChange={e => setSmsGatewayProvider(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
-                        >
-                          <option value="twilio">Twilio Programmable SMS API</option>
-                          <option value="textlocal">Textlocal SMS Gateway</option>
-                          <option value="fast2sms">Fast2SMS Gateway</option>
-                          <option value="generic_webhook">Custom Webhook / Zapier / Make</option>
-                        </select>
+                      {/* Dynamic Phone Number Input */}
+                      <div className="md:col-span-7 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-xs font-medium text-slate-300">
+                            Mobile Number:
+                          </label>
+                          <span className={`text-[10px] font-medium ${
+                            smsValidation.isValid ? 'text-emerald-400' : 'text-amber-400'
+                          }`}>
+                            {smsValidation.message}
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type="tel"
+                            value={smsPhoneNumber}
+                            onChange={e => handleUpdatePhone(e.target.value, countryCode)}
+                            placeholder="e.g. 9876543210"
+                            className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 outline-none font-mono transition ${
+                              smsValidation.isValid
+                                ? 'border-emerald-500/50 focus:border-emerald-400'
+                                : 'border-slate-800 focus:border-amber-500'
+                            }`}
+                          />
+                          {smsValidation.isValid && (
+                            <div className="absolute right-2.5 top-2.5 text-emerald-400">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
+                    {/* Gateway Carrier Provider Selector */}
+                    <div className="pt-2 border-t border-slate-800/80 space-y-1">
+                      <label className="block text-xs font-medium text-slate-300">SMS Gateway Routing Engine:</label>
+                      <select
+                        value={smsGatewayProvider}
+                        onChange={e => setSmsGatewayProvider(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
+                      >
+                        <option value="twilio">Twilio Programmable SMS Gateway (Active Carrier)</option>
+                        <option value="fast2sms">Fast2SMS Indian Carrier Gateway</option>
+                        <option value="textlocal">Textlocal Enterprise SMS Gateway</option>
+                        <option value="generic_webhook">Custom SMS Webhook / Automation Endpoint</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 2. Due-Date Action Items SMS Dispatch */}
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-900 border border-indigo-500/30 space-y-3 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                        <div>
+                          <h3 className="text-xs font-bold text-slate-100">Send Today's Due Tasks via SMS</h3>
+                          <span className="text-[10px] text-indigo-400 font-mono">Mobile Action Checklist</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        {tasks.filter(t => !t.completed && (t.dueDate === (new Date().toISOString().split('T')[0]) || t.dueDate === 'Today' || t.starred)).length} Action Items
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Compiles today's due and starred action items into a concise mobile text dispatch sent directly to <strong className="text-slate-100">{smsValidation.formatted || 'your phone number'}</strong>.
+                    </p>
+
+                    {smsDueDateStatus && (
+                      <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                        smsDueDateStatus.type === 'success'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                      }`}>
+                        {smsDueDateStatus.text}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleSendDueDateSms}
+                        disabled={sendingSmsDueDate || !smsEnabled || !smsValidation.isValid}
+                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
+                      >
+                        <Send className={`w-3.5 h-3.5 ${sendingSmsDueDate ? 'animate-spin' : ''}`} />
+                        {sendingSmsDueDate ? 'Dispatching SMS...' : "Send Today's Tasks via SMS Now"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. Test SMS Dispatch */}
+                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                        <Smartphone className="w-3.5 h-3.5 text-indigo-400" /> Test Mobile SMS Dispatch
+                      </h3>
+                    </div>
+
                     {smsStatus && (
-                      <div className="p-2.5 rounded-xl text-xs font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                      <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                        smsStatus.type === 'success'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                      }`}>
                         {smsStatus.text}
                       </div>
                     )}
 
-                    <div className="pt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2 pt-1">
                       <button
                         type="button"
                         onClick={handleSendTestSms}
-                        disabled={sendingSms}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
+                        disabled={sendingSms || !smsEnabled || !smsValidation.isValid}
+                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
                       >
-                        <Smartphone className="w-3.5 h-3.5" />
+                        <Send className={`w-3.5 h-3.5 ${sendingSms ? 'animate-spin' : ''}`} />
                         {sendingSms ? 'Testing SMS Gateway...' : 'Send Test SMS Notification'}
                       </button>
                     </div>
@@ -892,9 +1194,38 @@ export default function NotificationManagerModal({
 
               {/* Toggles */}
               <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3.5">
-                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Alert Preferences</h3>
+                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Channel & Alert Preferences</h3>
 
+                {/* Email Master Toggle */}
                 <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-200">Email Notifications Channel</span>
+                    <p className="text-[11px] text-slate-400">Scheduled 7:00 AM morning digest & target due-date emailings</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={emailEnabled}
+                    onChange={e => setEmailEnabled(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-600 rounded"
+                  />
+                </label>
+
+                {/* SMS Master Toggle */}
+                <label className="flex items-center justify-between cursor-pointer border-t border-slate-800/80 pt-3">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-200">SMS & Mobile Text Channel</span>
+                    <p className="text-[11px] text-slate-400">Mobile SMS dispatches and priority task alerts</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={smsEnabled}
+                    onChange={e => setSmsEnabled(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-600 rounded"
+                  />
+                </label>
+
+                {/* Browser Push */}
+                <label className="flex items-center justify-between cursor-pointer border-t border-slate-800/80 pt-3">
                   <div>
                     <span className="text-xs font-semibold text-slate-200">Web & Mobile Browser Push</span>
                     <p className="text-[11px] text-slate-400">Receive desktop/mobile push popups for scheduled reminders</p>
@@ -907,6 +1238,7 @@ export default function NotificationManagerModal({
                   />
                 </label>
 
+                {/* Audio Chime */}
                 <label className="flex items-center justify-between cursor-pointer border-t border-slate-800/80 pt-3">
                   <div>
                     <span className="text-xs font-semibold text-slate-200">Audio Chime Effects</span>
@@ -929,6 +1261,28 @@ export default function NotificationManagerModal({
                     placeholder="user@taskpulse.app"
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
                   />
+                </div>
+
+                <div className="border-t border-slate-800/80 pt-3 space-y-2">
+                  <label className="block text-xs font-semibold text-slate-200">Mobile Phone Number (SMS)</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={countryCode}
+                      onChange={e => handleUpdatePhone(smsPhoneNumber, e.target.value)}
+                      className="w-28 bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
+                    >
+                      {COUNTRY_CODES.map(c => (
+                        <option key={c.code + c.name} value={c.code}>{c.flag} {c.code}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      value={smsPhoneNumber}
+                      onChange={e => handleUpdatePhone(e.target.value, countryCode)}
+                      placeholder="e.g. 9876543210"
+                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 font-mono"
+                    />
+                  </div>
                 </div>
 
                 <div className="border-t border-slate-800/80 pt-3 space-y-2">

@@ -2,11 +2,12 @@
 
 ## [v1.3.4-beta] - 2026-08-22
 
-### Added & Enhanced
+- **SMS & Mobile Notifications Engine**: Built `/api/notifications/sms` serverless endpoint with international country calling code selector (`COUNTRY_CODES` dataset), dynamic real-time mobile number validation, and support for Twilio carrier dispatch & high-fidelity simulation.
+- **Master Scheduling Enable/Disable Switches**: Added independent scheduling enable/disable power toggles for both Email and SMS channels in `NotificationManagerModal.js`. When disabled, automated scheduling and dispatches are cleanly gated with informative status warnings.
+- **Profile Phone Number Database Synchronization**: Added `phone` column to PostgreSQL `profiles` table schema in NeonDB, automatically syncing the user's validated mobile number across sessions and profiles.
 - **Multi-Criteria Task Sorting in Filter Bar**: Added interactive Sort dropdown in `TaskManager.js` supporting dynamic sorting by **Task Name (A → Z)**, **Task Name (Z → A)**, **Due Date (Earliest First)**, **Due Date (Latest First)**, and **Priority (Starred First ⭐)** across active and completed task views.
 - **Mandatory Due Date Enforcement on Priority Tasks**: Starring any task in `TaskCard.js`, `TaskDetailDrawer.js`, or `QuickAddTaskModal.js` automatically assigns today's date if empty and enforces a due date.
 - **Automated Due-Date & Priority Email Dispatch Engine**: Built a dedicated Due-Date & Priority Task Reminder trigger in `NotificationManagerModal.js` that scans today's scheduled tasks and priority items, compiling and emailing action items to the recipient.
-- **Notification Center Tab Restructuring & SMS Gateway Scaffold**: Replaced legacy dispatch debug cards with a streamlined **Automated Dispatches** center featuring sub-tabs for **Email Notifications** (7 AM Digest, Due-Date Reminders, SMTP Test) and **SMS Notifications** (Twilio/carrier provider selector and phone input preview).
 - **Open Source Productivity Utilities Suite**: Expanded `ShareRedirectModal.js` with an OSS Utilities suite including direct access to **Excalidraw** (collaborative whiteboard), **CryptPad** (encrypted collaborative docs & sheets), **CyberChef** (data transformations & decoding), and **Draw.io / Diagrams.net** (flowcharts & architecture diagrams) alongside Codeshare and Toffeeshare.
 - **Routine Card Layout Stabilization & Universal Crash Guard**: Resolved icon import reference error on recurring routine tasks and locked routine card grid dimensions (`min-h-[230px]`, `line-clamp-2`) in `RoutineManager.js` to eliminate layout shifts when toggling tag filters.
 

@@ -305,14 +305,16 @@ export default function Home() {
     setNotificationSettings(updatedSettings);
     storage.saveNotificationSettings(updatedSettings);
 
-    // If recipient email is updated, synchronize it directly to the active profile in the database (NeonDB / Supabase)
-    if (updatedSettings?.emailRecipient && activeProfile) {
-      const cleanEmail = updatedSettings.emailRecipient.trim();
+    // If recipient email or phone is updated, synchronize it directly to the active profile in the database (NeonDB / Supabase)
+    if (activeProfile && (updatedSettings?.emailRecipient || updatedSettings?.smsPhoneNumber)) {
+      const cleanEmail = updatedSettings?.emailRecipient ? updatedSettings.emailRecipient.trim() : (activeProfile.email || '');
+      const cleanPhone = updatedSettings?.smsPhoneNumber ? updatedSettings.smsPhoneNumber.trim() : (activeProfile.phone || '');
+      
       const updatedProfiles = profiles.map(p =>
-        p.id === activeProfile.id ? { ...p, email: cleanEmail } : p
+        p.id === activeProfile.id ? { ...p, email: cleanEmail, phone: cleanPhone } : p
       );
       setProfiles(updatedProfiles);
-      setActiveProfile(prev => prev ? { ...prev, email: cleanEmail } : prev);
+      setActiveProfile(prev => prev ? { ...prev, email: cleanEmail, phone: cleanPhone } : prev);
       storage.saveProfiles(updatedProfiles);
       saveProfilesToDB(updatedProfiles);
     }
