@@ -39,6 +39,21 @@ export default function NotificationManagerModal({
   const [digestStatus, setDigestStatus] = useState(null);
   const [sendingDigest, setSendingDigest] = useState(false);
   const [showMailPreview, setShowMailPreview] = useState(false); // Requirement 8: Mail template preview modal
+  const [smtpConfigInfo, setSmtpConfigInfo] = useState(null);
+
+  // Check SMTP configuration status from backend on open
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/notifications/email')
+        .then(res => res.json())
+        .then(data => {
+          setSmtpConfigInfo(data);
+        })
+        .catch(err => {
+          console.error('Failed to fetch SMTP status:', err);
+        });
+    }
+  }, [isOpen]);
 
   const handleTestSmtpEmail = async () => {
     // Enhancement 7 — Before 1st time entering recipient email, show alert
@@ -524,6 +539,24 @@ export default function NotificationManagerModal({
           {/* TAB 2: EMAIL & MOBILE DISPATCH */}
           {activeTab === 'dispatch' && (
             <div className="space-y-4">
+              {/* Recipient Target Email Configuration Bar */}
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-indigo-400" />
+                    Recipient Email Address:
+                  </label>
+                  <span className="text-[10px] text-slate-400">Target for digests & test alerts</span>
+                </div>
+                <input
+                  type="email"
+                  value={emailRecipient}
+                  onChange={e => setEmailRecipient(e.target.value)}
+                  placeholder="e.g. yourname@example.com"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-indigo-500"
+                />
+              </div>
+
               {/* 7:00 AM Daily Morning Digest Email (SMTP) */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-indigo-950/40 to-slate-900 border border-amber-500/30 space-y-3 shadow-lg">
                 <div className="flex items-center justify-between">
@@ -541,7 +574,7 @@ export default function NotificationManagerModal({
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Automatically email your daily "My Day" focus tasks and active routines every morning at 7:00 AM to <strong className="text-slate-100">{emailRecipient || activeProfile?.email || 'tiwari17aditya@gmail.com'}</strong>.
+                  Automatically email your daily "My Day" focus tasks and active routines every morning at 7:00 AM to <strong className="text-slate-100">{emailRecipient || activeProfile?.email || 'your email'}</strong>.
                 </p>
 
                 {digestStatus && (
@@ -579,8 +612,12 @@ export default function NotificationManagerModal({
                       <span className="text-[10px] text-indigo-400 font-mono">Backend Server Transport</span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
-                    SMTP Active
+                  <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
+                    smtpConfigInfo?.configured
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  }`}>
+                    {smtpConfigInfo?.configured ? `SMTP Active (${smtpConfigInfo.host || 'Ready'})` : 'SMTP Active'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">

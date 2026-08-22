@@ -1,5 +1,15 @@
 # Version History
 
+## [v1.3.3-beta] - 2026-08-22
+
+### Added & Enhanced
+- **SMTP Notification Resiliency & Env Resolver**: Added multi-directory fallback `.env` resolution in `/api/notifications/email` and synchronized workspace root configuration, resolving the missing SMTP env variables alert when Next.js is invoked from workspace root.
+- **Dynamic SMTP Health Check & Status Badge**: Added GET diagnostic endpoint `/api/notifications/email` and real-time backend connection status badge in `NotificationManagerModal.js`.
+- **Inline Email Recipient Customization**: Added an interactive recipient address input directly inside the "Email & Mobile Dispatch" tab for instant test dispatches and 7:00 AM Morning Digest trigger without needing to switch tabs.
+- **End-to-End SMTP Verification**: Verified Gmail SMTP relay (`smtp.gmail.com:587`) dispatch and HTML payload rendering with Quote banner and tabular task summaries.
+
+---
+
 ## [v1.3.2-beta] - 2026-08-21
 
 ### Added & Enhanced
