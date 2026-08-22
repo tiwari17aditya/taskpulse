@@ -48,4 +48,9 @@ npm run dev
 npm run build
 ```
 
-For full setup, architecture details, and RBAC documentation, see [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
+## 📚 Documentation & Technical Specifications
+
+- 📖 [User Manual & System Documentation](docs/DOCUMENTATION.md)
+- 🏛️ [Tech Stack Compendium & Architecture Diagrams](docs/TECH_STACK.md)
+- 📋 [Release Changelog & Version History](audits/VERSION.md)
+- ⚡ [Custom Slash Commands & Agent Skills](.agents/commands/COMMANDS.md)

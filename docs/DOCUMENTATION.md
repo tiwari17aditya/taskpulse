@@ -2,6 +2,8 @@
 
 **TaskPulse** is an all-in-one personal daily planner and productivity engine. It merges the core strengths of **Microsoft To-Do** (task management, checklists, due dates, "My Day"), **Google Keep** (visual masonry card notes, colors, media attachments), **Apple Reminders** (smart filters, multi-tag system), and **Codeshare.io / Toffeeshare** (custom room passcodes, direct URL redirection).
 
+📖 **Technical Reference**: For an in-depth breakdown of all libraries, infrastructure layers, alternatives, pros/cons, and Mermaid architecture diagrams, see the [TaskPulse Tech Stack & Architecture Compendium](file:///d:/Antigravity-Projects/taskpulse/docs/TECH_STACK.md).
+
 ---
 
 ## 🚀 Key v1.3.4-beta Priority Enhancements
