@@ -6,8 +6,22 @@ This document serves as the architectural reference for all technologies, infras
 
 ## 🏛️ 1. Master System Architecture Diagram
 
-> 💡 **Tip**: Click the link below to open and edit this interactive diagram directly in your browser:  
-> 🔗 **[🎨 Open & Render in Mermaid Live Editor](https://mermaid.live)**
+<div style="display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 1px solid #312e81; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;">
+  <span style="color: #c7d2fe; font-size: 13px; font-weight: 600; font-family: monospace;">🏛️ Master System Architecture Diagram</span>
+  <div style="display: flex; gap: 8px;">
+    <button 
+      onclick="navigator.clipboard.writeText(`graph TD\n    subgraph Client_Layer [🖥️ Client Application Layer]\n        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]\n        TM[Microsoft To-Do Engine<br/>TaskManager.js]\n        KN[Google Keep Notes Vault<br/>NoteCanvas.js]\n        RM[Apple Reminders and Routines<br/>RoutineManager.js]\n        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]\n        NM[Automated Dispatches<br/>NotificationManagerModal.js]\n    end\n\n    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]\n        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]\n        LS[Browser LocalStorage<br/>Indexed offline state]\n        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]\n    end\n\n    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]\n        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]\n        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]\n        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]\n        API_Routines[/api/db/routines<br/>Habit streaks]\n        API_Email[/api/notifications/email<br/>Nodemailer SMTP]\n        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]\n    end\n\n    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]\n        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]\n        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]\n        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]\n        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]\n        TWILIO[Twilio REST API<br/>Carrier Gateway]\n        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]\n    end\n\n    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]\n        CS[Codeshare.io<br/>Live Collaborative Code]\n        TS[Toffeeshare<br/>P2P Encrypted File Transfer]\n        EXC[Excalidraw<br/>Virtual Whiteboard]\n        CRY[CryptPad<br/>Zero-Knowledge Docs]\n        CYB[CyberChef<br/>Cyber Swiss Army Knife]\n        DRW[Draw.io<br/>Architecture Diagrams]\n    end\n\n    UI --> TM & KN & RM & SU & NM\n    TM & KN & RM --> DA\n    NM --> VAL\n    DA --> LS\n    DA --> API_Tasks & API_Notes & API_Profiles & API_Routines\n    NM --> API_Email & API_SMS\n    SU --> CS & TS & EXC & CRY & CYB & DRW\n\n    API_Tasks & API_Notes & API_Profiles & API_Routines --> NEON\n    API_Tasks & API_Notes & API_Profiles & API_Routines -.-> SUPA\n    API_Email --> GMAIL\n    API_SMS --> NTFY & TWILIO\n    Client_Layer -.-> VERCEL`); alert('✅ Master Architecture Mermaid code copied to clipboard!');"
+      style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: bold; cursor: pointer;">
+      📋 Copy Mermaid Code
+    </button>
+    <a 
+      href="https://mermaid.live" 
+      target="_blank" 
+      style="background: #1e293b; color: #94a3b8; text-decoration: none; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center;">
+      🎨 Mermaid Live Editor ↗
+    </a>
+  </div>
+</div>
 
 ```mermaid
 graph TD
@@ -121,6 +135,23 @@ graph TD
 ---
 
 ### Category 3: Serverless Database & Persistence Layer
+
+<div style="display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 1px solid #065f46; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;">
+  <span style="color: #a7f3d0; font-size: 13px; font-weight: 600; font-family: monospace;">🔄 Data Pipeline Sequence Flow</span>
+  <div style="display: flex; gap: 8px;">
+    <button 
+      onclick="navigator.clipboard.writeText(`sequenceDiagram\n    autonumber\n    actor User as User\n    participant UI as TaskPulse UI\n    participant Adapter as dbAdapter.js\n    participant API as /api/db/* Route\n    participant DB as NeonDB PostgreSQL\n    participant LS as LocalStorage\n\n    User->>UI: Create / Update Task\n    UI->>Adapter: Dispatch payload\n    Adapter->>LS: 1. Optimistic Local Write\n    Adapter->>API: 2. POST /api/db/tasks\n    API->>DB: 3. SQL UPSERT (JSONB)\n    alt Cloud DB Connected\n        DB-->>API: 200 OK\n        API-->>Adapter: Sync Confirmed\n        Adapter-->>UI: Badge: \x22NeonDB Synced\x22\n    else Network / DB Timeout\n        DB-->>API: Timeout Error\n        API-->>Adapter: 500 Failover\n        Adapter-->>UI: Badge: \x22Offline Cache Active (Zero Data Loss)\x22\n    end`); alert('✅ Data Pipeline Sequence Mermaid code copied to clipboard!');"
+      style="background: #059669; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: bold; cursor: pointer;">
+      📋 Copy Sequence Code
+    </button>
+    <a 
+      href="https://mermaid.live" 
+      target="_blank" 
+      style="background: #1e293b; color: #94a3b8; text-decoration: none; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center;">
+      🎨 Mermaid Live Editor ↗
+    </a>
+  </div>
+</div>
 
 ```mermaid
 sequenceDiagram
