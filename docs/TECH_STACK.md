@@ -6,52 +6,48 @@ This document serves as the architectural reference for all technologies, infras
 
 ## 🏛️ 1. Master System Architecture Diagram
 
-![TaskPulse Master Architecture Diagram](assets/taskpulse_architecture.svg)
-
-<details>
-<summary><b>🔍 View Raw Mermaid Source Code</b></summary>
-
 ```mermaid
 graph TD
-    subgraph Client_Layer ["🖥️ Client Application Layer (Next.js 14 App Router)"]
-        UI["Modern Dark Glassmorphism UI\n(Tailwind CSS + Custom Variables)"]
-        TM["Microsoft To-Do Engine\n(TaskManager.js)"]
-        KN["Google Keep Notes Vault\n(NoteCanvas.js)"]
-        RM["Apple Reminders & Routines\n(RoutineManager.js)"]
-        SU["OSS Sharing & Productivity\n(ShareRedirectModal.js)"]
-        NM["Automated Dispatches\n(NotificationManagerModal.js)"]
+    subgraph Client_Layer [🖥️ Client Application Layer]
+        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]
+        TM[Microsoft To-Do Engine<br/>TaskManager.js]
+        KN[Google Keep Notes Vault<br/>NoteCanvas.js]
+        RM[Apple Reminders and Routines<br/>RoutineManager.js]
+        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]
+        NM[Automated Dispatches<br/>NotificationManagerModal.js]
     end
 
-    subgraph State_And_Adapters ["🔄 State Management & Offline Fallback"]
-        DA["src/lib/dbAdapter.js\n(Multi-Provider Routing)"]
-        LS["Browser LocalStorage\n(Indexed offline state)"]
-        VAL["src/lib/countryCodes.js\n(Real-time SMS Validator)"]
+    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]
+        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]
+        LS[Browser LocalStorage<br/>Indexed offline state]
+        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]
     end
 
-    subgraph Backend_APIs ["⚡ Next.js Serverless Route Handlers (/api)"]
-        API_Tasks["/api/db/tasks\n(PostgreSQL CRUD + JSONB)"]
-        API_Notes["/api/db/notes\n(PostgreSQL CRUD + JSONB)"]
-        API_Profiles["/api/db/profiles\n(Multi-User RBAC & Locks)"]
-        API_Routines["/api/db/routines\n(Habit streaks & recurring)"]
-        API_Email["/api/notifications/email\n(Nodemailer SMTP Relay)"]
-        API_SMS["/api/notifications/sms\n(Multi-Carrier Gateway Router)"]
+    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]
+        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]
+        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]
+        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]
+        API_Routines[/api/db/routines<br/>Habit streaks]
+        API_Email[/api/notifications/email<br/>Nodemailer SMTP]
+        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]
     end
 
-    subgraph External_Cloud ["☁️ Cloud Infrastructure & Third-Party APIs"]
-        NEON["NeonDB PostgreSQL\n(Serverless Pooler)"]
-        SUPA["Supabase PostgreSQL\n(Optional Secondary DB)"]
-        NTFY["Ntfy.sh Hub\n(100% Free Open-Source Push)"]
-        TWILIO["Twilio REST API\n(Global Programmable SMS)"]
-        VERCEL["Vercel Edge Cloud\n(Global CDN & SSR)"]
+    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]
+        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]
+        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]
+        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]
+        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]
+        TWILIO[Twilio REST API<br/>Carrier Gateway]
+        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]
     end
 
-    subgraph OSS_Ecosystem ["🌐 Open-Source Productivity Suite"]
-        CS["Codeshare.io\n(Live Collaborative Code)"]
-        TS["Toffeeshare\n(P2P Encrypted File Transfer)"]
-        EXC["Excalidraw\n(Virtual Collaborative Whiteboard)"]
-        CRY["CryptPad\n(Zero-Knowledge Private Docs)"]
-        CYB["CyberChef\n(The Cyber Swiss Army Knife)"]
-        DRW["Draw.io\n(Flowcharts & Architecture Diagrams)"]
+    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]
+        CS[Codeshare.io<br/>Live Collaborative Code]
+        TS[Toffeeshare<br/>P2P Encrypted File Transfer]
+        EXC[Excalidraw<br/>Virtual Whiteboard]
+        CRY[CryptPad<br/>Zero-Knowledge Docs]
+        CYB[CyberChef<br/>Cyber Swiss Army Knife]
+        DRW[Draw.io<br/>Architecture Diagrams]
     end
 
     UI --> TM & KN & RM & SU & NM
@@ -68,7 +64,6 @@ graph TD
     API_SMS --> NTFY & TWILIO
     Client_Layer -.-> VERCEL
 ```
-</details>
 
 ---
 
@@ -124,34 +119,31 @@ graph TD
 
 ### Category 3: Serverless Database & Persistence Layer
 
-![TaskPulse End-to-End Data Pipeline & Failover Flow](assets/data_pipeline.svg)
-
-<details>
-<summary><b>🔍 View Raw Mermaid Sequence Flow</b></summary>
-
 ```mermaid
 sequenceDiagram
-    participant UI as TaskPulse UI State
+    autonumber
+    actor User as User
+    participant UI as TaskPulse UI
     participant Adapter as dbAdapter.js
     participant API as /api/db/* Route
     participant DB as NeonDB PostgreSQL
-    participant LS as LocalStorage Fallback
+    participant LS as LocalStorage
 
-    UI->>Adapter: User creates task / note / routine
-    Adapter->>LS: Immediate optimistic local write
-    Adapter->>API: POST /api/db/tasks payload
-    API->>DB: SQL UPSERT with JSONB columns
-    alt DB Success
-        DB-->>API: 200 OK (count: 1)
-        API-->>Adapter: { success: true }
-        Adapter-->>UI: Sync Pill -> "NeonDB Synced"
-    else Network / DB Error
-        DB-->>API: Error (Connection timeout)
-        API-->>Adapter: 500 Fail
-        Adapter-->>UI: Sync Pill -> "Offline Cache Saved"
+    User->>UI: Create / Update Task
+    UI->>Adapter: Dispatch payload
+    Adapter->>LS: 1. Optimistic Local Write
+    Adapter->>API: 2. POST /api/db/tasks
+    API->>DB: 3. SQL UPSERT (JSONB)
+    alt Cloud DB Connected
+        DB-->>API: 200 OK
+        API-->>Adapter: Sync Confirmed
+        Adapter-->>UI: Badge: "NeonDB Synced"
+    else Network / DB Timeout
+        DB-->>API: Timeout Error
+        API-->>Adapter: 500 Failover
+        Adapter-->>UI: Badge: "Offline Cache Active (Zero Data Loss)"
     end
 ```
-</details>
 
 | Specification | Current Implementation |
 | :--- | :--- |
