@@ -41,7 +41,8 @@ export default function NotificationManagerModal({
   // SMS Gateway & Country Code State (Requirement: Country code dropdown + dynamic validation)
   const [countryCode, setCountryCode] = useState(notificationSettings?.countryCode || '+91');
   const [smsPhoneNumber, setSmsPhoneNumber] = useState(notificationSettings?.smsPhoneNumber || activeProfile?.phone || '');
-  const [smsGatewayProvider, setSmsGatewayProvider] = useState('twilio');
+  const [smsGatewayProvider, setSmsGatewayProvider] = useState('ntfy');
+  const [ntfyTopic, setNtfyTopic] = useState(notificationSettings?.ntfyTopic || 'taskpulse_aditya');
   const [smsStatus, setSmsStatus] = useState(null);
   const [sendingSms, setSendingSms] = useState(false);
   const [smsDueDateStatus, setSmsDueDateStatus] = useState(null);
@@ -197,11 +198,11 @@ export default function NotificationManagerModal({
 
   const handleSendTestSms = async () => {
     if (!smsEnabled) {
-      alert("⚠️ Automated SMS notifications are currently disabled. Please toggle SMS Notifications ON to send.");
+      alert("⚠️ Automated Mobile notifications are currently disabled. Please toggle Notifications ON to send.");
       return;
     }
 
-    if (!smsValidation.isValid) {
+    if (smsGatewayProvider !== 'ntfy' && smsGatewayProvider !== 'generic_webhook' && !smsValidation.isValid) {
       alert(`⚠️ Please provide a valid mobile number: ${smsValidation.message}`);
       return;
     }
@@ -215,22 +216,23 @@ export default function NotificationManagerModal({
         body: JSON.stringify({
           to: smsPhoneNumber.trim(),
           countryCode: countryCode,
-          message: `[TaskPulse Test] Hello ${activeProfile?.name || 'User'}, your mobile SMS notification integration is operating properly!`,
+          message: `[TaskPulse Test] Hello ${activeProfile?.name || 'User'}, your 100% Free Open-Source iOS & Android push notification integration is operating properly!`,
           provider: smsGatewayProvider,
-          customWebhookUrl: webhookUrl
+          customWebhookUrl: webhookUrl,
+          ntfyTopic: ntfyTopic.trim()
         })
       });
       const data = await res.json();
       if (data.success) {
         setSmsStatus({
           type: 'success',
-          text: `✅ SMS Sent to ${data.recipient}! Status: ${data.status} (Message ID: ${data.messageId})`,
+          text: `✅ Alert Sent to ${data.recipient}! Status: ${data.status} (Message ID: ${data.messageId})`,
           ...data
         });
       } else {
         setSmsStatus({
           type: 'error',
-          text: `❌ ${data.failedStep || 'SMS Dispatch Failed'}: ${data.error}`,
+          text: `❌ ${data.failedStep || 'Alert Dispatch Failed'}: ${data.error}`,
           ...data
         });
       }
@@ -239,7 +241,7 @@ export default function NotificationManagerModal({
         type: 'error',
         text: `❌ Network / Dispatch Error: ${e.message}`,
         steps: [
-          { name: 'Step 1: Phone Validation', status: 'passed', details: smsValidation.formatted },
+          { name: 'Step 1: Target Channel Verification', status: 'passed', details: smsGatewayProvider === 'ntfy' ? `Topic: ${ntfyTopic}` : smsValidation.formatted },
           { name: 'Step 2: Gateway Credentials Check', status: 'unknown' },
           { name: 'Step 3: Network Carrier Dispatch', status: 'failed', error: e.message }
         ]
@@ -251,11 +253,11 @@ export default function NotificationManagerModal({
 
   const handleSendDueDateSms = async () => {
     if (!smsEnabled) {
-      alert("⚠️ Automated SMS notifications are currently disabled. Please toggle SMS Notifications ON to send.");
+      alert("⚠️ Automated Mobile notifications are currently disabled. Please toggle Notifications ON to send.");
       return;
     }
 
-    if (!smsValidation.isValid) {
+    if (smsGatewayProvider !== 'ntfy' && smsGatewayProvider !== 'generic_webhook' && !smsValidation.isValid) {
       alert(`⚠️ Please provide a valid mobile number: ${smsValidation.message}`);
       return;
     }
@@ -274,20 +276,21 @@ export default function NotificationManagerModal({
           countryCode: countryCode,
           tasksSummary: dueTasks,
           provider: smsGatewayProvider,
-          customWebhookUrl: webhookUrl
+          customWebhookUrl: webhookUrl,
+          ntfyTopic: ntfyTopic.trim()
         })
       });
       const data = await res.json();
       if (data.success) {
         setSmsDueDateStatus({
           type: 'success',
-          text: `✅ SMS Due-Date Digest (${dueTasks.length} tasks) dispatched to ${data.recipient}!`,
+          text: `✅ Action Items Digest (${dueTasks.length} tasks) dispatched to ${data.recipient}!`,
           ...data
         });
       } else {
         setSmsDueDateStatus({
           type: 'error',
-          text: `❌ ${data.failedStep || 'SMS Due-Date Dispatch Failed'}: ${data.error}`,
+          text: `❌ ${data.failedStep || 'Dispatch Failed'}: ${data.error}`,
           ...data
         });
       }
@@ -296,7 +299,7 @@ export default function NotificationManagerModal({
         type: 'error',
         text: `❌ Network / Dispatch Error: ${e.message}`,
         steps: [
-          { name: 'Step 1: Phone Validation', status: 'passed', details: smsValidation.formatted },
+          { name: 'Step 1: Target Channel Verification', status: 'passed', details: smsGatewayProvider === 'ntfy' ? `Topic: ${ntfyTopic}` : smsValidation.formatted },
           { name: 'Step 2: Gateway Credentials Check', status: 'unknown' },
           { name: 'Step 3: Network Carrier Dispatch', status: 'failed', error: e.message }
         ]
@@ -1095,27 +1098,36 @@ export default function NotificationManagerModal({
                     </div>
 
                     {/* Gateway Carrier Provider Selector */}
-                    <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <div className="pt-2 border-t border-slate-800/80 space-y-3">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-medium text-slate-300">SMS Gateway Routing Engine:</label>
+                        <label className="block text-xs font-medium text-slate-300">Mobile Dispatch Engine:</label>
                         <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
-                          smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                          smsGatewayProvider === 'ntfy'
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            : (smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30')
                         }`}>
-                          {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? '● Gateway Configured in .env' : '⚠️ Gateway Not Configured in .env'}
+                          {smsGatewayProvider === 'ntfy'
+                            ? '🌟 100% Free Open-Source (iOS & Android)'
+                            : (smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                              ? '● Gateway Configured in .env'
+                              : '⚠️ Gateway Not Configured in .env')}
                         </span>
                       </div>
                       <select
                         value={smsGatewayProvider}
                         onChange={e => setSmsGatewayProvider(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none focus:border-indigo-500 font-semibold"
                       >
-                        <option value="twilio">
-                          Twilio Programmable SMS API {smsConfigInfo?.providers?.twilio?.configured ? '✓' : '(⚠️ Missing .env Keys)'}
+                        <option value="ntfy">
+                          🌟 Ntfy.sh Open-Source Push Gateway (100% Free on iOS & Android)
                         </option>
                         <option value="fast2sms">
                           Fast2SMS Indian Carrier Gateway {smsConfigInfo?.providers?.fast2sms?.configured ? '✓' : '(⚠️ Missing FAST2SMS_API_KEY)'}
+                        </option>
+                        <option value="twilio">
+                          Twilio Programmable SMS API {smsConfigInfo?.providers?.twilio?.configured ? '✓' : '(⚠️ Missing .env Keys)'}
                         </option>
                         <option value="textlocal">
                           Textlocal Enterprise SMS Gateway {smsConfigInfo?.providers?.textlocal?.configured ? '✓' : '(⚠️ Missing TEXTLOCAL_API_KEY)'}
@@ -1125,46 +1137,131 @@ export default function NotificationManagerModal({
                         </option>
                       </select>
 
-                      {/* Live Gateway Credential Status Card */}
-                      <div className={`p-3 rounded-xl text-xs space-y-1.5 border ${
-                        smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
-                          ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
-                          : 'bg-amber-950/20 border-amber-500/30 text-amber-200'
-                      }`}>
-                        <div className="flex items-center justify-between font-semibold">
-                          <span className="flex items-center gap-1.5">
-                            {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            ) : (
-                              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                            )}
-                            Provider Status: {smsConfigInfo?.providers?.[smsGatewayProvider]?.name || smsGatewayProvider}
-                          </span>
-                          <span className="font-mono text-[10px]">
-                            {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? 'AUTHENTICATED' : 'ACTION REQUIRED'}
-                          </span>
+                      {/* Provider 1: Ntfy.sh Open Source Setup Card (iOS + Android) */}
+                      {smsGatewayProvider === 'ntfy' && (
+                        <div className="p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/30 text-xs space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-amber-400" />
+                              <span className="font-bold text-slate-100">100% Free Open-Source Mobile Push (iOS & Android)</span>
+                            </div>
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              ZERO FEES FOREVER
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] font-medium text-slate-300">
+                              Your Personal Mobile Push Topic Channel:
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                                ntfy.sh/
+                              </span>
+                              <input
+                                type="text"
+                                value={ntfyTopic}
+                                onChange={e => setNtfyTopic(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '_'))}
+                                placeholder="taskpulse_aditya"
+                                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 font-mono outline-none focus:border-indigo-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                            <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">🍏</span>
+                                <div>
+                                  <div className="text-[11px] font-bold text-slate-200">Apple iOS (iPhone)</div>
+                                  <div className="text-[10px] text-slate-400">Search "ntfy" on App Store</div>
+                                </div>
+                              </div>
+                              <a
+                                href="https://apps.apple.com/us/app/ntfy/id1625396347"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg"
+                              >
+                                Get iOS App
+                              </a>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">🤖</span>
+                                <div>
+                                  <div className="text-[11px] font-bold text-slate-200">Google Android</div>
+                                  <div className="text-[10px] text-slate-400">Search "ntfy" on Play Store</div>
+                                </div>
+                              </div>
+                              <a
+                                href="https://play.google.com/store/apps/details?id=io.heckel.ntfy"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg"
+                              >
+                                Get Android
+                              </a>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px] text-slate-400">
+                            <span>📌 Step: Install app on your phone & subscribe to topic <strong className="text-indigo-300 font-mono">{ntfyTopic || 'taskpulse_aditya'}</strong></span>
+                            <a
+                              href={`https://ntfy.sh/${ntfyTopic || 'taskpulse_aditya'}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-indigo-400 hover:underline flex items-center gap-1 font-mono text-[10px]"
+                            >
+                              Open Web Feed ↗
+                            </a>
+                          </div>
                         </div>
-                        {smsGatewayProvider === 'twilio' && !smsConfigInfo?.providers?.twilio?.configured && (
-                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TWILIO_ACCOUNT_SID</span>, <span className="font-mono text-amber-400">TWILIO_AUTH_TOKEN</span>, and <span className="font-mono text-amber-400">TWILIO_PHONE_NUMBER</span>.
-                          </p>
-                        )}
-                        {smsGatewayProvider === 'fast2sms' && !smsConfigInfo?.providers?.fast2sms?.configured && (
-                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">FAST2SMS_API_KEY</span>.
-                          </p>
-                        )}
-                        {smsGatewayProvider === 'textlocal' && !smsConfigInfo?.providers?.textlocal?.configured && (
-                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TEXTLOCAL_API_KEY</span>.
-                          </p>
-                        )}
-                        {smsGatewayProvider === 'generic_webhook' && !webhookUrl && (
-                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                            Requires a valid HTTP Webhook URL configured in the <strong className="text-slate-100">Push & Alerts Config</strong> tab.
-                          </p>
-                        )}
-                      </div>
+                      )}
+
+                      {/* Live Gateway Credential Status Card (For Paid Carriers) */}
+                      {smsGatewayProvider !== 'ntfy' && (
+                        <div className={`p-3 rounded-xl text-xs space-y-1.5 border ${
+                          smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                            ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                            : 'bg-amber-950/20 border-amber-500/30 text-amber-200'
+                        }`}>
+                          <div className="flex items-center justify-between font-semibold">
+                            <span className="flex items-center gap-1.5">
+                              {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                              )}
+                              Provider Status: {smsConfigInfo?.providers?.[smsGatewayProvider]?.name || smsGatewayProvider}
+                            </span>
+                            <span className="font-mono text-[10px]">
+                              {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? 'AUTHENTICATED' : 'ACTION REQUIRED'}
+                            </span>
+                          </div>
+                          {smsGatewayProvider === 'twilio' && !smsConfigInfo?.providers?.twilio?.configured && (
+                            <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                              Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TWILIO_ACCOUNT_SID</span>, <span className="font-mono text-amber-400">TWILIO_AUTH_TOKEN</span>, and <span className="font-mono text-amber-400">TWILIO_PHONE_NUMBER</span>.
+                            </p>
+                          )}
+                          {smsGatewayProvider === 'fast2sms' && !smsConfigInfo?.providers?.fast2sms?.configured && (
+                            <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                              Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">FAST2SMS_API_KEY</span>.
+                            </p>
+                          )}
+                          {smsGatewayProvider === 'textlocal' && !smsConfigInfo?.providers?.textlocal?.configured && (
+                            <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                              Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TEXTLOCAL_API_KEY</span>.
+                            </p>
+                          )}
+                          {smsGatewayProvider === 'generic_webhook' && !webhookUrl && (
+                            <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                              Requires a valid HTTP Webhook URL configured in the <strong className="text-slate-100">Push & Alerts Config</strong> tab.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
