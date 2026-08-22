@@ -35,8 +35,7 @@ graph TD
     subgraph External_Cloud ["☁️ Cloud Infrastructure & Third-Party APIs"]
         NEON["NeonDB PostgreSQL\n(Serverless Pooler)"]
         SUPA["Supabase PostgreSQL\n(Optional Secondary DB)"]
-        GMAIL["Gmail SMTP Server\n(smtp.gmail.com:587)"]
-        FAST2SMS["Fast2SMS Carrier\n(Indian Mobile Routes)"]
+        NTFY["Ntfy.sh Hub\n(100% Free Open-Source Push)"]
         TWILIO["Twilio REST API\n(Global Programmable SMS)"]
         VERCEL["Vercel Edge Cloud\n(Global CDN & SSR)"]
     end
@@ -61,7 +60,7 @@ graph TD
     API_Tasks & API_Notes & API_Profiles & API_Routines --> NEON
     API_Tasks & API_Notes & API_Profiles & API_Routines -.-> SUPA
     API_Email --> GMAIL
-    API_SMS --> FAST2SMS & TWILIO
+    API_SMS --> NTFY & TWILIO
     Client_Layer -.-> VERCEL
 ```
 
@@ -188,28 +187,28 @@ sequenceDiagram
 
 ---
 
-### Category 5: Mobile SMS & Carrier Messaging Engine
+### Category 5: Mobile Push & Carrier Messaging Engine
 
 ```mermaid
 flowchart LR
-    UserTrigger["User / Schedule Trigger"] --> Val["Phone Validation\n(countryCodes.js)"]
-    Val --> Check["Gatekeeper Check\n(smsEnabled & .env Keys)"]
+    UserTrigger["User / Schedule Trigger"] --> Val["Channel & Format Validation\n(countryCodes.js)"]
+    Val --> Check["Gatekeeper Check\n(smsEnabled & Channel Route)"]
     
-    Check -- "Twilio Configured" --> Twilio["Twilio REST API\n(Global Delivery)"]
-    Check -- "Fast2SMS Configured" --> Fast2SMS["Fast2SMS Gateway\n(Indian +91 Numbers)"]
+    Check -- "Ntfy Active (Free)" --> Ntfy["Ntfy.sh Open-Source Hub\n(iOS & Android Instant Push)"]
+    Check -- "Twilio Configured" --> Twilio["Twilio REST API\n(Global Carrier Delivery)"]
     Check -- "Webhook Configured" --> Webhook["Custom Webhook\n(Discord / Slack)"]
     Check -- "Missing Keys" --> Err["Strict Diagnostic Error\n(Step-by-Step Breakdown)"]
     
-    Twilio & Fast2SMS & Webhook --> Delivered["📱 Mobile SMS Delivered"]
+    Ntfy & Twilio & Webhook --> Delivered["📱 Mobile Notification Delivered"]
 ```
 
 | Specification | Current Implementation |
 | :--- | :--- |
-| **Technology** | **Fast2SMS API + Twilio REST API + International Phone Validator** |
-| **Why Selected** | Multi-carrier architecture supporting low-cost Indian mobile SMS routes (Fast2SMS) and global programmable delivery (Twilio) with strict step-by-step diagnostic verification. |
-| **Pros** | • Dedicated Indian routes with fast OTP/Quick routes.<br>• Twilio global reach across 180+ countries.<br>• Real-time format validation across 30+ international calling codes.<br>• Zero false-positive dispatch claims. |
-| **Cons** | • Fast2SMS requires minimum ₹100 recharge for Dev API route activation.<br>• Twilio requires trial verification for unverified recipient numbers. |
-| **When to Use** | Urgent task reminders, scheduled due-date SMS digests, and time-critical priority alerts. |
+| **Technology** | **Ntfy.sh (100% Free Open-Source Push for iOS & Android) + Twilio REST API** |
+| **Why Selected** | Zero-cost open-source pub/sub push engine supporting instant priority banners on Apple iOS (iPhone/iPad) and Android, with optional programmable carrier SMS via Twilio. |
+| **Pros** | • **100% Free Forever**: Zero SIM top-ups, zero wallet recharges, zero credit cards.<br>• Native apps on Apple App Store & Google Play.<br>• Real-time lockscreen notifications with custom sound & vibration.<br>• Zero character truncation limits. |
+| **Cons** | • Requires recipient to subscribe to topic once in the free mobile app. |
+| **When to Use** | Urgent task reminders, scheduled due-date mobile digests, and priority action checklists on smartphones. |
 
 #### 🔄 Industry Alternatives & Comparison:
 - **Telegram Bot Webhook API**:
@@ -277,6 +276,6 @@ flowchart LR
 | **Standard Task & Note Persistence** | **NeonDB PostgreSQL** (Active) | **Supabase** (If real-time multi-user live cursors are needed) |
 | **Offline / Travel Mode** | **Browser LocalStorage** (Active Fallback) | **IndexedDB / Dexie.js** (For 50MB+ offline media caching) |
 | **Daily Morning Digest** | **Nodemailer SMTP (Gmail)** (Active) | **Resend / React Email** (If branded marketing templates are needed) |
-| **Urgent Due-Date Mobile Alerts** | **Fast2SMS / Twilio** (Active) | **Telegram Bot Webhook** (If 100% free unlimited push is required) |
+| **Urgent Due-Date Mobile Alerts** | **Ntfy.sh Open-Source Push** (Active, 100% Free on iOS & Android) | **Twilio SMS / Telegram Bot** |
 | **Collaborative Code Editing** | **Codeshare.io** (Active) | **Live Share / Monaco Editor** (If self-hosted in-app code editor is required) |
 | **Large File Sharing** | **Toffeeshare P2P** (Active) | **AWS S3 Presigned URLs** (If files must be stored permanently in the cloud) |

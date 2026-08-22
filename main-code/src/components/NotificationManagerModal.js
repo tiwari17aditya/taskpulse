@@ -1123,9 +1123,6 @@ export default function NotificationManagerModal({
                         <option value="ntfy">
                           🌟 Ntfy.sh Open-Source Push Gateway (100% Free on iOS & Android)
                         </option>
-                        <option value="fast2sms">
-                          Fast2SMS Indian Carrier Gateway {smsConfigInfo?.providers?.fast2sms?.configured ? '✓' : '(⚠️ Missing FAST2SMS_API_KEY)'}
-                        </option>
                         <option value="twilio">
                           Twilio Programmable SMS API {smsConfigInfo?.providers?.twilio?.configured ? '✓' : '(⚠️ Missing .env Keys)'}
                         </option>
@@ -1243,11 +1240,6 @@ export default function NotificationManagerModal({
                           {smsGatewayProvider === 'twilio' && !smsConfigInfo?.providers?.twilio?.configured && (
                             <p className="text-[11px] text-amber-300/90 leading-relaxed">
                               Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TWILIO_ACCOUNT_SID</span>, <span className="font-mono text-amber-400">TWILIO_AUTH_TOKEN</span>, and <span className="font-mono text-amber-400">TWILIO_PHONE_NUMBER</span>.
-                            </p>
-                          )}
-                          {smsGatewayProvider === 'fast2sms' && !smsConfigInfo?.providers?.fast2sms?.configured && (
-                            <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                              Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">FAST2SMS_API_KEY</span>.
                             </p>
                           )}
                           {smsGatewayProvider === 'textlocal' && !smsConfigInfo?.providers?.textlocal?.configured && (

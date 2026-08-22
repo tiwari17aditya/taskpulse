@@ -97,7 +97,7 @@ if (mode === 'inspect') {
     'SMTP_PASS',
     'SMTP_FROM_EMAIL',
     'NEXT_PUBLIC_ENABLE_P2P_REDIRECT',
-    'FAST2SMS_API_KEY',
+    'NTFY_TOPIC',
     'TWILIO_ACCOUNT_SID',
     'TWILIO_AUTH_TOKEN',
     'TWILIO_PHONE_NUMBER',

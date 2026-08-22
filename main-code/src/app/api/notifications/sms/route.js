@@ -43,7 +43,6 @@ export async function GET() {
   const twilioSid = process.env.TWILIO_ACCOUNT_SID || '';
   const twilioToken = process.env.TWILIO_AUTH_TOKEN || '';
   const twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
-  const fast2smsKey = process.env.FAST2SMS_API_KEY || '';
   const textlocalKey = process.env.TEXTLOCAL_API_KEY || '';
   const webhookUrl = process.env.SMS_WEBHOOK_URL || process.env.WEBHOOK_URL || '';
   const telegramToken = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -65,14 +64,6 @@ export async function GET() {
       sender: '@TaskPulseBot',
       isOpenSource: false,
       free: true
-    },
-    fast2sms: {
-      name: 'Fast2SMS Indian Gateway',
-      configured: Boolean(fast2smsKey),
-      missing: [!fast2smsKey && 'FAST2SMS_API_KEY'].filter(Boolean),
-      sender: 'FASTSMS',
-      isOpenSource: false,
-      free: false
     },
     twilio: {
       name: 'Twilio Programmable SMS',
@@ -346,94 +337,7 @@ export async function POST(request) {
       }
     }
 
-    // PROVIDER 3: Fast2SMS (Indian Gateway)
-    if (provider === 'fast2sms') {
-      const fast2smsKey = process.env.FAST2SMS_API_KEY;
-      if (!fast2smsKey) {
-        diagnosticSteps.push({
-          name: 'Step 2: Gateway Credentials Check (Fast2SMS)',
-          status: 'failed',
-          error: 'Missing FAST2SMS_API_KEY in .env'
-        });
-
-        return NextResponse.json({
-          success: false,
-          failedStep: 'Step 2: Carrier Authentication Verification',
-          provider: 'fast2sms',
-          error: 'Fast2SMS gateway is NOT configured. Missing FAST2SMS_API_KEY in .env.',
-          instructions: 'Please add FAST2SMS_API_KEY to your .env file.',
-          steps: [
-            ...diagnosticSteps,
-            { name: 'Step 3: Network Carrier Dispatch', status: 'aborted' }
-          ]
-        }, { status: 400 });
-      }
-
-      diagnosticSteps.push({
-        name: 'Step 2: Gateway Credentials Check (Fast2SMS)',
-        status: 'passed',
-        details: 'FAST2SMS_API_KEY verified.'
-      });
-
-      try {
-        const rawPhone = String(to).replace(/\D/g, '');
-        const fastRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-          method: 'POST',
-          headers: {
-            'authorization': fast2smsKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            route: 'q',
-            message: smsBody,
-            numbers: rawPhone
-          })
-        });
-
-        const fastData = await fastRes.json();
-        if (fastData.return === true) {
-          diagnosticSteps.push({
-            name: 'Step 3: Network Carrier Dispatch',
-            status: 'passed',
-            details: `Fast2SMS Request ID: ${fastData.request_id}`
-          });
-
-          return NextResponse.json({
-            success: true,
-            provider: 'fast2sms',
-            messageId: fastData.request_id,
-            recipient: validatedRecipient,
-            status: 'queued',
-            preview: smsBody,
-            steps: diagnosticSteps
-          });
-        } else {
-          diagnosticSteps.push({
-            name: 'Step 3: Network Carrier Dispatch',
-            status: 'failed',
-            error: fastData.message || 'Fast2SMS dispatch rejected'
-          });
-
-          return NextResponse.json({
-            success: false,
-            failedStep: 'Step 3: Fast2SMS API Response',
-            provider: 'fast2sms',
-            error: fastData.message || 'Fast2SMS rejected payload',
-            steps: diagnosticSteps
-          }, { status: 502 });
-        }
-      } catch (fastErr) {
-        return NextResponse.json({
-          success: false,
-          failedStep: 'Step 3: Fast2SMS Connection',
-          provider: 'fast2sms',
-          error: `Fast2SMS network error: ${fastErr.message}`,
-          steps: diagnosticSteps
-        }, { status: 504 });
-      }
-    }
-
-    // PROVIDER 4: Twilio
+    // PROVIDER 3: Twilio
     if (provider === 'twilio') {
       const twilioSid = process.env.TWILIO_ACCOUNT_SID;
       const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
