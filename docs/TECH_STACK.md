@@ -6,6 +6,11 @@ This document serves as the architectural reference for all technologies, infras
 
 ## 🏛️ 1. Master System Architecture Diagram
 
+![TaskPulse Master Architecture Diagram](assets/taskpulse_architecture.svg)
+
+<details>
+<summary><b>🔍 View Raw Mermaid Source Code</b></summary>
+
 ```mermaid
 graph TD
     subgraph Client_Layer ["🖥️ Client Application Layer (Next.js 14 App Router)"]
@@ -63,6 +68,7 @@ graph TD
     API_SMS --> NTFY & TWILIO
     Client_Layer -.-> VERCEL
 ```
+</details>
 
 ---
 
@@ -118,6 +124,11 @@ graph TD
 
 ### Category 3: Serverless Database & Persistence Layer
 
+![TaskPulse End-to-End Data Pipeline & Failover Flow](assets/data_pipeline.svg)
+
+<details>
+<summary><b>🔍 View Raw Mermaid Sequence Flow</b></summary>
+
 ```mermaid
 sequenceDiagram
     participant UI as TaskPulse UI State
@@ -140,6 +151,7 @@ sequenceDiagram
         Adapter-->>UI: Sync Pill -> "Offline Cache Saved"
     end
 ```
+</details>
 
 | Specification | Current Implementation |
 | :--- | :--- |

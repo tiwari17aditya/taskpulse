@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 820" width="100%" height="100%" style="background:#090d16; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.15" />
+    </linearGradient>
+    <linearGradient id="apiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.15" />
+    </linearGradient>
+    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.15" />
+    </linearGradient>
+    <linearGradient id="ossGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.15" />
+    </linearGradient>
+    
+    <!-- Box Gradients -->
+    <linearGradient id="boxGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="boxGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e1065" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="boxGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="boxGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#451a03" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Filters & Shadows -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+    
+    <!-- Markers -->
+    <marker id="arrowIndigo" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#6366f1" />
+    </marker>
+    <marker id="arrowEmerald" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#10b981" />
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- Title Header -->
+  <g transform="translate(40, 40)">
+    <rect x="0" y="0" width="1020" height="60" rx="14" fill="#111827" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)" />
+    <circle cx="30" cy="30" r="10" fill="#6366f1" opacity="0.8" />
+    <circle cx="30" cy="30" r="4" fill="#ffffff" />
+    <text x="54" y="36" fill="#f8fafc" font-size="20" font-weight="bold" letter-spacing="0.5">TaskPulse Master System Architecture</text>
+    <rect x="850" y="16" width="150" height="28" rx="8" fill="#1e1b4b" stroke="#4338ca" stroke-width="1" />
+    <text x="862" y="34" fill="#a5b4fc" font-size="12" font-weight="600" font-family="monospace">v1.3.4-beta • Next.js 14</text>
+  </g>
+
+  <!-- 1. Client Layer -->
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="1020" height="150" rx="16" fill="url(#clientGrad)" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="24" y="28" fill="#818cf8" font-size="13" font-weight="700" text-transform="uppercase" letter-spacing="1">🖥️ Client Application Tier (React 19 / Tailwind CSS)</text>
+    
+    <!-- Component 1: TaskManager -->
+    <rect x="24" y="44" width="180" height="85" rx="12" fill="url(#boxGrad1)" stroke="#6366f1" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="40" y="72" fill="#ffffff" font-size="14" font-weight="bold">Microsoft To-Do</text>
+    <text x="40" y="92" fill="#94a3b8" font-size="11">TaskManager.js</text>
+    <text x="40" y="110" fill="#6366f1" font-size="10" font-family="monospace">My Day • Starred • Sorting</text>
+
+    <!-- Component 2: KeepNotes -->
+    <rect x="224" y="44" width="180" height="85" rx="12" fill="url(#boxGrad1)" stroke="#6366f1" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="240" y="72" fill="#ffffff" font-size="14" font-weight="bold">Google Keep</text>
+    <text x="240" y="92" fill="#94a3b8" font-size="11">NoteCanvas.js</text>
+    <text x="240" y="110" fill="#6366f1" font-size="10" font-family="monospace">Masonry Grid • Pinning</text>
+
+    <!-- Component 3: RoutineManager -->
+    <rect x="424" y="44" width="180" height="85" rx="12" fill="url(#boxGrad1)" stroke="#6366f1" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="440" y="72" fill="#ffffff" font-size="14" font-weight="bold">Apple Reminders</text>
+    <text x="440" y="92" fill="#94a3b8" font-size="11">RoutineManager.js</text>
+    <text x="440" y="110" fill="#6366f1" font-size="10" font-family="monospace">Habit Streaks • Recurrence</text>
+
+    <!-- Component 4: NotificationManager -->
+    <rect x="624" y="44" width="180" height="85" rx="12" fill="url(#boxGrad1)" stroke="#6366f1" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="640" y="72" fill="#ffffff" font-size="14" font-weight="bold">Automated Alerts</text>
+    <text x="640" y="92" fill="#94a3b8" font-size="11">NotificationModal.js</text>
+    <text x="640" y="110" fill="#6366f1" font-size="10" font-family="monospace">7 AM Digest • Due Alerts</text>
+
+    <!-- Component 5: Sharing & OSS -->
+    <rect x="824" y="44" width="172" height="85" rx="12" fill="url(#boxGrad1)" stroke="#6366f1" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="836" y="72" fill="#ffffff" font-size="14" font-weight="bold">OSS Productivity</text>
+    <text x="836" y="92" fill="#94a3b8" font-size="11">ShareRedirectModal.js</text>
+    <text x="836" y="110" fill="#6366f1" font-size="10" font-family="monospace">Codeshare • P2P Vault</text>
+  </g>
+
+  <!-- 2. State & Adapter Tier -->
+  <g transform="translate(40, 290)">
+    <rect x="0" y="0" width="1020" height="90" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+    <text x="24" y="24" fill="#94a3b8" font-size="12" font-weight="700" text-transform="uppercase">🔄 State & Offline Resiliency Layer</text>
+
+    <rect x="24" y="36" width="300" height="42" rx="8" fill="#1e1b4b" stroke="#3730a3" stroke-width="1" />
+    <text x="40" y="62" fill="#c7d2fe" font-size="12" font-family="monospace">src/lib/dbAdapter.js (Multi-DB Routing)</text>
+
+    <rect x="360" y="36" width="300" height="42" rx="8" fill="#14532d" stroke="#15803d" stroke-width="1" />
+    <text x="376" y="62" fill="#bbf7d0" font-size="12" font-family="monospace">Browser LocalStorage (Offline Cache)</text>
+
+    <rect x="696" y="36" width="300" height="42" rx="8" fill="#581c87" stroke="#7e22ce" stroke-width="1" />
+    <text x="712" y="62" fill="#f5d0fe" font-size="12" font-family="monospace">src/lib/countryCodes.js (Phone Validator)</text>
+  </g>
+
+  <!-- 3. Serverless Backend APIs -->
+  <g transform="translate(40, 400)">
+    <rect x="0" y="0" width="1020" height="150" rx="16" fill="url(#apiGrad)" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="24" y="28" fill="#c084fc" font-size="13" font-weight="700" text-transform="uppercase" letter-spacing="1">⚡ Next.js Serverless Route Handlers (/api)</text>
+    
+    <rect x="24" y="44" width="180" height="85" rx="12" fill="url(#boxGrad2)" stroke="#a855f7" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="40" y="72" fill="#ffffff" font-size="13" font-family="monospace" font-weight="bold">/api/db/tasks</text>
+    <text x="40" y="92" fill="#d8b4fe" font-size="11">PostgreSQL Tasks CRUD</text>
+    <text x="40" y="110" fill="#a855f7" font-size="10">Subtasks & Media JSONB</text>
+
+    <rect x="224" y="44" width="180" height="85" rx="12" fill="url(#boxGrad2)" stroke="#a855f7" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="240" y="72" fill="#ffffff" font-size="13" font-family="monospace" font-weight="bold">/api/db/notes</text>
+    <text x="240" y="92" fill="#d8b4fe" font-size="11">Masonry Notes Vault</text>
+    <text x="240" y="110" fill="#a855f7" font-size="10">Colors & Pinning Sync</text>
+
+    <rect x="424" y="44" width="180" height="85" rx="12" fill="url(#boxGrad2)" stroke="#a855f7" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="440" y="72" fill="#ffffff" font-size="13" font-family="monospace" font-weight="bold">/api/db/profiles</text>
+    <text x="440" y="92" fill="#d8b4fe" font-size="11">Multi-Profile RBAC</text>
+    <text x="440" y="110" fill="#a855f7" font-size="10">PIN Locks & Mobile Sync</text>
+
+    <rect x="624" y="44" width="180" height="85" rx="12" fill="url(#boxGrad2)" stroke="#a855f7" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="640" y="72" fill="#ffffff" font-size="13" font-family="monospace" font-weight="bold">/api/notifications</text>
+    <text x="640" y="92" fill="#d8b4fe" font-size="11">Email SMTP Engine</text>
+    <text x="640" y="110" fill="#a855f7" font-size="10">Nodemailer TLS Relay</text>
+
+    <rect x="824" y="44" width="172" height="85" rx="12" fill="url(#boxGrad2)" stroke="#a855f7" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="836" y="72" fill="#ffffff" font-size="13" font-family="monospace" font-weight="bold">/api/notifications/sms</text>
+    <text x="836" y="92" fill="#d8b4fe" font-size="11">Mobile Push Router</text>
+    <text x="836" y="110" fill="#a855f7" font-size="10">Ntfy.sh (iOS/Android)</text>
+  </g>
+
+  <!-- 4. Cloud & Microservices Layer -->
+  <g transform="translate(40, 570)">
+    <rect x="0" y="0" width="1020" height="130" rx="16" fill="url(#cloudGrad)" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="24" y="26" fill="#34d399" font-size="13" font-weight="700" text-transform="uppercase" letter-spacing="1">☁️ Cloud Infrastructure & Global Services</text>
+
+    <rect x="24" y="38" width="220" height="75" rx="12" fill="url(#boxGrad3)" stroke="#10b981" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="40" y="64" fill="#ffffff" font-size="14" font-weight="bold">NeonDB PostgreSQL</text>
+    <text x="40" y="82" fill="#a7f3d0" font-size="11">Serverless Connection Pool</text>
+    <text x="40" y="98" fill="#10b981" font-size="10" font-family="monospace">Zero-idle Serverless DB</text>
+
+    <rect x="274" y="38" width="220" height="75" rx="12" fill="url(#boxGrad3)" stroke="#10b981" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="290" y="64" fill="#ffffff" font-size="14" font-weight="bold">Ntfy.sh Open Source</text>
+    <text x="290" y="82" fill="#a7f3d0" font-size="11">100% Free iOS & Android</text>
+    <text x="290" y="98" fill="#10b981" font-size="10" font-family="monospace">Instant Mobile Push Alerts</text>
+
+    <rect x="524" y="38" width="220" height="75" rx="12" fill="url(#boxGrad3)" stroke="#10b981" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="540" y="64" fill="#ffffff" font-size="14" font-weight="bold">Gmail SMTP Relay</text>
+    <text x="540" y="82" fill="#a7f3d0" font-size="11">smtp.gmail.com:587</text>
+    <text x="540" y="98" fill="#10b981" font-size="10" font-family="monospace">Secure TLS Auth</text>
+
+    <rect x="774" y="38" width="222" height="75" rx="12" fill="url(#boxGrad3)" stroke="#10b981" stroke-width="1.2" filter="url(#shadow)" />
+    <text x="790" y="64" fill="#ffffff" font-size="14" font-weight="bold">Vercel Global Edge</text>
+    <text x="790" y="82" fill="#a7f3d0" font-size="11">taskpulse17.vercel.app</text>
+    <text x="790" y="98" fill="#10b981" font-size="10" font-family="monospace">CDN • SSL • Serverless</text>
+  </g>
+
+  <!-- 5. OSS Productivity Tools Dock -->
+  <g transform="translate(40, 720)">
+    <rect x="0" y="0" width="1020" height="75" rx="14" fill="url(#ossGrad)" stroke="#f59e0b" stroke-width="1.2" />
+    <text x="24" y="24" fill="#fcd34d" font-size="12" font-weight="700" text-transform="uppercase">🌐 Open-Source Productivity Suite (Zero Cloud Storage P2P & Real-Time Rooms)</text>
+    
+    <g transform="translate(24, 34)">
+      <rect x="0" y="0" width="145" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="12" y="20" fill="#fef08a" font-size="11" font-weight="bold">💻 Codeshare.io</text>
+
+      <rect x="160" y="0" width="145" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="172" y="20" fill="#fef08a" font-size="11" font-weight="bold">⚡ Toffeeshare P2P</text>
+
+      <rect x="320" y="0" width="145" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="332" y="20" fill="#fef08a" font-size="11" font-weight="bold">🎨 Excalidraw</text>
+
+      <rect x="480" y="0" width="145" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="492" y="20" fill="#fef08a" font-size="11" font-weight="bold">🔒 CryptPad</text>
+
+      <rect x="640" y="0" width="145" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="652" y="20" fill="#fef08a" font-size="11" font-weight="bold">🔪 CyberChef</text>
+
+      <rect x="800" y="0" width="168" height="30" rx="8" fill="#1e1b4b" stroke="#f59e0b" stroke-width="0.8" />
+      <text x="812" y="20" fill="#fef08a" font-size="11" font-weight="bold">📊 Draw.io Diagrams</text>
+    </g>
+  </g>
+
+  <!-- Connective Arrows & Visual Dataflow lines -->
+  <path d="M 130 205 L 130 290" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" />
+  <path d="M 314 205 L 314 290" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" />
+  <path d="M 714 205 L 714 290" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" />
+  
+  <path d="M 174 332 L 174 400" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowIndigo)" />
+  <path d="M 714 485 L 714 570" stroke="#10b981" stroke-width="2" marker-end="url(#arrowEmerald)" />
+  <path d="M 910 485 L 384 570" stroke="#10b981" stroke-width="2" stroke-dasharray="4 2" marker-end="url(#arrowEmerald)" />
+  <path d="M 114 485 L 114 570" stroke="#10b981" stroke-width="2" marker-end="url(#arrowEmerald)" />
+
+</svg>
