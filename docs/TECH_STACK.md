@@ -10,7 +10,7 @@ This document serves as the architectural reference for all technologies, infras
   <span style="color: #c7d2fe; font-size: 13px; font-weight: 600; font-family: monospace;">🏛️ Master System Architecture Diagram</span>
   <div style="display: flex; gap: 8px;">
     <button 
-      onclick="navigator.clipboard.writeText(`graph TD\n    subgraph Client_Layer [🖥️ Client Application Layer]\n        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]\n        TM[Microsoft To-Do Engine<br/>TaskManager.js]\n        KN[Google Keep Notes Vault<br/>NoteCanvas.js]\n        RM[Apple Reminders and Routines<br/>RoutineManager.js]\n        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]\n        NM[Automated Dispatches<br/>NotificationManagerModal.js]\n    end\n\n    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]\n        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]\n        LS[Browser LocalStorage<br/>Indexed offline state]\n        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]\n    end\n\n    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]\n        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]\n        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]\n        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]\n        API_Routines[/api/db/routines<br/>Habit streaks]\n        API_Email[/api/notifications/email<br/>Nodemailer SMTP]\n        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]\n    end\n\n    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]\n        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]\n        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]\n        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]\n        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]\n        TWILIO[Twilio REST API<br/>Carrier Gateway]\n        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]\n    end\n\n    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]\n        CS[Codeshare.io<br/>Live Collaborative Code]\n        TS[Toffeeshare<br/>P2P Encrypted File Transfer]\n        EXC[Excalidraw<br/>Virtual Whiteboard]\n        CRY[CryptPad<br/>Zero-Knowledge Docs]\n        CYB[CyberChef<br/>Cyber Swiss Army Knife]\n        DRW[Draw.io<br/>Architecture Diagrams]\n    end\n\n    UI --> TM & KN & RM & SU & NM\n    TM & KN & RM --> DA\n    NM --> VAL\n    DA --> LS\n    DA --> API_Tasks & API_Notes & API_Profiles & API_Routines\n    NM --> API_Email & API_SMS\n    SU --> CS & TS & EXC & CRY & CYB & DRW\n\n    API_Tasks & API_Notes & API_Profiles & API_Routines --> NEON\n    API_Tasks & API_Notes & API_Profiles & API_Routines -.-> SUPA\n    API_Email --> GMAIL\n    API_SMS --> NTFY & TWILIO\n    Client_Layer -.-> VERCEL`); alert('✅ Master Architecture Mermaid code copied to clipboard!');"
+      onclick="navigator.clipboard.writeText(`graph TD\n    subgraph Client_Layer [\x22🖥️ Client Application Layer\x22]\n        UI[\x22Modern Dark Glassmorphism UI<br/>Tailwind CSS\x22]\n        TM[\x22Microsoft To-Do Engine<br/>TaskManager.js\x22]\n        KN[\x22Google Keep Notes Vault<br/>NoteCanvas.js\x22]\n        RM[\x22Apple Reminders and Routines<br/>RoutineManager.js\x22]\n        SU[\x22OSS Sharing and Productivity<br/>ShareRedirectModal.js\x22]\n        NM[\x22Automated Dispatches<br/>NotificationManagerModal.js\x22]\n    end\n\n    subgraph State_And_Adapters [\x22🔄 State Management and Offline Fallback\x22]\n        DA[\x22src/lib/dbAdapter.js<br/>Multi-Provider Routing\x22]\n        LS[\x22Browser LocalStorage<br/>Indexed offline state\x22]\n        VAL[\x22src/lib/countryCodes.js<br/>Real-time Phone Validator\x22]\n    end\n\n    subgraph Backend_APIs [\x22⚡ Next.js Serverless Route Handlers\x22]\n        API_Tasks[\x22/api/db/tasks<br/>PostgreSQL Tasks CRUD\x22]\n        API_Notes[\x22/api/db/notes<br/>PostgreSQL Notes CRUD\x22]\n        API_Profiles[\x22/api/db/profiles<br/>Multi-User RBAC\x22]\n        API_Routines[\x22/api/db/routines<br/>Habit streaks\x22]\n        API_Email[\x22/api/notifications/email<br/>Nodemailer SMTP\x22]\n        API_SMS[\x22/api/notifications/sms<br/>Ntfy Mobile Push\x22]\n    end\n\n    subgraph External_Cloud [\x22☁️ Cloud Infrastructure and Global Services\x22]\n        NEON[(\x22NeonDB PostgreSQL<br/>Serverless Pooler\x22)]\n        SUPA[(\x22Supabase PostgreSQL<br/>Secondary DB\x22)]\n        GMAIL[\x22Gmail SMTP Server<br/>smtp.gmail.com:587\x22]\n        NTFY[\x22Ntfy.sh Free Hub<br/>iOS and Android Push\x22]\n        TWILIO[\x22Twilio REST API<br/>Carrier Gateway\x22]\n        VERCEL[\x22Vercel Edge Cloud<br/>Global CDN and SSR\x22]\n    end\n\n    subgraph OSS_Ecosystem [\x22🌐 Open-Source Productivity Suite\x22]\n        CS[\x22Codeshare.io<br/>Live Collaborative Code\x22]\n        TS[\x22Toffeeshare<br/>P2P Encrypted File Transfer\x22]\n        EXC[\x22Excalidraw<br/>Virtual Whiteboard\x22]\n        CRY[\x22CryptPad<br/>Zero-Knowledge Docs\x22]\n        CYB[\x22CyberChef<br/>Cyber Swiss Army Knife\x22]\n        DRW[\x22Draw.io<br/>Architecture Diagrams\x22]\n    end\n\n    UI --> TM & KN & RM & SU & NM\n    TM & KN & RM --> DA\n    NM --> VAL\n    DA --> LS\n    DA --> API_Tasks & API_Notes & API_Profiles & API_Routines\n    NM --> API_Email & API_SMS\n    SU --> CS & TS & EXC & CRY & CYB & DRW\n\n    API_Tasks & API_Notes & API_Profiles & API_Routines --> NEON\n    API_Tasks & API_Notes & API_Profiles & API_Routines -.-> SUPA\n    API_Email --> GMAIL\n    API_SMS --> NTFY & TWILIO\n    Client_Layer -.-> VERCEL`); alert('✅ Master Architecture Mermaid code copied to clipboard!');"
       style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: bold; cursor: pointer;">
       📋 Copy Mermaid Code
     </button>
@@ -25,46 +25,46 @@ This document serves as the architectural reference for all technologies, infras
 
 ```mermaid
 graph TD
-    subgraph Client_Layer [🖥️ Client Application Layer]
-        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]
-        TM[Microsoft To-Do Engine<br/>TaskManager.js]
-        KN[Google Keep Notes Vault<br/>NoteCanvas.js]
-        RM[Apple Reminders and Routines<br/>RoutineManager.js]
-        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]
-        NM[Automated Dispatches<br/>NotificationManagerModal.js]
+    subgraph Client_Layer ["🖥️ Client Application Layer"]
+        UI["Modern Dark Glassmorphism UI<br/>Tailwind CSS"]
+        TM["Microsoft To-Do Engine<br/>TaskManager.js"]
+        KN["Google Keep Notes Vault<br/>NoteCanvas.js"]
+        RM["Apple Reminders and Routines<br/>RoutineManager.js"]
+        SU["OSS Sharing and Productivity<br/>ShareRedirectModal.js"]
+        NM["Automated Dispatches<br/>NotificationManagerModal.js"]
     end
 
-    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]
-        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]
-        LS[Browser LocalStorage<br/>Indexed offline state]
-        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]
+    subgraph State_And_Adapters ["🔄 State Management and Offline Fallback"]
+        DA["src/lib/dbAdapter.js<br/>Multi-Provider Routing"]
+        LS["Browser LocalStorage<br/>Indexed offline state"]
+        VAL["src/lib/countryCodes.js<br/>Real-time Phone Validator"]
     end
 
-    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]
-        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]
-        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]
-        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]
-        API_Routines[/api/db/routines<br/>Habit streaks]
-        API_Email[/api/notifications/email<br/>Nodemailer SMTP]
-        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]
+    subgraph Backend_APIs ["⚡ Next.js Serverless Route Handlers"]
+        API_Tasks["/api/db/tasks<br/>PostgreSQL Tasks CRUD"]
+        API_Notes["/api/db/notes<br/>PostgreSQL Notes CRUD"]
+        API_Profiles["/api/db/profiles<br/>Multi-User RBAC"]
+        API_Routines["/api/db/routines<br/>Habit streaks"]
+        API_Email["/api/notifications/email<br/>Nodemailer SMTP"]
+        API_SMS["/api/notifications/sms<br/>Ntfy Mobile Push"]
     end
 
-    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]
-        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]
-        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]
-        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]
-        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]
-        TWILIO[Twilio REST API<br/>Carrier Gateway]
-        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]
+    subgraph External_Cloud ["☁️ Cloud Infrastructure and Global Services"]
+        NEON[("NeonDB PostgreSQL<br/>Serverless Pooler")]
+        SUPA[("Supabase PostgreSQL<br/>Secondary DB")]
+        GMAIL["Gmail SMTP Server<br/>smtp.gmail.com:587"]
+        NTFY["Ntfy.sh Free Hub<br/>iOS and Android Push"]
+        TWILIO["Twilio REST API<br/>Carrier Gateway"]
+        VERCEL["Vercel Edge Cloud<br/>Global CDN and SSR"]
     end
 
-    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]
-        CS[Codeshare.io<br/>Live Collaborative Code]
-        TS[Toffeeshare<br/>P2P Encrypted File Transfer]
-        EXC[Excalidraw<br/>Virtual Whiteboard]
-        CRY[CryptPad<br/>Zero-Knowledge Docs]
-        CYB[CyberChef<br/>Cyber Swiss Army Knife]
-        DRW[Draw.io<br/>Architecture Diagrams]
+    subgraph OSS_Ecosystem ["🌐 Open-Source Productivity Suite"]
+        CS["Codeshare.io<br/>Live Collaborative Code"]
+        TS["Toffeeshare<br/>P2P Encrypted File Transfer"]
+        EXC["Excalidraw<br/>Virtual Whiteboard"]
+        CRY["CryptPad<br/>Zero-Knowledge Docs"]
+        CYB["CyberChef<br/>Cyber Swiss Army Knife"]
+        DRW["Draw.io<br/>Architecture Diagrams"]
     end
 
     UI --> TM & KN & RM & SU & NM

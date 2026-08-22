@@ -337,46 +337,46 @@ export default function UserGuideModal({ onClose }) {
                       type="button"
                       onClick={() => {
                         const code = `graph TD
-    subgraph Client_Layer [🖥️ Client Application Layer]
-        UI[Modern Dark Glassmorphism UI<br/>Tailwind CSS]
-        TM[Microsoft To-Do Engine<br/>TaskManager.js]
-        KN[Google Keep Notes Vault<br/>NoteCanvas.js]
-        RM[Apple Reminders and Routines<br/>RoutineManager.js]
-        SU[OSS Sharing and Productivity<br/>ShareRedirectModal.js]
-        NM[Automated Dispatches<br/>NotificationManagerModal.js]
+    subgraph Client_Layer ["🖥️ Client Application Layer"]
+        UI["Modern Dark Glassmorphism UI<br/>Tailwind CSS"]
+        TM["Microsoft To-Do Engine<br/>TaskManager.js"]
+        KN["Google Keep Notes Vault<br/>NoteCanvas.js"]
+        RM["Apple Reminders and Routines<br/>RoutineManager.js"]
+        SU["OSS Sharing and Productivity<br/>ShareRedirectModal.js"]
+        NM["Automated Dispatches<br/>NotificationManagerModal.js"]
     end
 
-    subgraph State_And_Adapters [🔄 State Management and Offline Fallback]
-        DA[src/lib/dbAdapter.js<br/>Multi-Provider Routing]
-        LS[Browser LocalStorage<br/>Indexed offline state]
-        VAL[src/lib/countryCodes.js<br/>Real-time Phone Validator]
+    subgraph State_And_Adapters ["🔄 State Management and Offline Fallback"]
+        DA["src/lib/dbAdapter.js<br/>Multi-Provider Routing"]
+        LS["Browser LocalStorage<br/>Indexed offline state"]
+        VAL["src/lib/countryCodes.js<br/>Real-time Phone Validator"]
     end
 
-    subgraph Backend_APIs [⚡ Next.js Serverless Route Handlers]
-        API_Tasks[/api/db/tasks<br/>PostgreSQL Tasks CRUD]
-        API_Notes[/api/db/notes<br/>PostgreSQL Notes CRUD]
-        API_Profiles[/api/db/profiles<br/>Multi-User RBAC]
-        API_Routines[/api/db/routines<br/>Habit streaks]
-        API_Email[/api/notifications/email<br/>Nodemailer SMTP]
-        API_SMS[/api/notifications/sms<br/>Ntfy Mobile Push]
+    subgraph Backend_APIs ["⚡ Next.js Serverless Route Handlers"]
+        API_Tasks["/api/db/tasks<br/>PostgreSQL Tasks CRUD"]
+        API_Notes["/api/db/notes<br/>PostgreSQL Notes CRUD"]
+        API_Profiles["/api/db/profiles<br/>Multi-User RBAC"]
+        API_Routines["/api/db/routines<br/>Habit streaks"]
+        API_Email["/api/notifications/email<br/>Nodemailer SMTP"]
+        API_SMS["/api/notifications/sms<br/>Ntfy Mobile Push"]
     end
 
-    subgraph External_Cloud [☁️ Cloud Infrastructure and Global Services]
-        NEON[(NeonDB PostgreSQL<br/>Serverless Pooler)]
-        SUPA[(Supabase PostgreSQL<br/>Secondary DB)]
-        GMAIL[Gmail SMTP Server<br/>smtp.gmail.com:587]
-        NTFY[Ntfy.sh Free Hub<br/>iOS and Android Push]
-        TWILIO[Twilio REST API<br/>Carrier Gateway]
-        VERCEL[Vercel Edge Cloud<br/>Global CDN and SSR]
+    subgraph External_Cloud ["☁️ Cloud Infrastructure and Global Services"]
+        NEON[("NeonDB PostgreSQL<br/>Serverless Pooler")]
+        SUPA[("Supabase PostgreSQL<br/>Secondary DB")]
+        GMAIL["Gmail SMTP Server<br/>smtp.gmail.com:587"]
+        NTFY["Ntfy.sh Free Hub<br/>iOS and Android Push"]
+        TWILIO["Twilio REST API<br/>Carrier Gateway"]
+        VERCEL["Vercel Edge Cloud<br/>Global CDN and SSR"]
     end
 
-    subgraph OSS_Ecosystem [🌐 Open-Source Productivity Suite]
-        CS[Codeshare.io<br/>Live Collaborative Code]
-        TS[Toffeeshare<br/>P2P Encrypted File Transfer]
-        EXC[Excalidraw<br/>Virtual Whiteboard]
-        CRY[CryptPad<br/>Zero-Knowledge Docs]
-        CYB[CyberChef<br/>Cyber Swiss Army Knife]
-        DRW[Draw.io<br/>Architecture Diagrams]
+    subgraph OSS_Ecosystem ["🌐 Open-Source Productivity Suite"]
+        CS["Codeshare.io<br/>Live Collaborative Code"]
+        TS["Toffeeshare<br/>P2P Encrypted File Transfer"]
+        EXC["Excalidraw<br/>Virtual Whiteboard"]
+        CRY["CryptPad<br/>Zero-Knowledge Docs"]
+        CYB["CyberChef<br/>Cyber Swiss Army Knife"]
+        DRW["Draw.io<br/>Architecture Diagrams"]
     end
 
     UI --> TM & KN & RM & SU & NM
