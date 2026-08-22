@@ -216,23 +216,34 @@ export default function NotificationManagerModal({
           to: smsPhoneNumber.trim(),
           countryCode: countryCode,
           message: `[TaskPulse Test] Hello ${activeProfile?.name || 'User'}, your mobile SMS notification integration is operating properly!`,
-          provider: smsGatewayProvider
+          provider: smsGatewayProvider,
+          customWebhookUrl: webhookUrl
         })
       });
       const data = await res.json();
       if (data.success) {
         setSmsStatus({
           type: 'success',
-          text: `✅ SMS Sent to ${data.recipient}! Status: ${data.status} (Message ID: ${data.messageId})`
+          text: `✅ SMS Sent to ${data.recipient}! Status: ${data.status} (Message ID: ${data.messageId})`,
+          ...data
         });
       } else {
         setSmsStatus({
           type: 'error',
-          text: `⚠️ SMS Dispatch failed: ${data.error}`
+          text: `❌ ${data.failedStep || 'SMS Dispatch Failed'}: ${data.error}`,
+          ...data
         });
       }
     } catch (e) {
-      setSmsStatus({ type: 'error', text: `⚠️ Dispatch Error: ${e.message}` });
+      setSmsStatus({
+        type: 'error',
+        text: `❌ Network / Dispatch Error: ${e.message}`,
+        steps: [
+          { name: 'Step 1: Phone Validation', status: 'passed', details: smsValidation.formatted },
+          { name: 'Step 2: Gateway Credentials Check', status: 'unknown' },
+          { name: 'Step 3: Network Carrier Dispatch', status: 'failed', error: e.message }
+        ]
+      });
     } finally {
       setSendingSms(false);
     }
@@ -262,23 +273,34 @@ export default function NotificationManagerModal({
           to: smsPhoneNumber.trim(),
           countryCode: countryCode,
           tasksSummary: dueTasks,
-          provider: smsGatewayProvider
+          provider: smsGatewayProvider,
+          customWebhookUrl: webhookUrl
         })
       });
       const data = await res.json();
       if (data.success) {
         setSmsDueDateStatus({
           type: 'success',
-          text: `✅ SMS Due-Date Digest (${dueTasks.length} tasks) dispatched to ${data.recipient}!`
+          text: `✅ SMS Due-Date Digest (${dueTasks.length} tasks) dispatched to ${data.recipient}!`,
+          ...data
         });
       } else {
         setSmsDueDateStatus({
           type: 'error',
-          text: `⚠️ SMS dispatch failed: ${data.error}`
+          text: `❌ ${data.failedStep || 'SMS Due-Date Dispatch Failed'}: ${data.error}`,
+          ...data
         });
       }
     } catch (e) {
-      setSmsDueDateStatus({ type: 'error', text: `⚠️ SMS Error: ${e.message}` });
+      setSmsDueDateStatus({
+        type: 'error',
+        text: `❌ Network / Dispatch Error: ${e.message}`,
+        steps: [
+          { name: 'Step 1: Phone Validation', status: 'passed', details: smsValidation.formatted },
+          { name: 'Step 2: Gateway Credentials Check', status: 'unknown' },
+          { name: 'Step 3: Network Carrier Dispatch', status: 'failed', error: e.message }
+        ]
+      });
     } finally {
       setSendingSmsDueDate(false);
     }
@@ -1073,18 +1095,76 @@ export default function NotificationManagerModal({
                     </div>
 
                     {/* Gateway Carrier Provider Selector */}
-                    <div className="pt-2 border-t border-slate-800/80 space-y-1">
-                      <label className="block text-xs font-medium text-slate-300">SMS Gateway Routing Engine:</label>
+                    <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-medium text-slate-300">SMS Gateway Routing Engine:</label>
+                        <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
+                          smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        }`}>
+                          {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? '● Gateway Configured in .env' : '⚠️ Gateway Not Configured in .env'}
+                        </span>
+                      </div>
                       <select
                         value={smsGatewayProvider}
                         onChange={e => setSmsGatewayProvider(e.target.value)}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500"
                       >
-                        <option value="twilio">Twilio Programmable SMS Gateway (Active Carrier)</option>
-                        <option value="fast2sms">Fast2SMS Indian Carrier Gateway</option>
-                        <option value="textlocal">Textlocal Enterprise SMS Gateway</option>
-                        <option value="generic_webhook">Custom SMS Webhook / Automation Endpoint</option>
+                        <option value="twilio">
+                          Twilio Programmable SMS API {smsConfigInfo?.providers?.twilio?.configured ? '✓' : '(⚠️ Missing .env Keys)'}
+                        </option>
+                        <option value="fast2sms">
+                          Fast2SMS Indian Carrier Gateway {smsConfigInfo?.providers?.fast2sms?.configured ? '✓' : '(⚠️ Missing FAST2SMS_API_KEY)'}
+                        </option>
+                        <option value="textlocal">
+                          Textlocal Enterprise SMS Gateway {smsConfigInfo?.providers?.textlocal?.configured ? '✓' : '(⚠️ Missing TEXTLOCAL_API_KEY)'}
+                        </option>
+                        <option value="generic_webhook">
+                          Custom SMS Webhook / Automation Endpoint {webhookUrl ? '✓' : '(⚠️ Missing Webhook URL)'}
+                        </option>
                       </select>
+
+                      {/* Live Gateway Credential Status Card */}
+                      <div className={`p-3 rounded-xl text-xs space-y-1.5 border ${
+                        smsConfigInfo?.providers?.[smsGatewayProvider]?.configured
+                          ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                          : 'bg-amber-950/20 border-amber-500/30 text-amber-200'
+                      }`}>
+                        <div className="flex items-center justify-between font-semibold">
+                          <span className="flex items-center gap-1.5">
+                            {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                            )}
+                            Provider Status: {smsConfigInfo?.providers?.[smsGatewayProvider]?.name || smsGatewayProvider}
+                          </span>
+                          <span className="font-mono text-[10px]">
+                            {smsConfigInfo?.providers?.[smsGatewayProvider]?.configured ? 'AUTHENTICATED' : 'ACTION REQUIRED'}
+                          </span>
+                        </div>
+                        {smsGatewayProvider === 'twilio' && !smsConfigInfo?.providers?.twilio?.configured && (
+                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TWILIO_ACCOUNT_SID</span>, <span className="font-mono text-amber-400">TWILIO_AUTH_TOKEN</span>, and <span className="font-mono text-amber-400">TWILIO_PHONE_NUMBER</span>.
+                          </p>
+                        )}
+                        {smsGatewayProvider === 'fast2sms' && !smsConfigInfo?.providers?.fast2sms?.configured && (
+                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">FAST2SMS_API_KEY</span>.
+                          </p>
+                        )}
+                        {smsGatewayProvider === 'textlocal' && !smsConfigInfo?.providers?.textlocal?.configured && (
+                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                            Requires in <code className="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-200">.env</code>: <span className="font-mono text-amber-400">TEXTLOCAL_API_KEY</span>.
+                          </p>
+                        )}
+                        {smsGatewayProvider === 'generic_webhook' && !webhookUrl && (
+                          <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                            Requires a valid HTTP Webhook URL configured in the <strong className="text-slate-100">Push & Alerts Config</strong> tab.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1106,13 +1186,46 @@ export default function NotificationManagerModal({
                       Compiles today's due and starred action items into a concise mobile text dispatch sent directly to <strong className="text-slate-100">{smsValidation.formatted || 'your phone number'}</strong>.
                     </p>
 
+                    {/* Step-by-Step Diagnostic Timeline for Due-Date SMS */}
                     {smsDueDateStatus && (
-                      <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                      <div className={`p-3.5 rounded-xl text-xs space-y-2 border ${
                         smsDueDateStatus.type === 'success'
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                          ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
+                          : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
                       }`}>
-                        {smsDueDateStatus.text}
+                        <div className="font-bold flex items-center gap-1.5">
+                          {smsDueDateStatus.type === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-rose-400" />
+                          )}
+                          {smsDueDateStatus.text}
+                        </div>
+
+                        {smsDueDateStatus.steps && (
+                          <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Step-by-Step Diagnostic Breakdown:</span>
+                            {smsDueDateStatus.steps.map((st, i) => (
+                              <div key={i} className="flex items-start gap-2 text-[11px] font-mono bg-slate-900/60 p-1.5 rounded-lg">
+                                <span className={st.status === 'passed' ? 'text-emerald-400' : (st.status === 'failed' ? 'text-rose-400' : 'text-slate-500')}>
+                                  {st.status === 'passed' ? '✓' : (st.status === 'failed' ? '✕' : '–')}
+                                </span>
+                                <div className="flex-1">
+                                  <span className="font-semibold text-slate-200">{st.name}:</span>{' '}
+                                  <span className={st.status === 'passed' ? 'text-emerald-300' : (st.status === 'failed' ? 'text-rose-300' : 'text-slate-500')}>
+                                    {st.details || st.error || st.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {smsDueDateStatus.instructions && (
+                          <p className="text-[11px] text-amber-300 bg-amber-950/30 p-2 rounded-lg border border-amber-500/20">
+                            💡 <strong>Suggested Fix:</strong> {smsDueDateStatus.instructions}
+                          </p>
+                        )}
                       </div>
                     )}
 
@@ -1137,13 +1250,46 @@ export default function NotificationManagerModal({
                       </h3>
                     </div>
 
+                    {/* Step-by-Step Diagnostic Timeline for Test SMS */}
                     {smsStatus && (
-                      <div className={`p-2.5 rounded-xl text-xs font-mono border ${
+                      <div className={`p-3.5 rounded-xl text-xs space-y-2 border ${
                         smsStatus.type === 'success'
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                          ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
+                          : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
                       }`}>
-                        {smsStatus.text}
+                        <div className="font-bold flex items-center gap-1.5">
+                          {smsStatus.type === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-rose-400" />
+                          )}
+                          {smsStatus.text}
+                        </div>
+
+                        {smsStatus.steps && (
+                          <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Step-by-Step Diagnostic Breakdown:</span>
+                            {smsStatus.steps.map((st, i) => (
+                              <div key={i} className="flex items-start gap-2 text-[11px] font-mono bg-slate-900/60 p-1.5 rounded-lg">
+                                <span className={st.status === 'passed' ? 'text-emerald-400' : (st.status === 'failed' ? 'text-rose-400' : 'text-slate-500')}>
+                                  {st.status === 'passed' ? '✓' : (st.status === 'failed' ? '✕' : '–')}
+                                </span>
+                                <div className="flex-1">
+                                  <span className="font-semibold text-slate-200">{st.name}:</span>{' '}
+                                  <span className={st.status === 'passed' ? 'text-emerald-300' : (st.status === 'failed' ? 'text-rose-300' : 'text-slate-500')}>
+                                    {st.details || st.error || st.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {smsStatus.instructions && (
+                          <p className="text-[11px] text-amber-300 bg-amber-950/30 p-2 rounded-lg border border-amber-500/20">
+                            💡 <strong>Suggested Fix:</strong> {smsStatus.instructions}
+                          </p>
+                        )}
                       </div>
                     )}
 
