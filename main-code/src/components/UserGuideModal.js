@@ -204,31 +204,32 @@ export default function UserGuideModal({ onClose }) {
             </div>
           )}
 
-          {/* TAB 5: CODESHARE & TOFFEESHARE */}
+          {/* TAB 5: OPEN SOURCE UTILITIES & SHARE */}
           {activeTab === 'share' && (
             <div className="space-y-4 animate-fade-in">
               <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-purple-400" /> Codeshare.io & Toffeeshare Hub Specification
+                <Share2 className="w-4 h-4 text-purple-400" /> Open-Source Sharing & Productivity Utilities
               </h4>
 
               <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
                 <div className="space-y-1">
-                  <span className="font-semibold text-emerald-400">1. Codeshare.io Room Mode:</span>
+                  <span className="font-semibold text-emerald-400">1. Codeshare.io Collaborative Editor:</span>
                   <p className="text-[11px] text-slate-400">
-                    Enter a **Custom Codeshare Passcode / Room Name** (e.g., `aditya-room-123`). TaskPulse constructs the exact official Codeshare room URL:
-                  </p>
-                  <code className="block p-2 bg-slate-900 border border-slate-800 rounded text-emerald-400 font-mono text-[11px]">
-                    https://codeshare.io/aditya-room-123
-                  </code>
-                  <p className="text-[11px] text-slate-400">
-                    Clicking **Open Codeshare.io Room** opens the live online code editor in a new tab with your content ready!
+                    Enter a room passcode or load recent room history to open real-time shared code editor rooms.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="font-semibold text-indigo-400">2. Toffeeshare Redirect Mode:</span>
+                  <span className="font-semibold text-purple-400">2. Toffeeshare Direct P2P Transfer:</span>
                   <p className="text-[11px] text-slate-400">
-                    Generates a secret access link pointing to the official Toffeeshare platform (`https://toffeeshare.com`) for direct peer-to-peer file transfers!
+                    Unlimited peer-to-peer, zero-cloud encrypted file sharing directly across browser endpoints.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="font-semibold text-indigo-400">3. Curated OSS Productivity Suite:</span>
+                  <p className="text-[11px] text-slate-400">
+                    One-click launchpads for <b>Excalidraw</b> (whiteboards), <b>CryptPad</b> (zero-knowledge docs/sheets), <b>CyberChef</b> (data transformation), and <b>Draw.io</b> (architecture diagrams).
                   </p>
                 </div>
               </div>
@@ -246,17 +247,15 @@ export default function UserGuideModal({ onClose }) {
                 <div className="space-y-1">
                   <span className="font-semibold text-emerald-400">Automatic Table Creation (Auto-Migrations):</span>
                   <p className="text-[11px] text-slate-400">
-                    When `NEXT_PUBLIC_DB_PROVIDER=neondb` is selected in `.env`, server API routes (`/api/db/tasks` and `/api/db/notes`) auto-execute `CREATE TABLE IF NOT EXISTS` on first request.
+                    Server API routes (`/api/db/tasks`, `/api/db/notes`, `/api/db/profiles`, `/api/db/routines`) auto-execute `CREATE TABLE IF NOT EXISTS` with full schema constraints and JSONB column types.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="font-semibold text-indigo-400">How to View Tables in Neon Console:</span>
-                  <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-400 pl-2">
-                    <td>1. Log into your <a href="https://console.neon.tech" target="_blank" className="text-indigo-400 underline">Neon Console</a>.</td>
-                    <td>2. Select project <code className="text-slate-200 font-mono">taskpulse</code>.</td>
-                    <td>3. Click <b>Tables</b> in left menu to inspect <code className="text-emerald-400 font-mono">tasks</code> and <code className="text-emerald-400 font-mono">notes</code> tables.</td>
-                  </ol>
+                  <span className="font-semibold text-indigo-400">Profile & Email Synchronization:</span>
+                  <p className="text-[11px] text-slate-400">
+                    Recipient notification emails are saved directly to the <code className="text-slate-200 font-mono">profiles</code> table, ensuring multi-device persistence across sessions.
+                  </p>
                 </div>
               </div>
             </div>
@@ -266,7 +265,7 @@ export default function UserGuideModal({ onClose }) {
         {/* Modal Footer */}
         <div className="border-t border-slate-800 pt-3 flex items-center justify-between shrink-0 text-xs">
           <span className="flex items-center gap-1.5 text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> TaskPulse Documentation Suite v1.3.1-beta
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> TaskPulse Documentation Suite v1.3.4-beta
           </span>
           <button
             onClick={onClose}

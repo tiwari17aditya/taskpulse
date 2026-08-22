@@ -189,11 +189,11 @@ export default function QuickAddTaskModal({
                   type="date"
                   value={fabDueDate}
                   onChange={(e) => setFabDueDate(e.target.value)}
-                  className="bg-transparent text-slate-200 text-xs outline-none"
+                  className="bg-transparent text-slate-200 text-xs outline-none cursor-pointer"
                 />
               </div>
 
-              {fabDueDate && (
+              {fabDueDate && !fabStarred && (
                 <button
                   type="button"
                   onClick={() => setFabDueDate('')}
@@ -201,6 +201,11 @@ export default function QuickAddTaskModal({
                 >
                   Clear
                 </button>
+              )}
+              {fabStarred && (
+                <span className="text-[10px] text-amber-400 font-medium ml-auto">
+                  (Due date required for Priority ⭐)
+                </span>
               )}
             </div>
 
@@ -403,7 +408,13 @@ export default function QuickAddTaskModal({
 
             <button
               type="button"
-              onClick={() => setFabStarred(!fabStarred)}
+              onClick={() => {
+                const nextStarred = !fabStarred;
+                setFabStarred(nextStarred);
+                if (nextStarred && !fabDueDate) {
+                  setFabDueDate(getTodayStr ? getTodayStr() : new Date().toISOString().split('T')[0]);
+                }
+              }}
               className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                 fabStarred
                   ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'

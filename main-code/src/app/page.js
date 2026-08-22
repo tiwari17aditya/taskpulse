@@ -304,6 +304,18 @@ export default function Home() {
   const handleSaveSettings = (updatedSettings) => {
     setNotificationSettings(updatedSettings);
     storage.saveNotificationSettings(updatedSettings);
+
+    // If recipient email is updated, synchronize it directly to the active profile in the database (NeonDB / Supabase)
+    if (updatedSettings?.emailRecipient && activeProfile) {
+      const cleanEmail = updatedSettings.emailRecipient.trim();
+      const updatedProfiles = profiles.map(p =>
+        p.id === activeProfile.id ? { ...p, email: cleanEmail } : p
+      );
+      setProfiles(updatedProfiles);
+      setActiveProfile(prev => prev ? { ...prev, email: cleanEmail } : prev);
+      storage.saveProfiles(updatedProfiles);
+      saveProfilesToDB(updatedProfiles);
+    }
   };
 
   // Save tags on change & update local storage

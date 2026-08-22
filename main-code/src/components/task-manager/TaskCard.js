@@ -137,43 +137,50 @@ export default function TaskCard({
               {showDatePicker && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute left-0 top-6 z-30 bg-slate-900 border border-slate-800 rounded-xl p-2 shadow-2xl space-y-1.5 min-w-[170px] text-xs animate-slide-up"
+                  className="absolute left-0 top-7 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-2.5 shadow-2xl space-y-2 min-w-[200px] text-xs animate-slide-up"
                 >
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block px-1">Set Due Date</span>
-                  <button
-                    onClick={() => { updateTaskDueDate?.(task.id, getTodayStr ? getTodayStr() : new Date().toISOString().split('T')[0]); setShowDatePicker(false); }}
-                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Today</span> <span className="text-[10px] text-slate-500">{getTodayStr ? getTodayStr() : ''}</span>
-                  </button>
-                  <button
-                    onClick={() => { updateTaskDueDate?.(task.id, getTomorrowStr ? getTomorrowStr() : ''); setShowDatePicker(false); }}
-                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Tomorrow</span> <span className="text-[10px] text-slate-500">{getTomorrowStr ? getTomorrowStr() : ''}</span>
-                  </button>
-                  <button
-                    onClick={() => { updateTaskDueDate?.(task.id, getNextWeekStr ? getNextWeekStr() : ''); setShowDatePicker(false); }}
-                    className="w-full text-left px-2 py-1 hover:bg-slate-800 rounded text-slate-200 text-[11px] flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Next Week</span> <span className="text-[10px] text-slate-500">{getNextWeekStr ? getNextWeekStr() : ''}</span>
-                  </button>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Set Due Date</span>
+                    <span className="text-[9px] text-indigo-400 font-mono">Select timeline</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => { updateTaskDueDate?.(task.id, getTodayStr ? getTodayStr() : new Date().toISOString().split('T')[0]); setShowDatePicker(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-indigo-600/20 hover:text-indigo-200 rounded-lg text-slate-200 text-[11px] flex items-center justify-between transition cursor-pointer"
+                    >
+                      <span>Today</span> <span className="text-[10px] text-slate-400 font-mono">{getTodayStr ? getTodayStr() : ''}</span>
+                    </button>
+                    <button
+                      onClick={() => { updateTaskDueDate?.(task.id, getTomorrowStr ? getTomorrowStr() : ''); setShowDatePicker(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-indigo-600/20 hover:text-indigo-200 rounded-lg text-slate-200 text-[11px] flex items-center justify-between transition cursor-pointer"
+                    >
+                      <span>Tomorrow</span> <span className="text-[10px] text-slate-400 font-mono">{getTomorrowStr ? getTomorrowStr() : ''}</span>
+                    </button>
+                    <button
+                      onClick={() => { updateTaskDueDate?.(task.id, getNextWeekStr ? getNextWeekStr() : ''); setShowDatePicker(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-indigo-600/20 hover:text-indigo-200 rounded-lg text-slate-200 text-[11px] flex items-center justify-between transition cursor-pointer"
+                    >
+                      <span>Next Week</span> <span className="text-[10px] text-slate-400 font-mono">{getNextWeekStr ? getNextWeekStr() : ''}</span>
+                    </button>
+                  </div>
 
-                  <div className="pt-1 border-t border-slate-800 flex items-center gap-1">
+                  <div className="pt-1.5 border-t border-slate-800 space-y-1">
+                    <span className="text-[10px] text-slate-400 block px-1">Custom Calendar Date:</span>
                     <input
                       type="date"
                       value={task.dueDate || ''}
                       onChange={(e) => { updateTaskDueDate?.(task.id, e.target.value); setShowDatePicker(false); }}
-                      className="bg-slate-950 border border-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 rounded outline-none w-full"
+                      className="bg-slate-950 border border-slate-700 text-slate-100 text-xs px-2.5 py-1 rounded-lg outline-none focus:border-indigo-500 w-full cursor-pointer"
                     />
                   </div>
 
-                  {task.dueDate && (
+                  {task.dueDate && !task.starred && (
                     <button
                       onClick={() => { updateTaskDueDate?.(task.id, ''); setShowDatePicker(false); }}
-                      className="w-full text-left px-2 py-1 hover:bg-rose-950/40 text-rose-400 rounded text-[10px] cursor-pointer"
+                      className="w-full text-center px-2 py-1 bg-rose-950/30 hover:bg-rose-950/60 border border-rose-800/40 text-rose-300 rounded-lg text-[10px] transition cursor-pointer"
                     >
-                      Clear Date
+                      Clear Due Date
                     </button>
                   )}
                 </div>
@@ -205,8 +212,15 @@ export default function TaskCard({
       {/* Star & Chevron Action Buttons */}
       <div className="flex items-center gap-1 shrink-0">
         <button
-          onClick={(e) => toggleStar?.(task.id, e)}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!task.starred && !task.dueDate) {
+              updateTaskDueDate?.(task.id, getTodayStr ? getTodayStr() : new Date().toISOString().split('T')[0]);
+            }
+            toggleStar?.(task.id, e);
+          }}
           className={`p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer ${task.starred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}`}
+          title={task.starred ? "Priority task (Starred)" : "Mark as Priority (Auto-sets Due Date)"}
         >
           <Star className={`w-4 h-4 ${task.starred ? 'fill-amber-400' : ''}`} />
         </button>

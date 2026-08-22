@@ -4,6 +4,21 @@
 
 ---
 
+## 🚀 Key v1.3.4-beta Priority Enhancements
+
+1. **Multi-Criteria Task Sorting in Filter Bar**:
+   - Added dynamic sorting in `TaskManager.js` by Task Name (A-Z, Z-A), Due Date (Earliest, Latest), and Priority (Starred First ⭐).
+2. **Automated Due-Date & Priority Email Dispatch Engine**:
+   - Built automatic action item scanner in `NotificationManagerModal.js` that dispatches scheduled task summaries directly to the recipient.
+3. **Open Source Productivity Utilities Suite**:
+   - Expanded `ShareRedirectModal.js` with direct integrations for Excalidraw, CryptPad, CyberChef, and Draw.io alongside Codeshare and Toffeeshare.
+4. **Active Profile & Notification Email Database Persistence**:
+   - Linked recipient address updates directly to the `profiles` table in NeonDB / Supabase via `saveProfilesToDB`.
+5. **Routine Card Layout Stabilization & Universal Crash Guard**:
+   - Added safe icon import guards and locked routine card grid dimensions (`min-h-[230px]`, `line-clamp-2`) in `RoutineManager.js`.
+
+---
+
 ## 🚀 Key v1.3.3-beta Priority Enhancements
 
 1. **SMTP Mailing Resiliency & Multi-Directory Resolver**:

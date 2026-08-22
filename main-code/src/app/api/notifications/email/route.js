@@ -109,13 +109,19 @@ export async function POST(req) {
       }
     });
 
+    const isPriorityEmail = subject?.includes('Priority') || subject?.includes('Due Date');
+    const headerBg = isPriorityEmail 
+      ? 'linear-gradient(135deg, #b45309 0%, #d97706 50%, #4f46e5 100%)' 
+      : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+    const headerTitle = isPriorityEmail ? '🎯 TaskPulse Priority & Due-Date Reminder' : '⚡ TaskPulse Notification';
+
     const defaultHtml = `
       <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #020617; color: #f8fafc; padding: 32px 16px;">
         <div style="max-width: 600px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
           
           <!-- Header Banner -->
-          <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 28px 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; tracking-wide: 0.5px;">⚡ TaskPulse Notification</h1>
+          <div style="background: ${headerBg}; padding: 28px 24px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; tracking-wide: 0.5px;">${headerTitle}</h1>
             <p style="color: #e0e7ff; margin: 0; font-size: 13px; opacity: 0.9;">Automated Workspace Summary & Task Reminders</p>
           </div>
 
@@ -127,7 +133,7 @@ export async function POST(req) {
 
             ${tasksSummary && tasksSummary.length > 0 ? `
               <div style="margin: 20px 0;">
-                <h3 style="color: #818cf8; font-size: 14px; margin: 0 0 12px 0; text-transform: uppercase; tracking-wider: 1px;">📌 Task Overview & Details</h3>
+                <h3 style="color: #818cf8; font-size: 14px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">📌 Action Items & Schedule</h3>
                 <table style="width: 100%; border-collapse: collapse; background: #020617; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; font-size: 13px;">
                   <thead>
                     <tr style="background: #1e293b; color: #94a3b8; text-align: left; font-size: 11px; text-transform: uppercase;">
@@ -138,18 +144,25 @@ export async function POST(req) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${tasksSummary.map((t, idx) => `
-                      <tr style="border-top: 1px solid #1e293b; color: #e2e8f0;">
-                        <td style="padding: 10px 12px; font-weight: 600;">${t.title || 'Untitled Task'}</td>
-                        <td style="padding: 10px 12px; color: #818cf8;">${t.dueDate || 'Today'}</td>
-                        <td style="padding: 10px 12px; color: #fbbf24;">${t.tags ? (Array.isArray(t.tags) ? t.tags.join(', ') : t.tags) : (t.starred ? 'Starred' : 'Normal')}</td>
+                    ${tasksSummary.map((t) => {
+                      const isStarred = t.starred;
+                      return `
+                      <tr style="border-top: 1px solid #1e293b; color: #e2e8f0; ${isStarred ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
+                        <td style="padding: 10px 12px; font-weight: 600;">
+                          ${isStarred ? '⭐ ' : ''}${t.title || 'Untitled Task'}
+                        </td>
+                        <td style="padding: 10px 12px; color: ${isStarred ? '#f59e0b; font-weight: bold;' : '#818cf8;'}">${t.dueDate || 'Today'}</td>
+                        <td style="padding: 10px 12px; color: #fbbf24;">
+                          ${isStarred ? '<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px;">PRIORITY</span> ' : ''}
+                          ${t.tags ? (Array.isArray(t.tags) ? t.tags.join(', ') : t.tags) : ''}
+                        </td>
                         <td style="padding: 10px 12px; text-align: right;">
                           <span style="background: ${t.completed ? '#065f46' : '#312e81'}; color: ${t.completed ? '#34d399' : '#a5b4fc'}; padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold;">
                             ${t.completed ? 'COMPLETED' : 'PENDING'}
                           </span>
                         </td>
                       </tr>
-                    `).join('')}
+                    `;}).join('')}
                   </tbody>
                 </table>
               </div>

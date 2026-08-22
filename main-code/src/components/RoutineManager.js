@@ -363,26 +363,26 @@ export default function RoutineManager({
                     : routine.paused
                     ? 'border-slate-800/60 opacity-60'
                     : 'border-slate-800 hover:border-slate-700'
-                } rounded-2xl p-5 shadow-lg space-y-4 transition flex flex-col justify-between`}
+                } rounded-2xl p-5 shadow-lg space-y-4 transition flex flex-col justify-between min-h-[230px] h-full`}
               >
                 <div className="space-y-3">
                   {/* Title & Actions Bar */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-3 min-h-[48px]">
+                    <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className={`text-sm font-bold ${routine.paused ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+                        <h3 className={`text-sm font-bold truncate max-w-full ${routine.paused ? 'line-through text-slate-400' : 'text-slate-100'}`} title={routine.title}>
                           {routine.title}
                         </h3>
-                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono">
+                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono shrink-0">
                           {routine.frequency} {routine.interval > 1 ? `(Every ${routine.interval})` : ''}
                         </span>
                         {routine.isArchived && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono">
-                            Archived (Max Iterations Done)
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono shrink-0">
+                            Archived
                           </span>
                         )}
                         {routine.paused && !routine.isArchived && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono shrink-0">
                             Paused
                           </span>
                         )}

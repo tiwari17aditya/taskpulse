@@ -94,11 +94,11 @@ export default function ShareRedirectModal({ onClose }) {
 
         {/* Tab switcher */}
         <div className="px-5 pt-4 shrink-0">
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl">
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold">
             <button
               type="button"
               onClick={() => setActiveTab('codeshare')}
-              className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+              className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'codeshare' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -107,11 +107,20 @@ export default function ShareRedirectModal({ onClose }) {
             <button
               type="button"
               onClick={() => setActiveTab('toffeeshare')}
-              className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition ${
+              className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'toffeeshare' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Globe className="w-3.5 h-3.5" /> Toffeeshare
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('utilities')}
+              className={`py-2 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                activeTab === 'utilities' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Star className="w-3.5 h-3.5" /> OSS Utilities
             </button>
           </div>
         </div>
@@ -149,7 +158,7 @@ export default function ShareRedirectModal({ onClose }) {
                   type="button"
                   onClick={() => openCodeshare(passcode)}
                   disabled={!passcode.trim()}
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition"
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer"
                 >
                   Open Codeshare.io Room <ArrowRight className="w-4 h-4" />
                 </button>
@@ -168,7 +177,7 @@ export default function ShareRedirectModal({ onClose }) {
                     <button
                       type="button"
                       onClick={clearAllVisited}
-                      className="text-[10px] text-rose-400 hover:text-rose-300 transition flex items-center gap-1"
+                      className="text-[10px] text-rose-400 hover:text-rose-300 transition flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" /> Clear All
                     </button>
@@ -189,7 +198,6 @@ export default function ShareRedirectModal({ onClose }) {
                         className="group flex items-center justify-between gap-2 px-3 py-2 bg-slate-950/60 hover:bg-slate-800/60 border border-slate-800 hover:border-slate-700 rounded-xl transition cursor-pointer"
                         onClick={() => {
                           window.open(entry.url, '_blank', 'noopener,noreferrer');
-                          // Bump to top of list
                           const filtered = visitedUrls.filter(u => u.url !== entry.url);
                           const updated = [{ ...entry, visitedAt: new Date().toISOString() }, ...filtered];
                           saveVisitedUrls(updated);
@@ -210,7 +218,7 @@ export default function ShareRedirectModal({ onClose }) {
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); removeVisited(entry.url); }}
-                            className="p-0.5 text-slate-600 hover:text-rose-400 transition opacity-0 group-hover:opacity-100"
+                            className="p-0.5 text-slate-600 hover:text-rose-400 transition opacity-0 group-hover:opacity-100 cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -253,10 +261,98 @@ export default function ShareRedirectModal({ onClose }) {
                 href="https://toffeeshare.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition"
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition cursor-pointer"
               >
                 Go to Toffeeshare.com <ExternalLink className="w-4 h-4" />
               </a>
+            </div>
+          )}
+
+          {/* ---- OPEN SOURCE PRODUCTIVITY UTILITIES TAB ---- */}
+          {activeTab === 'utilities' && (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-400">
+                Curated open-source productivity, diagramming, and encryption utilities accessible directly from TaskPulse:
+              </p>
+
+              {/* Utility Grid Cards */}
+              <div className="space-y-2.5">
+                {/* 1. Excalidraw */}
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 flex items-center justify-between transition">
+                  <div className="space-y-1 pr-3">
+                    <h4 className="text-xs font-bold text-slate-100 flex items-center gap-2">
+                      ✏️ Excalidraw
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono">Whiteboard</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">Virtual collaborative whiteboard for sketching architectures and workflows.</p>
+                  </div>
+                  <a
+                    href="https://excalidraw.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    Open <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* 2. CryptPad */}
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 flex items-center justify-between transition">
+                  <div className="space-y-1 pr-3">
+                    <h4 className="text-xs font-bold text-slate-100 flex items-center gap-2">
+                      🔒 CryptPad
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">Encrypted Docs</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">Private, end-to-end encrypted collaborative suite (docs, sheets, code, kanban).</p>
+                  </div>
+                  <a
+                    href="https://cryptpad.fr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    Open <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* 3. CyberChef */}
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 flex items-center justify-between transition">
+                  <div className="space-y-1 pr-3">
+                    <h4 className="text-xs font-bold text-slate-100 flex items-center gap-2">
+                      🧑‍🍳 CyberChef
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">Data Tools</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">The cyber swiss army knife for encoding, decoding, JSON parsing, and regex.</p>
+                  </div>
+                  <a
+                    href="https://gchq.github.io/CyberChef"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    Open <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* 4. Diagrams.net / Draw.io */}
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 flex items-center justify-between transition">
+                  <div className="space-y-1 pr-3">
+                    <h4 className="text-xs font-bold text-slate-100 flex items-center gap-2">
+                      📊 Diagrams.net (Draw.io)
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono">Flowcharts</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">Industrial-grade flowcharting, cloud architecture, and UML diagram software.</p>
+                  </div>
+                  <a
+                    href="https://app.diagrams.net"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    Open <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
             </div>
           )}
         </div>

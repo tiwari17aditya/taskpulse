@@ -8,4 +8,10 @@
 [2026-08-22 16:29:20] [SUCCESS] /manage-vercel push completed: 15 environment variables synced across Production, Preview, and Development on Vercel.
 [2026-08-22 16:30:08] [SUCCESS] Vercel live production deployment succeeded (https://taskpulse17.vercel.app).
 [2026-08-22 16:30:24] [SUCCESS] Live production email endpoint verified via POST to https://taskpulse17.vercel.app/api/notifications/email (Message ID: <edf9b998-4eb1-876a-53a6-86484f212a6f@gmail.com>, 250 2.0.0 OK).
-
+[2026-08-22 20:25:30] [FIX] Fixed ReferenceError: Repeat icon missing import in TaskDetailDrawer.js for recurring routine tasks.
+[2026-08-22 20:27:00] [ENHANCEMENT] Enforced mandatory due dates on priority/starred tasks across TaskCard.js, TaskDetailDrawer.js, QuickAddTaskModal.js, and TaskManager.js.
+[2026-08-22 20:28:10] [ENHANCEMENT] Restructured NotificationManagerModal.js into Automated Dispatches with Email and SMS subtabs, adding automated due-date and priority task reminder email engine.
+[2026-08-22 20:28:30] [ENHANCEMENT] Expanded ShareRedirectModal.js with Open Source Productivity Utilities (Excalidraw, CryptPad, CyberChef, Draw.io).
+[2026-08-22 20:28:40] [FIX] Stabilized RoutineManager.js card dimensions and line-clamps to prevent layout shifts when toggling tag filters.
+[2026-08-22 20:30:40] [FEATURE] Added multi-criteria task sorting in TaskManager.js toolbar for Task Name (A-Z, Z-A), Due Date (Earliest, Latest), and Priority (Starred first).
+[2026-08-22 20:31:13] [SUCCESS] Full Next.js production build verified cleanly with 0 errors.

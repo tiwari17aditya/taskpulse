@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, ListTodo, Pencil, Repeat } from 'lucide-react';
+import { Star, CheckCircle2, Circle, Sun, Calendar, Plus, Trash2, Tag, ChevronRight, Check, ListTodo, Pencil, Repeat, ArrowUpDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { saveTaskToDB, deleteTaskFromDB, deleteTasksFromDB } from '@/lib/dbAdapter';
 import { getLocalDateStr, getTodayStr, getTomorrowStr, getNextWeekStr, getYesterdayStr } from '@/lib/dateUtils';
@@ -25,6 +25,9 @@ export default function TaskManager({
   const [selectedTask, setSelectedTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [selectedDueDate, setSelectedDueDate] = useState('');
+
+  // Sorting state: 'default' | 'title-asc' | 'title-desc' | 'due-asc' | 'due-desc' | 'priority'
+  const [sortBy, setSortBy] = useState('default');
 
   // Bulk Multi-Select state
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
@@ -156,6 +159,39 @@ export default function TaskManager({
     });
   })() : completedTasks;
 
+  // Sorting Handler for Task Name and Due Date
+  const sortTasks = (taskList) => {
+    if (!taskList || taskList.length === 0) return [];
+    const copy = [...taskList];
+    if (sortBy === 'title-asc') {
+      return copy.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
+    if (sortBy === 'title-desc') {
+      return copy.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+    }
+    if (sortBy === 'due-asc') {
+      return copy.sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
+    }
+    if (sortBy === 'due-desc') {
+      return copy.sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return b.dueDate.localeCompare(a.dueDate);
+      });
+    }
+    if (sortBy === 'priority') {
+      return copy.sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+    }
+    return copy;
+  };
+
+  const sortedActiveTasks = sortTasks(activeTasks);
+  const sortedHistoryTasks = sortTasks(historyFilteredTasks);
+
   const clearHistoryFilters = () => {
     setHistoryPreset('all');
     setHistoryDateFrom('');
@@ -233,7 +269,9 @@ export default function TaskManager({
     let targetTask = null;
     const updated = tasks.map(t => {
       if (t.id === taskId) {
-        targetTask = { ...t, starred: !t.starred };
+        const nextStarred = !t.starred;
+        const nextDueDate = (nextStarred && !t.dueDate) ? getTodayStr() : t.dueDate;
+        targetTask = { ...t, starred: nextStarred, dueDate: nextDueDate };
         return targetTask;
       }
       return t;
@@ -384,70 +422,90 @@ export default function TaskManager({
         {/* Date Filter & Multi-Select Toolbars */}
         {(!isCalendarMode || showCalendarFilters) && (
           <>
-            {/* Date Filter Toolbar */}
+            {/* Date Filter & Sorting Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
-              <div className="flex items-center gap-1.5 text-slate-400 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Filter by Date:</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-1">
-                <button
-                  onClick={() => setFilterDate('all')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    filterDate === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  All Dates
-                </button>
-                <button
-                  onClick={() => setFilterDate('today')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    filterDate === 'today' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Today
-                </button>
-                <button
-                  onClick={() => setFilterDate('tomorrow')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    filterDate === 'tomorrow' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Tomorrow
-                </button>
-                <button
-                  onClick={() => setFilterDate('next-week')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
-                    filterDate === 'next-week' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Next Week
-                </button>
-                {/* Flexible Date Filter */}
-                <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5">
-                  <input
-                    type="text"
-                    placeholder="YYYY-MM-DD"
-                    value={customFilterDate}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCustomFilterDate(val);
-                      setFilterDate(val.trim() ? 'custom' : 'all');
-                    }}
-                    className="w-24 bg-transparent text-slate-200 text-[11px] outline-none font-mono placeholder:text-slate-600"
-                    title="Type date manually (YYYY-MM-DD) or pick from calendar"
-                  />
-                  <input
-                    type="date"
-                    value={customFilterDate}
-                    onChange={(e) => {
-                      setCustomFilterDate(e.target.value);
-                      setFilterDate(e.target.value ? 'custom' : 'all');
-                    }}
-                    className="w-5 h-5 bg-transparent border-0 text-slate-300 text-[11px] cursor-pointer outline-none shrink-0"
-                    title="Open calendar date picker"
-                  />
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 text-slate-400 font-medium">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Filter:</span>
                 </div>
+                <div className="flex flex-wrap items-center gap-1">
+                  <button
+                    onClick={() => setFilterDate('all')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
+                      filterDate === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    All Dates
+                  </button>
+                  <button
+                    onClick={() => setFilterDate('today')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
+                      filterDate === 'today' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setFilterDate('tomorrow')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
+                      filterDate === 'tomorrow' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Tomorrow
+                  </button>
+                  <button
+                    onClick={() => setFilterDate('next-week')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
+                      filterDate === 'next-week' ? 'bg-indigo-600 text-white' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Next Week
+                  </button>
+                  {/* Flexible Date Filter */}
+                  <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5">
+                    <input
+                      type="text"
+                      placeholder="YYYY-MM-DD"
+                      value={customFilterDate}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomFilterDate(val);
+                        setFilterDate(val.trim() ? 'custom' : 'all');
+                      }}
+                      className="w-24 bg-transparent text-slate-200 text-[11px] outline-none font-mono placeholder:text-slate-600"
+                      title="Type date manually (YYYY-MM-DD) or pick from calendar"
+                    />
+                    <input
+                      type="date"
+                      value={customFilterDate}
+                      onChange={(e) => {
+                        setCustomFilterDate(e.target.value);
+                        setFilterDate(e.target.value ? 'custom' : 'all');
+                      }}
+                      className="w-5 h-5 bg-transparent border-0 text-slate-300 text-[11px] cursor-pointer outline-none shrink-0"
+                      title="Open calendar date picker"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sorting Filter Selector */}
+              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs">
+                <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="text-slate-400 font-medium text-[11px]">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-transparent text-slate-200 text-xs font-semibold outline-none cursor-pointer"
+                >
+                  <option value="default" className="bg-slate-900 text-slate-200">Default Order</option>
+                  <option value="title-asc" className="bg-slate-900 text-slate-200">Task Name (A → Z)</option>
+                  <option value="title-desc" className="bg-slate-900 text-slate-200">Task Name (Z → A)</option>
+                  <option value="due-asc" className="bg-slate-900 text-slate-200">Due Date (Earliest First)</option>
+                  <option value="due-desc" className="bg-slate-900 text-slate-200">Due Date (Latest First)</option>
+                  <option value="priority" className="bg-slate-900 text-slate-200">Priority (Starred First ⭐)</option>
+                </select>
               </div>
             </div>
 
@@ -665,12 +723,12 @@ export default function TaskManager({
               <div className="space-y-4">
                 {currentFilter === 'my-day' ? (
                   <>
-                    {activeTasks.filter(t => !t.routineId).length > 0 && (
+                    {sortedActiveTasks.filter(t => !t.routineId).length > 0 && (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 px-1 text-xs font-bold text-amber-400 uppercase tracking-wider">
-                          <Sun className="w-3.5 h-3.5" /> ☀️ Regular Focus Tasks ({activeTasks.filter(t => !t.routineId).length})
+                          <Sun className="w-3.5 h-3.5" /> ☀️ Regular Focus Tasks ({sortedActiveTasks.filter(t => !t.routineId).length})
                         </div>
-                        {activeTasks.filter(t => !t.routineId).map((task) => (
+                        {sortedActiveTasks.filter(t => !t.routineId).map((task) => (
                           <TaskCard
                             key={task.id}
                             task={task}
@@ -692,12 +750,12 @@ export default function TaskManager({
                       </div>
                     )}
 
-                    {activeTasks.filter(t => t.routineId).length > 0 && (
+                    {sortedActiveTasks.filter(t => t.routineId).length > 0 && (
                       <div className="space-y-2 pt-2 border-t border-slate-800/80">
                         <div className="flex items-center gap-2 px-1 text-xs font-bold text-indigo-400 uppercase tracking-wider">
-                          <Repeat className="w-3.5 h-3.5 text-indigo-400" /> 🔁 Routine Tasks & Daily Habits ({activeTasks.filter(t => t.routineId).length})
+                          <Repeat className="w-3.5 h-3.5 text-indigo-400" /> 🔁 Routine Tasks & Daily Habits ({sortedActiveTasks.filter(t => t.routineId).length})
                         </div>
-                        {activeTasks.filter(t => t.routineId).map((task) => (
+                        {sortedActiveTasks.filter(t => t.routineId).map((task) => (
                           <TaskCard
                             key={task.id}
                             task={task}
@@ -722,7 +780,7 @@ export default function TaskManager({
                 ) : (
                   <div className="space-y-2">
                     {currentFilter === 'completed'
-                      ? historyFilteredTasks.map((task) => (
+                      ? sortedHistoryTasks.map((task) => (
                           <TaskCard
                             key={task.id}
                             task={task}
@@ -741,7 +799,7 @@ export default function TaskManager({
                             onRenameTask={updateTaskTitle}
                           />
                         ))
-                      : activeTasks.map((task) => (
+                      : sortedActiveTasks.map((task) => (
                           <TaskCard
                             key={task.id}
                             task={task}
