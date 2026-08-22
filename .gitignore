@@ -29,3 +29,6 @@ yarn-error.log*
 /venv
 /env
 /.venv
+
+.vercel
+.env*

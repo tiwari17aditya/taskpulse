@@ -4,6 +4,22 @@
 
 ---
 
+## 🚀 Key v1.3.3-beta Priority Enhancements
+
+1. **SMTP Mailing Resiliency & Multi-Directory Resolver**:
+   - Upgraded `/api/notifications/email` route with resilient fallback `.env` file resolution across workspace directories.
+   - Synchronized workspace root environment variables to eliminate missing SMTP credentials alerts when running from root.
+2. **Dynamic SMTP Diagnostic Health Check & UI Status Pill**:
+   - Added GET diagnostic endpoint on `/api/notifications/email` returning live server configuration status.
+   - Integrated dynamic `SMTP Active` badge inside `NotificationManagerModal.js`.
+3. **Interactive Inline Email Recipient Customization**:
+   - Added editable recipient email address bar in the *Email & Mobile Dispatch* tab for one-click target confirmation.
+4. **Vercel Automation Suite & `/manage-vercel` Slash Command**:
+   - Built custom `/manage-vercel` command and skill for zero-effort batch environment variable synchronization (15 keys pushed automatically to Vercel).
+   - Deployed live production build to [https://taskpulse17.vercel.app](https://taskpulse17.vercel.app) with 0 errors.
+
+---
+
 ## 🚀 Key v1.3.2-beta Priority Enhancements
 
 1. **Routine Tag Filtering & Interactive Tag Badges**:
