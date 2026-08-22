@@ -13,6 +13,7 @@ export default function UserGuideModal({ onClose }) {
     { id: 'reminders', label: 'Apple Reminders & Tags', icon: Tag },
     { id: 'share', label: 'Codeshare & Toffeeshare', icon: Share2 },
     { id: 'neondb', label: 'NeonDB & Supabase Sync', icon: Database },
+    { id: 'techstack', label: 'Tech Stack & Architecture', icon: Layers },
   ];
 
   return (
@@ -256,6 +257,83 @@ export default function UserGuideModal({ onClose }) {
                   <p className="text-[11px] text-slate-400">
                     Recipient notification emails are saved directly to the <code className="text-slate-200 font-mono">profiles</code> table, ensuring multi-device persistence across sessions.
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: TECH STACK & SYSTEM ARCHITECTURE */}
+          {activeTab === 'techstack' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-indigo-400" /> TaskPulse Master Architecture & Tech Stack
+                </h4>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  Full-Stack Next.js 14
+                </span>
+              </div>
+
+              {/* Architecture Tier Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-3.5 bg-slate-950/80 border border-indigo-500/30 rounded-xl space-y-2">
+                  <span className="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+                    🖥️ Frontend & UI Engine
+                  </span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <strong>Next.js 14 App Router</strong> + <strong>React 19/18</strong> with <strong>Tailwind CSS</strong>, custom HSL design variables, and <strong>Lucide React</strong> icons.
+                  </p>
+                  <div className="text-[10px] font-mono text-indigo-400 bg-indigo-950/40 p-1.5 rounded border border-indigo-500/20">
+                    Alternatives: Vite SPA, SvelteKit, Remix
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-950/80 border border-emerald-500/30 rounded-xl space-y-2">
+                  <span className="font-bold text-xs text-emerald-300 flex items-center gap-1.5">
+                    🗄️ Database & State
+                  </span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <strong>NeonDB Serverless PostgreSQL</strong> via WebSocket/HTTP pooler with JSONB columns + <strong>LocalStorage</strong> offline fallback.
+                  </p>
+                  <div className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 p-1.5 rounded border border-emerald-500/20">
+                    Alternatives: Supabase, Turso libSQL, PlanetScale
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-950/80 border border-purple-500/30 rounded-xl space-y-2">
+                  <span className="font-bold text-xs text-purple-300 flex items-center gap-1.5">
+                    📱 100% Free Mobile Push
+                  </span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <strong>Ntfy.sh Open-Source Hub</strong> (Apache 2.0) with zero fees, instant lockscreen banners on <strong>iOS & Android</strong>, and custom topic channels.
+                  </p>
+                  <div className="text-[10px] font-mono text-purple-400 bg-purple-950/40 p-1.5 rounded border border-purple-500/20">
+                    Alternatives: Telegram Webhook, Twilio SMS, Firebase
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-950/80 border border-amber-500/30 rounded-xl space-y-2">
+                  <span className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                    🌐 OSS Productivity Suite
+                  </span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <strong>Codeshare.io</strong> (live code), <strong>Toffeeshare</strong> (P2P encrypted files), <strong>Excalidraw</strong> (whiteboard), <strong>CryptPad</strong>, <strong>CyberChef</strong>, <strong>Draw.io</strong>.
+                  </p>
+                  <div className="text-[10px] font-mono text-amber-400 bg-amber-950/40 p-1.5 rounded border border-amber-500/20">
+                    Zero-cloud P2P & End-to-end encrypted
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Flow Diagram Card */}
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                <span className="font-bold text-xs text-slate-200">🔄 End-to-End Data Pipeline & Failover Flow:</span>
+                <div className="p-2.5 rounded-lg bg-slate-900 font-mono text-[11px] text-slate-300 space-y-1">
+                  <div className="text-indigo-400">1. User Mutation ➔ TaskPulse UI State</div>
+                  <div className="text-emerald-400">2. Optimistic Local Write ➔ Browser LocalStorage</div>
+                  <div className="text-purple-400">3. Serverless API Route ➔ POST /api/db/tasks</div>
+                  <div className="text-cyan-400">4. SQL UPSERT (JSONB) ➔ NeonDB PostgreSQL</div>
+                  <div className="text-slate-400">5. Failover Guard ➔ If offline, cached locally with zero data loss</div>
                 </div>
               </div>
             </div>
